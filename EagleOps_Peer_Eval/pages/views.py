@@ -11,3 +11,6 @@ def admin_login_view(request):
 
 def create_account_view(request):
     return render(request, "create_account.html")  
+
+def success_login_view(request):
+    return render(request, "success_login.html")
