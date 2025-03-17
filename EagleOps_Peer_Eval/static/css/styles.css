@@ -15,34 +15,27 @@ html, body {
 }
 
 
-.action-button, .admin-button {
+.action-button {
+    display: inline-block;
+    text-align: center;
+    text-decoration: none;
     padding: 12px 18px;
     margin: 15px 10px;
     border: 3px solid black;
     cursor: pointer;
     width: 220px;
     font-size: 16px;
-    text-align: center;
     border-radius: 10px;
+    background: linear-gradient(to bottom, #222, #000);
+    color: white;
     transition: background 0.3s ease-in-out, box-shadow 0.3s;
     box-shadow: 3px 3px 8px rgba(0, 0, 0, 0.3);
 }
 
-.action-button {
-    background: linear-gradient(to bottom, #222, #000);
-    color: white;
-}
-
-.admin-button {
-    background: linear-gradient(to bottom, #bbb, #888);
-    color: white;
-}
-
-.action-button:hover, .admin-button:hover {
+.action-button:hover {
     opacity: 0.9;
     box-shadow: 5px 5px 12px rgba(0, 0, 0, 0.5);
 }
-
 
 .underline-link {
     color: black;
