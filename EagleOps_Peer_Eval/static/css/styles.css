@@ -15,7 +15,7 @@ html, body {
 }
 
 
-.student-button, .admin-button {
+.action-button, .admin-button {
     padding: 12px 18px;
     margin: 15px 10px;
     border: 3px solid black;
@@ -28,7 +28,7 @@ html, body {
     box-shadow: 3px 3px 8px rgba(0, 0, 0, 0.3);
 }
 
-.student-button {
+.action-button {
     background: linear-gradient(to bottom, #222, #000);
     color: white;
 }
@@ -38,7 +38,7 @@ html, body {
     color: white;
 }
 
-.student-button:hover, .admin-button:hover {
+.action-button:hover, .admin-button:hover {
     opacity: 0.9;
     box-shadow: 5px 5px 12px rgba(0, 0, 0, 0.5);
 }
