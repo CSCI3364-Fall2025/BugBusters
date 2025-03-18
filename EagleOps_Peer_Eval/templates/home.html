@@ -8,11 +8,37 @@
     <p>Streamlined Peer Assessment & Team Management
         Easily create courses, assign teams, and conduct peer evaluations with our intuitive platform.</p>
 
-    <button class="btn btn-outline-info">
-        <a href="{% provider_login_url 'google'%}?next=/">
-            <i class="fab fa-google"></i>
-            Login with Google
-        </a>
-    </button>
+    {% if user.is_authenticated %}
+        <p>Welcome, 
+            {% if user.socialaccount_set.count > 0 %}
+                {{ user.socialaccount_set.first.extra_data.given_name }}
+            {% else %}
+                {{ user.username }}
+            {% endif %}
+        </p>
+        <p>Email: {{ user.email }}</p>
+        <p>
+            {% if user.userprofile.admin %}
+                <p>You are an admin.</p>
+            {% else %}
+                <p>You are not an admin.</p>
+            {% endif %}
+        </p>
+        <button class="btn btn-outline-info">
+            <a href="{% url 'account_logout' %}?next=/">
+                <i class="fab fa-google"></i>
+                Logout
+            </a>
+        </button>
+    {% else %}   
+
+        <button class="btn btn-outline-info">
+            <a href="{% provider_login_url 'google'%}?next=/">
+                <i class="fab fa-google"></i>
+                Login with Google
+            </a>
+        </button>
+
+    {% endif %}    
 
 {% endblock %}

@@ -25,5 +25,5 @@ urlpatterns = [
     # path("login/", page_views.login_view, name="login"),
     # path("success/", page_views.success_login_view, name="success"),
     path("accounts/", include("allauth.urls")),  # Allauth for authentication
-    path("landing/", page_views.landing_view, name="landing"),
+#     path("landing/", page_views.landing_view, name="landing"),
 ]

@@ -1,31 +1,18 @@
 from django.db.models.signals import post_save
+from django.contrib.auth.signals import user_logged_in
 from django.dispatch import receiver
-from social_django.models import UserSocialAuth
-from .models import GoogleOAuthProfile
+from django.contrib.auth.models import User
+from .models import UserProfile
 
-ADMIN_EMAILS = [
-    "spotob@bc.edu",
-]
+@receiver(user_logged_in)
+def update_user_profile_on_login(sender, request, user, **kwargs):
+    admin_emails = []
+    user_profile, created = UserProfile.objects.get_or_create(user=user)
 
-@receiver(post_save, sender = UserSocialAuth)
-def save_google_oauth_info(sender, instance, created, **kwargs):
-    if created:
-        user = instance.user
+    if user.email in admin_emails:
+        user_profile.admin = True
+    else:
+        user_profile.admin = False
 
-        # Fetch the necessary info from the instance's extra_data (which stores OAuth info)
-        name = instance.extra_data.get('name')
-        print(name)
-        google_email = instance.extra_data.get('email')
-        print(google_email)
-
-        if name and google_email:
-            admin = google_email in ADMIN_EMAILS
-
-            google_oauth_profile, created = GoogleOAuthProfile.objects.update_or_create(
-                user=user,
-                defaults={
-                    'google_name': name,
-                    'google_email': google_email,
-                    'admin': admin
-                }
-            )
+    user_profile.save()
+    print(f"User {user.username} admin status updated to {user_profile.admin}")
