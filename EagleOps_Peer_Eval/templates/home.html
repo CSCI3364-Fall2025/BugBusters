@@ -1,5 +1,6 @@
 {% extends 'base.html' %}
 {% load socialaccount %}
+{% load static %}
 
 {% block title %}Home - EagleOps{% endblock %}
 
@@ -9,36 +10,34 @@
         Easily create courses, assign teams, and conduct peer evaluations with our intuitive platform.</p>
 
     {% if user.is_authenticated %}
-        <p>Welcome, 
+        <h2>Welcome, 
             {% if user.socialaccount_set.count > 0 %}
-                {{ user.socialaccount_set.first.extra_data.given_name }}
+                {{ user.socialaccount_set.first.extra_data.given_name }}!
             {% else %}
-                {{ user.username }}
+                {{ user.username }}!
             {% endif %}
-        </p>
-        <p>Email: {{ user.email }}</p>
-        <p>
+        </h2>
+        <h3>Email: {{ user.email }}</h3>
+        <h3>
             {% if user.userprofile.admin %}
-                <p>You are an admin.</p>
+                You are an admin.
             {% else %}
-                <p>You are not an admin.</p>
+                You are not an admin.
             {% endif %}
-        </p>
-        <button class="btn btn-outline-info">
+        </h3>
+        <button class="google-btn">
             <a href="{% url 'account_logout' %}?next=/">
                 <i class="fab fa-google"></i>
                 Logout
             </a>
         </button>
     {% else %}   
-
-        <button class="btn btn-outline-info">
-            <a href="{% provider_login_url 'google'%}?next=/">
-                <i class="fab fa-google"></i>
-                Login with Google
-            </a>
-        </button>
-
+    <button class="google-btn">
+        <a href="{% provider_login_url 'google'%}?next=/">
+            <i class="fab fa-google"></i>
+            Login with Google
+        </a>
+    </button>
     {% endif %}    
 
 {% endblock %}

@@ -28,7 +28,6 @@ DEBUG = True
 
 ALLOWED_HOSTS = []
 
-
 # Application definition
 
 SITE_ID = 2
@@ -78,8 +77,10 @@ SOCIALACCOUNT_PROVIDERS = {
 
 LOGIN_REDIRECT_URL = '/'
 SOCIAL_AUTH_LOGIN_REDIRECT_URL = '/'
+SOCIAL_AUTH_GOOGLE_OAUTH2_LOGIN_REDIRECT_URL = '/'
 LOGOUT_REDIRECT_URL = '/'
 ACCOUNT_LOGOUT_REDIRECT_URL = '/'
+SOCIAL_AUTH_GOOGLE_OAUTH2_LOGOUT_REDIRECT_URL = '/'
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
@@ -160,6 +161,7 @@ USE_TZ = True
 
 STATIC_URL = "/static/"
 STATICFILES_DIRS = [os.path.join(BASE_DIR, "static")]
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
@@ -169,4 +171,5 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 ACCOUNT_AUTHENTICATED_LOGIN_REDIRECTS = True 
 
 SOCIALACCOUNT_LOGIN_ON_GET = True
+ACCOUNT_LOGOUT_ON_GET = True
 SOCIALACCOUNT_AUTO_SIGNUP = True

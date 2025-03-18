@@ -127,3 +127,43 @@ footer {
     background: black;
     border-radius: 5px;
 }
+
+.google-btn {
+    width: auto;
+    max-width: 100%;
+    margin: 10px auto;
+    background-color: #000000;
+    border-radius: 50px;
+    border: none;
+    padding: 12px 24px;
+    text-align: center;
+    font-size: 16px;
+    font-weight: 500;
+    color: white;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+.google-btn a {
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    color: white;
+    width: 100%;
+}
+
+.google-btn i {
+    font-size: 20px;
+    margin-right: 10px;
+}
+
+.google-btn:hover {
+    background-color: #000000;
+    transform: scale(1.05);
+}
+
+.google-btn span {
+    margin-left: 8px;
+}

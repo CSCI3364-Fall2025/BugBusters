@@ -21,9 +21,6 @@ from pages import views as page_views
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path("", page_views.home_view, name="home"),  # Home Page
-    # path("login/", page_views.login_view, name="login"),
-    # path("success/", page_views.success_login_view, name="success"),
+    path("", page_views.home_view, name="home"),  # Home Page w/ ifs dependent on user authentication
     path("accounts/", include("allauth.urls")),  # Allauth for authentication
-#     path("landing/", page_views.landing_view, name="landing"),
 ]
