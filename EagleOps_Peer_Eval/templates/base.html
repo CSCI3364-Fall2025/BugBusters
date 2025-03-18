@@ -13,6 +13,7 @@
 
 <body>
     
+    {% if user.is_authenticated %}
     <nav class="navbar">
         <a href="/" class="brand">EagleOps Peer Evaluation</a>
         <ul class="nav-links">
@@ -22,6 +23,7 @@
             <li><a href="#" class="active">Profile</a></li>
         </ul>
     </nav>
+    {% endif %}
 
     <div class="content">
         {% block content %}
