@@ -22,5 +22,10 @@ from pages import views as page_views
 urlpatterns = [
     path('admin/', admin.site.urls),
     path("", page_views.home_view, name="home"),  # Home Page w/ ifs dependent on user authentication
+    
+    # Include our custom URLs first so they take precedence 
+    path("", include("pages.urls")),
+    
+    # Allauth URLs come after our custom paths
     path("accounts/", include("allauth.urls")),  # Allauth for authentication
 ]
