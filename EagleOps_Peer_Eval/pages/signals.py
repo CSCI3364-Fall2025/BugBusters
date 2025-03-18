@@ -5,7 +5,7 @@ from django.contrib.auth.models import User
 from .models import UserProfile
 from allauth.socialaccount.models import SocialAccount
 from allauth.socialaccount.signals import social_account_added, pre_social_login
-from allauth.exceptions import ImmediateHttpResponse
+from allauth.core.exceptions import ImmediateHttpResponse
 from django.shortcuts import redirect
 from django.conf import settings
 

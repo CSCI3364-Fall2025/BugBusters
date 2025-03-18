@@ -50,13 +50,19 @@ INSTALLED_APPS = [
 
 SOCIALACCOUNT_LOGIN_ON_GET = True
 
-ACCOUNT_EMAIL_REQUIRED = True
+# Replace deprecated settings with new format
+# ACCOUNT_EMAIL_REQUIRED = True - Deprecated
+# ACCOUNT_USERNAME_REQUIRED = False - Deprecated
+# ACCOUNT_AUTHENTICATION_METHOD = 'email' - Deprecated
+# ACCOUNT_SIGNUP_PASSWORD_ENTER_TWICE = False - Deprecated
+
+# New recommended settings format
+ACCOUNT_LOGIN_METHODS = {'email'}
+ACCOUNT_SIGNUP_FIELDS = ['email*', 'password1*']  # Removed password2 since SIGNUP_PASSWORD_ENTER_TWICE is False
+
 ACCOUNT_UNIQUE_EMAIL = True
-ACCOUNT_USERNAME_REQUIRED = False
-ACCOUNT_AUTHENTICATION_METHOD = 'email'
 ACCOUNT_EMAIL_VERIFICATION = "optional"
-ACCOUNT_SIGNUP_FIELDS = ['email*', 'password1*', 'password2*']
-SOCIALACCOUNT_AUTO_SIGNUP = True
+SOCIALACCOUNT_AUTO_SIGNUP = True  # Do not ask for additional information during social signup
 SOCIALACCOUNT_EMAIL_REQUIRED = False
 
 # Skip the signup form for social accounts
@@ -69,11 +75,7 @@ ACCOUNT_EMAIL_VERIFICATION = "none"
 SOCIALACCOUNT_EMAIL_VERIFICATION = "none"
 SOCIALACCOUNT_ADAPTER = "pages.adapters.CustomSocialAccountAdapter"
 
-# Do not ask for additional information during social signup
-SOCIALACCOUNT_AUTO_SIGNUP = True
-
 # Disable redirect to signup page
-ACCOUNT_SIGNUP_PASSWORD_ENTER_TWICE = False
 SOCIALACCOUNT_QUERY_EMAIL = False
 
 AUTHENTICATION_BACKENDS = [
