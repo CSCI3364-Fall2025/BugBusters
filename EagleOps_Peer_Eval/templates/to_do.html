@@ -1,0 +1,125 @@
+{% extends 'base.html' %}
+{% load socialaccount %}
+{% load static %}
+
+{% block title %}To Do - EagleOps{% endblock %}
+
+{% block content %}
+  <head>
+    <meta charset="utf-8" />
+    <link rel="stylesheet" href="{% static 'css/styles.css' %}" />
+    <link rel="stylesheet" href="{% static 'css/to_do/globals.css' %}" />
+    <link rel="stylesheet" href="{% static 'css/to_do/styleguide.css' %}" />
+    <link rel="stylesheet" href="{% static 'css/to_do/style.css' %}" />
+  </head>
+  <body>
+    <div class="landing-page">
+      <div class="div">
+        <div class="text-wrapper">Personal Feedback</div>
+        <div class="cards">
+          <div class="customer-quote"><p class="p">“Great work on the latest delivery!”</p></div>
+          <div class="div-wrapper">
+            <p class="text-wrapper-2">“We could’ve used some more of your critical feedback on the slideshow.”</p>
+          </div>
+          <div class="customer-quote-2"><p class="p">“Nice job in our latest pitch!”</p></div>
+        </div>
+        <div class="navigation-footer">
+          <div class="group">
+            <div class="items"><div class="text-wrapper-3">About</div></div>
+          </div>
+          <div class="items-wrapper">
+            <div class="items"><div class="text-wrapper-3">Settings</div></div>
+          </div>
+          <div class="text-wrapper-4">EagleOps Peer Evaluation</div>
+          <!-- <div class="social-icons">
+            <div class="buttons-icon">
+              <div class="icon"><img class="img" src="img/icon-2.svg" /></div>
+            </div>
+            <div class="buttons-icon">
+              <div class="icon"><img class="icon-2" src="img/image.svg" /></div>
+            </div>
+            <div class="buttons-icon">
+              <div class="icon"><img class="icon-3" src="img/icon-3.svg" /></div>
+            </div>
+            <div class="buttons-icon">
+              <div class="icon"><img class="img" src="img/icon.svg" /></div>
+            </div>
+          </div> -->
+          <img class="divider" src="img/divider.svg" />
+        </div>
+        <!-- <div class="navigation">
+          <div class="items-2">
+            <div class="text-wrapper-5">To Do</div>
+            <div class="text-wrapper-5">Team</div>
+            <div class="text-wrapper-5">Performance</div>
+            <button class="button"><div class="text-wrapper-6">Profile</div></button>
+          </div>
+          <div class="text-wrapper-7">EagleOps Peer Evaluation</div>
+        </div> -->
+        <div class="section">
+          <div class="buttons">
+            <button class="button-2"><div class="text-wrapper-8">Button</div></button>
+            <button class="button-3"><div class="text-wrapper-9">Secondary button</div></button>
+          </div>
+          <!-- <div class="text-wrapper-10">Section heading</div> -->
+        </div>
+        <div class="copy">
+          <div class="page-title">
+            <div class="text-wrapper-11">EagleOps Peer Evaluation</div>
+            <p class="text-wrapper-12">
+              Welcome, Joe! Click the buttons below to begin completing feedback forms for your teammates.
+            </p>
+          </div>
+        </div>
+        <div class="overlap">
+          <div class="dialog-body">
+            <div class="text">
+              <div class="text-heading">Jane Doe</div>
+              <p class="body-text">
+                <span class="span">Due in </span> <span class="text-wrapper-13">2 days, 3 hours, and 21 minutes.</span>
+              </p>
+            </div>
+            <div class="button-group">
+              <button class="button-4"><button class="button-5">Begin</button></button>
+            </div>
+            <div class="icon-button"><img class="x" src="img/x.svg" /></div>
+          </div>
+          <div class="text-wrapper-14">Published on 2/13/25</div>
+        </div>
+        <div class="overlap-group">
+          <div class="dialog-body">
+            <div class="text">
+              <div class="text-heading">John Doe</div>
+              <p class="body-text">
+                <span class="span">Due in </span> <span class="text-wrapper-13">2 days, 3 hours, and 21 minutes.</span>
+              </p>
+            </div>
+            <div class="button-group">
+              <button class="button-6"><button class="button-7">Restart</button></button>
+              <button class="button-4"><button class="button-5">Edit Responses</button></button>
+            </div>
+            <div class="icon-button"><img class="x" src="img/x.svg" /></div>
+          </div>
+          <div class="text-wrapper-14">Published on 2/13/25</div>
+        </div>
+        <div class="overlap-group-2">
+          <div class="dialog-body">
+            <div class="text">
+              <div class="text-heading">Joe Schmoe (You)</div>
+              <p class="body-text">
+                <span class="span">Due in </span> <span class="text-wrapper-13">4 days, 3 hours, and 21 minutes.</span>
+              </p>
+            </div>
+            <div class="button-group">
+              <button class="button-6"><button class="button-7">Restart</button></button>
+              <button class="button-4"><button class="button-5">Edit Responses</button></button>
+            </div>
+            <div class="icon-button"><img class="x" src="img/x.svg" /></div>
+          </div>
+          <div class="text-wrapper-14">Published on 2/13/25</div>
+        </div>
+      </div>
+    </div>
+  </body>
+
+{% endblock %}

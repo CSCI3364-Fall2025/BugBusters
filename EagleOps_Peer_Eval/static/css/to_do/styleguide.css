@@ -1,0 +1,161 @@
+:root {
+    --small-text-font-family: "Inter", Helvetica;
+    --small-text-font-weight: 500;
+    --small-text-font-size: 16px;
+    --small-text-letter-spacing: 0px;
+    --small-text-line-height: 150%;
+    --small-text-font-style: normal;
+    --subheading-font-family: "Inter", Helvetica;
+    --subheading-font-weight: 400;
+    --subheading-font-size: 24px;
+    --subheading-letter-spacing: 0px;
+    --subheading-line-height: 150%;
+    --subheading-font-style: normal;
+    --body-text-font-family: "Inter", Helvetica;
+    --body-text-font-weight: 500;
+    --body-text-font-size: 20px;
+    --body-text-letter-spacing: 0px;
+    --body-text-line-height: 150%;
+    --body-text-font-style: normal;
+    --heading-font-family: "Inter", Helvetica;
+    --heading-font-weight: 600;
+    --heading-font-size: 24px;
+    --heading-letter-spacing: -0.48px;
+    --heading-line-height: 120.00000476837158%;
+    --heading-font-style: normal;
+    --body-base-font-family: "Inter", Helvetica;
+    --body-base-font-weight: 400;
+    --body-base-font-size: 16px;
+    --body-base-letter-spacing: 0px;
+    --body-base-line-height: 139.9999976158142%;
+    --body-base-font-style: normal;
+    --single-line-body-base-font-family: "Inter", Helvetica;
+    --single-line-body-base-font-weight: 400;
+    --single-line-body-base-font-size: 16px;
+    --single-line-body-base-letter-spacing: 0px;
+    --single-line-body-base-line-height: 100%;
+    --single-line-body-base-font-style: normal;
+    --button-shadow: 0px 1px 2px 0px rgba(0, 0, 0, 0.05);
+    --drop-shadow-400: 0px 4px 4px -4px rgba(12, 12, 13, 0.05), 0px 16px 32px -4px
+      rgba(12, 12, 13, 0.1);
+    --colors-text-text-default: var(--colors-text-default-default);
+    --colors-text-default-default: var(--colors-black-800);
+    --colors-black-800: rgba(0, 0, 0, 0.9);
+    --colors-border-border-default: var(--colors-border-default-default);
+    --colors-border-default-default: var(--colors-grey-200);
+    --colors-grey-200: rgba(230, 230, 230, 1);
+    --colors-white-1000: rgba(255, 255, 255, 1);
+    --colors-grey-600: rgba(68, 68, 68, 1);
+    --color-text-default-default: var(--color-primitives-gray-900);
+    --color-text-brand-on-brand: var(--color-primitives-brand-100);
+    --color-background-brand-default: var(--color-primitives-brand-800);
+    --color-background-neutral-tertiary: var(--color-primitives-slate-200);
+    --color-border-brand-default: var(--color-primitives-brand-800);
+    --color-border-neutral-secondary: var(--color-primitives-slate-600);
+    --color-background-default-default: var(--color-primitives-white-1000);
+    --color-border-default-default: var(--color-primitives-gray-300);
+    --size-space-200: 8px;
+    --size-space-300: 12px;
+    --size-radius-200: 8px;
+    --size-space-400: 16px;
+    --size-space-600: 24px;
+    --size-space-800: 32px;
+    --variable-collection-spacing-m: 48px;
+    --variable-collection-spacing-s: 24px;
+    --variable-collection-spacing-XS: 8px;
+    --variable-collection-spacing-SM: 32px;
+    --color-primitives-gray-900: rgba(30, 30, 30, 1);
+    --color-primitives-brand-100: rgba(245, 245, 245, 1);
+    --color-primitives-white-1000: rgba(255, 255, 255, 1);
+    --color-primitives-brand-900: rgba(30, 30, 30, 1);
+    --color-primitives-brand-800: rgba(44, 44, 44, 1);
+    --color-primitives-slate-200: rgba(227, 227, 227, 1);
+    --color-primitives-slate-600: rgba(118, 118, 118, 1);
+    --color-primitives-slate-900: rgba(48, 48, 48, 1);
+    --color-primitives-slate-500: rgba(148, 148, 148, 1);
+    --color-primitives-gray-300: rgba(217, 217, 217, 1);
+    --typography-primitives-scale-06: 32px;
+  }
+  
+  /*
+  
+  To enable a theme in your HTML, simply add one of the following data attributes to an HTML element, like so:
+  
+  <body data-colors-mode="light">
+      <!-- the rest of your content -->
+  </body>
+  
+  You can apply the theme on any DOM node, not just the `body`
+  
+  */
+  
+  [data-colors-mode="light"] {
+    --colors-text-default-default: var(--colors-black-800);
+    --colors-border-default-default: var(--colors-grey-200);
+  }
+  
+  [data-colors-mode="dark"] {
+    --colors-text-default-default: var(--colors-white-1000);
+    --colors-border-default-default: var(--colors-grey-600);
+  }
+  
+  [data-colors-mode="figjam-light"] {
+    --colors-text-default-default: var(--colors-black-800);
+    --colors-border-default-default: var(--colors-grey-200);
+  }
+  
+  [data-colors-mode="figjam-dark"] {
+    --colors-text-default-default: var(--colors-white-1000);
+    --colors-border-default-default: var(--colors-grey-600);
+  }
+  
+  [data-colors-mode="handoff-light"] {
+    --colors-text-default-default: var(--colors-black-800);
+    --colors-border-default-default: var(--colors-grey-200);
+  }
+  
+  [data-colors-mode="handoff-dark"] {
+    --colors-text-default-default: var(--colors-white-1000);
+    --colors-border-default-default: var(--colors-grey-600);
+  }
+  
+  [data-colors-mode="flides-light"] {
+    --colors-text-default-default: var(--colors-black-800);
+    --colors-border-default-default: var(--colors-grey-200);
+  }
+  
+  [data-colors-mode="flides-dark"] {
+    --colors-text-default-default: var(--colors-white-1000);
+    --colors-border-default-default: var(--colors-grey-600);
+  }
+  
+  [data-colors-mode="sites-light"] {
+    --colors-text-default-default: var(--colors-black-800);
+    --colors-border-default-default: var(--colors-grey-200);
+  }
+  
+  [data-colors-mode="sites-dark"] {
+    --colors-text-default-default: var(--colors-white-1000);
+    --colors-border-default-default: var(--colors-grey-600);
+  }
+  
+  [data-color-mode="SDS-light"] {
+    --color-text-default-default: var(--color-primitives-gray-900);
+    --color-text-brand-on-brand: var(--color-primitives-brand-100);
+    --color-background-brand-default: var(--color-primitives-brand-800);
+    --color-background-neutral-tertiary: var(--color-primitives-slate-200);
+    --color-border-brand-default: var(--color-primitives-brand-800);
+    --color-border-neutral-secondary: var(--color-primitives-slate-600);
+    --color-background-default-default: var(--color-primitives-white-1000);
+  }
+  
+  [data-color-mode="SDS-dark"] {
+    --color-text-default-default: var(--color-primitives-white-1000);
+    --color-text-brand-on-brand: var(--color-primitives-brand-900);
+    --color-background-brand-default: var(--color-primitives-brand-100);
+    --color-background-neutral-tertiary: var(--color-primitives-slate-900);
+    --color-border-brand-default: var(--color-primitives-brand-100);
+    --color-border-neutral-secondary: var(--color-primitives-slate-500);
+    --color-background-default-default: var(--color-primitives-gray-900);
+  }
+  

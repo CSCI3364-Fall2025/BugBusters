@@ -9,3 +9,6 @@ def home_view(request):
         return redirect('/')
     
     return render(request, "home.html")  # render home.html template
+
+def todo_view(request):
+    return render(request, "to_do.html")
