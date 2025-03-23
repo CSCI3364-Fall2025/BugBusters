@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import UserProfile
+from .models import UserProfile, Team
 from django.contrib.auth.models import User
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 
@@ -16,6 +16,7 @@ class UserProfileAdmin(admin.ModelAdmin):
 
 # Register your models here.
 admin.site.register(UserProfile, UserProfileAdmin)
+admin.site.register(Team)
 
 # Add UserProfile info to the User admin page
 class UserProfileInline(admin.StackedInline):

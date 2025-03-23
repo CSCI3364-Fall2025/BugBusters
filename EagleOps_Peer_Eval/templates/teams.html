@@ -1,0 +1,40 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Teams - EagleOps{% endblock %}
+
+{% block content %}
+    {% if user.userprofile.admin %}
+        <h1>Teams</h1>
+        {% comment %} <a href="{% url 'create-team' %}" class="btn">Create Team</a> {% endcomment %}
+    {% else %}
+        <h1>My Team</h1>
+    {% endif %}
+
+    {% if teams.exists %}
+        <div class="team-boxes">
+            {% for team in teams %}
+                <div class="team-box">
+                    <h2 class="team-name">{{ team.name }}</h2>
+                    <div class="team-members">
+                        <h3>Members:</h3>
+                        <ul class="member-list">
+                            {% for member in team.members.all %}
+                                <li>
+                                    <span>{{ member.user.userprofile.full_name }} - {{ member.user.email }}</span>
+                                    {% if member.admin %}
+                                        - <span class="role admin">Admin</span>
+                                    {% else %}
+                                        - <span class="role member">Member</span>
+                                    {% endif %}
+                                </li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <p>You are not part of any team.</p>
+    {% endif %}
+{% endblock %}

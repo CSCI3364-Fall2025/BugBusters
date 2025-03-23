@@ -29,4 +29,7 @@ urlpatterns = [
     
     # Allauth URLs come after our custom paths
     path("accounts/", include("allauth.urls")),  # Allauth for authentication
+
+    # Path to the teams page
+    path('teams/', page_views.teams, name='teams'),
 ]

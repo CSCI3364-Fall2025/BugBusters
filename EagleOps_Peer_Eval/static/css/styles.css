@@ -167,3 +167,96 @@ footer {
 .google-btn span {
     margin-left: 8px;
 }
+
+
+/* Style the container for all teams */
+.team-boxes {
+    display: block; /* Stack elements vertically */
+    margin-top: 20px;
+}
+
+/* Style each team box */
+.team-box {
+    background-color: #f9f9f9;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    width: 100%;
+    padding: 20px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    transition: box-shadow 0.3s ease;
+    margin-bottom: 20px;
+}
+
+/* Hover effect for the team box */
+.team-box:hover {
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+}
+
+/* Team Name */
+.team-name {
+    font-size: 20px;
+    font-weight: bold;
+    margin-bottom: 10px;
+}
+
+/* Team Members */
+.team-members h3 {
+    font-size: 18px;
+    margin-bottom: 10px;
+}
+
+/* List styling for members */
+.member-list {
+    list-style: none;
+    padding-left: 0;
+}
+
+.member-list li {
+    padding: 5px 0;
+    font-size: 16px;
+}
+
+/* Style for the roles (admin/member) */
+.role {
+    font-weight: bold;
+}
+
+.role.admin {
+    color: red;
+}
+
+.role.member {
+    color: green;
+}
+
+/* Style for the dropdown */
+.navbar .dropdown {
+    position: relative;
+}
+
+.navbar .dropdown .dropdown-content {
+    display: none; /* Hide the dropdown by default */
+    position: absolute;
+    background-color: #f9f9f9;
+    min-width: 160px;
+    box-shadow: 0px 8px 16px rgba(0, 0, 0, 0.2);
+    z-index: 1;
+    right: 0;
+    top: 100%;
+    border-radius: 8px;
+}
+
+.navbar .dropdown:hover .dropdown-content {
+    display: block;
+}
+
+.navbar .dropdown .dropdown-content a {
+    color: black;
+    padding: 12px 16px;
+    text-decoration: none;
+    display: block;
+}
+
+.navbar .dropdown .dropdown-content a:hover {
+    background-color: #ddd;
+}

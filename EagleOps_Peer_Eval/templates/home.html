@@ -12,7 +12,7 @@
     {% if user.is_authenticated %}
         <h2>Welcome, 
             {% if user.socialaccount_set.count > 0 %}
-                {{ user.socialaccount_set.first.extra_data.given_name }}!
+                {{ user.userprofile.first_name }}!
             {% else %}
                 {{ user.username }}!
             {% endif %}
@@ -31,13 +31,13 @@
                 Logout
             </a>
         </button>
-    {% else %}   
+    {% else %}
     <button class="google-btn">
         <a href="{% provider_login_url 'google'%}?next=/">
             <i class="fab fa-google"></i>
             Login with Google
         </a>
     </button>
-    {% endif %}    
+    {% endif %}
 
 {% endblock %}
