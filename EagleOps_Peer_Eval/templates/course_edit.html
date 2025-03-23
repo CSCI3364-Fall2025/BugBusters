@@ -1,0 +1,97 @@
+{% extends 'base.html' %}
+
+{% block title %}{% if course %}Edit Course: {{ course.code }}{% else %}Create New Course{% endif %}{% endblock %}
+
+{% block content %}
+<div class="page-container">
+    <div class="page-header">
+        <a href="{% if course %}{% url 'course_detail' course_id=course.id %}{% else %}{% url 'courses' %}{% endif %}" class="underline-link">
+            <i class="fas fa-arrow-left"></i> Back to {% if course %}{{ course.code }}{% else %}Courses{% endif %}
+        </a>
+        <h1>{% if course %}Edit Course: {{ course.code }}{% else %}Create New Course{% endif %}</h1>
+    </div>
+
+    <div class="section">
+        {% if error_message %}
+        <div class="error-message">
+            {{ error_message }}
+        </div>
+        {% endif %}
+        <form method="post" action="{% if course %}{% url 'edit_course' course_id=course.id %}{% else %}{% url 'create_course' %}{% endif %}">
+            {% csrf_token %}
+            <div class="form-group">
+                <label for="name">Course Name<span class="required">*</span></label>
+                <input type="text" id="name" name="name" class="form-control" required value="{% if course %}{{ course.name }}{% endif %}">
+            </div>
+            
+            <div class="form-group">
+                <label for="code">Course Code<span class="required">*</span></label>
+                <input type="text" id="code" name="code" class="form-control" required value="{% if course %}{{ course.code }}{% endif %}">
+                <small class="form-text text-muted">E.g., CS101, ENGL201, etc.</small>
+            </div>
+            
+            <div class="form-group">
+                <label for="description">Description</label>
+                <textarea id="description" name="description" class="form-control" rows="4">{% if course %}{{ course.description }}{% endif %}</textarea>
+            </div>
+            
+            <div class="form-actions">
+                <a href="{% if course %}{% url 'course_detail' course_id=course.id %}{% else %}{% url 'courses' %}{% endif %}" class="btn btn-secondary">Cancel</a>
+                <button type="submit" class="btn btn-primary">{% if course %}Update Course{% else %}Create Course{% endif %}</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .form-group {
+        margin-bottom: 1.5rem;
+    }
+    
+    .form-control {
+        display: block;
+        width: 100%;
+        padding: 0.5rem;
+        font-size: 1rem;
+        border: 1px solid #ced4da;
+        border-radius: 0.25rem;
+    }
+    
+    textarea.form-control {
+        resize: vertical;
+    }
+    
+    .form-text {
+        display: block;
+        margin-top: 0.25rem;
+        font-size: 0.875rem;
+    }
+    
+    .text-muted {
+        color: #6c757d;
+    }
+    
+    .required {
+        color: #dc3545;
+        margin-left: 0.25rem;
+    }
+    
+    .form-actions {
+        margin-top: 2rem;
+        display: flex;
+        justify-content: flex-end;
+        gap: 1rem;
+    }
+    
+    .error-message {
+        background-color: #f8d7da;
+        color: #721c24;
+        padding: 12px;
+        border-radius: 4px;
+        margin-bottom: 20px;
+        border: 1px solid #f5c6cb;
+    }
+</style>
+{% endblock %} 
