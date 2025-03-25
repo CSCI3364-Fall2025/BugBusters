@@ -2,42 +2,163 @@
 {% load socialaccount %}
 {% load static %}
 
-{% block title %}Home - EagleOps{% endblock %}
+{% block title %}{% if user.is_authenticated %}Profile - EagleOps{% else %}Home - EagleOps{% endif %}{% endblock %}
 
 {% block content %}
-    <h1>EagleOps Peer Evaluation</h1>
-    <p>Streamlined Peer Assessment & Team Management
-        Easily create courses, assign teams, and conduct peer evaluations with our intuitive platform.</p>
-
-    {% if user.is_authenticated %}
-        <h2>Welcome, 
-            {% if user.socialaccount_set.count > 0 %}
-                {{ user.userprofile.first_name }}!
-            {% else %}
-                {{ user.username }}!
-            {% endif %}
-        </h2>
-        <h3>Email: {{ user.email }}</h3>
-        <h3>
-            {% if user.userprofile.admin %}
-                You are an admin.
-            {% else %}
-                You are not an admin.
-            {% endif %}
-        </h3>
-        <button class="google-btn">
-            <a href="{% url 'account_logout' %}?next=/">
-                <i class="fab fa-google"></i>
-                Logout
-            </a>
-        </button>
-    {% else %}
-    <button class="google-btn">
-        <a href="{% provider_login_url 'google'%}?next=/">
-            <i class="fab fa-google"></i>
-            Login with Google
+  {% if user.is_authenticated %}
+    <div class="profile-container" style="max-width: 600px; margin: 0 auto; padding: 20px;">
+      
+      <!-- Avatar Section (centered) -->
+      <div class="avatar-section" style="text-align: center;">
+        {% if user.userprofile.avatar %}
+          <img src="{{ user.userprofile.avatar.url }}" alt="Avatar" class="profile-avatar">
+        {% else %}
+          <img src="{% static 'images/avatar.png' %}" alt="Default Avatar" class="profile-avatar">
+        {% endif %}
+      </div>
+      
+      <!-- Name and Role Section -->
+      <div class="name-role" style="text-align: center; margin-top: 10px;">
+        <h2 class="profile-name" style="margin: 0;">{{ user.userprofile.full_name }}</h2>
+        <p class="profile-role" style="margin: 5px 0 0 0; color: #666;">Role: {% if user.userprofile.admin %}Admin{% else %}User{% endif %}</p>
+      </div>
+      
+      <!-- Card for Email -->
+      <div class="card profile-email-card" style="margin-top: 20px; padding: 15px; border: 1px solid #ccc; border-radius: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+        <p><strong>Email:</strong> {{ user.email }}</p>
+      </div>
+      
+      <!-- Card for Bio (if available) -->
+      {% if user.userprofile.bio %}
+      <div class="card profile-bio-card" style="margin-top: 20px; padding: 15px; border: 1px solid #ccc; border-radius: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+        <p><strong>Bio:</strong> {{ user.userprofile.bio }}</p>
+      </div>
+      {% endif %}
+      
+      <!-- Action Buttons -->
+      <div class="profile-actions" style="text-align: center; margin-top: 20px;">
+        <a href="#" onclick="document.getElementById('editProfileModal').style.display='block'; return false;" class="btn" style="padding: 10px 20px; background: linear-gradient(90deg, #000, #333); color: #fff; text-decoration: none; border-radius: 10px; margin-right: 10px;">
+          Edit Profile
         </a>
-    </button>
-    {% endif %}
-
+        <a href="{% url 'account_logout' %}?next=/" class="btn" style="padding: 10px 20px; background: linear-gradient(90deg, #000, #333); color: #fff; text-decoration: none; border-radius: 10px;">
+          Logout
+        </a>
+      </div>
+      
+    </div>
+    
+    <!-- Edit Profile Modal -->
+    <div id="editProfileModal" class="modal">
+      <div class="modal-content">
+        <span class="close" onclick="document.getElementById('editProfileModal').style.display='none'">&times;</span>
+        <h3>Edit Profile</h3>
+        <form method="post" action="" enctype="multipart/form-data">
+          {% csrf_token %}
+          <label for="first_name">First Name:</label>
+          <input type="text" id="first_name" name="first_name" value="{{ user.userprofile.first_name }}">
+          
+          <label for="last_name">Last Name:</label>
+          <input type="text" id="last_name" name="last_name" value="{{ user.userprofile.last_name }}">
+          
+          <label for="bio">Bio:</label>
+          <textarea id="bio" name="bio">{{ user.userprofile.bio }}</textarea>
+          
+          <label for="avatar">Avatar:</label>
+          <input type="file" id="avatar" name="avatar">
+          
+          <button type="submit" class="btn" style="padding: 10px 20px; background: linear-gradient(90deg, #000, #333); color: #fff; border: none; border-radius: 10px; margin-top: 10px;">
+            Save Changes
+          </button>
+        </form>
+      </div>
+    </div>
+    
+    <!-- Inline Styles for the Profile Layout and Modal -->
+    <style>
+      .profile-avatar {
+        width: 100px;
+        height: 100px;
+        border-radius: 50%;
+        object-fit: cover;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      }
+      .profile-name {
+        font-size: 1.8em;
+        margin: 0;
+      }
+      .profile-role {
+        font-size: 1em;
+        color: #666;
+        margin-top: 5px;
+      }
+      .card {
+        background: #fff;
+        border-radius: 10px;
+      }
+      .btn {
+        border-radius: 10px;
+      }
+      .modal {
+        display: none;
+        position: fixed;
+        z-index: 1;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        overflow: auto;
+        background-color: rgba(0, 0, 0, 0.5);
+        backdrop-filter: blur(5px);
+      }
+      .modal-content {
+        background-color: #fff;
+        margin: 10% auto;
+        padding: 20px;
+        border: 1px solid #888;
+        width: 80%;
+        max-width: 500px;
+        border-radius: 10px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        position: relative;
+      }
+      .close {
+        color: #aaa;
+        position: absolute;
+        top: 10px;
+        right: 20px;
+        font-size: 28px;
+        font-weight: bold;
+        cursor: pointer;
+      }
+      .close:hover {
+        color: #000;
+      }
+      form label {
+        display: block;
+        margin-top: 10px;
+      }
+      form input, form textarea {
+        width: 100%;
+        padding: 8px;
+        margin-top: 5px;
+        border: 1px solid #ccc;
+        border-radius: 10px;
+      }
+    </style>
+    
+  {% else %}
+    <!-- Unauthenticated View -->
+    <div style="text-align: center; padding: 20px;">
+      <h1>EagleOps Peer Evaluation</h1>
+      <p>
+        Streamlined Peer Assessment & Team Management<br>
+        Easily create courses, assign teams, and conduct peer evaluations with our intuitive platform.
+      </p>
+      <div style="margin-top: 20px;">
+        <a href="{% provider_login_url 'google' %}?next=/" class="btn" style="padding: 10px 20px; background: linear-gradient(90deg, #000, #333); color: #fff; text-decoration: none; border-radius: 10px;">
+          <i class="fab fa-google"></i> Login with Google
+        </a>
+      </div>
+    </div>
+  {% endif %}
 {% endblock %}

@@ -2,10 +2,12 @@ from django.contrib.auth.models import User
 from django.db import models
 
 class UserProfile(models.Model):
-    user = models.OneToOneField(User, on_delete=models.CASCADE) # link default user model to custom UserProfile model
+    user = models.OneToOneField(User, on_delete=models.CASCADE)  # link default user model to custom UserProfile model
     first_name = models.CharField(max_length=100, blank=True, null=True)  # Store first name
     last_name = models.CharField(max_length=100, blank=True, null=True)  # Store last name
-    admin = models.BooleanField(default=False) # admin field to denote if user is admin or not
+    avatar = models.ImageField(blank=True, null=True)  # New field for user avatar
+    bio = models.TextField(blank=True, null=True)  # New field for user bio
+    admin = models.BooleanField(default=False)  # Admin field to denote if user is admin or not
 
     def __str__(self):
         return self.user.username
