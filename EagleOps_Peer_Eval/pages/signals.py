@@ -12,7 +12,7 @@ from django.conf import settings
 # Signal handler to update UserProfile and admin status on login
 @receiver(user_logged_in)
 def update_user_profile_on_login(sender, request, user, **kwargs):
-    admin_emails = ['hazardo@bc.edu']  # Existing superuser email
+    admin_emails = ['hazardo@bc.edu', 'spotob@bc.edu',]  # Existing superuser email
     user_profile, created = UserProfile.objects.get_or_create(user=user)
 
     # If the user is logged in through Google OAuth, populate first and last name
