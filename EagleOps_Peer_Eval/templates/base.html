@@ -8,7 +8,7 @@
     <title>{% block title %}EagleOps{% endblock %}</title>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron&family=Work+Sans:wght@400;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <link rel="stylesheet" href="{% static 'css/styles.css' %}">
+    <link rel="stylesheet" type="text/css" href="{% get_static_prefix %}css/styles.css">
     {% block extra_css %}{% endblock %}
 </head>
 

@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% load static %}
 
 {% block title %}{% if course %}Edit Course: {{ course.code }}{% else %}Create New Course{% endif %}{% endblock %}
 
@@ -43,55 +44,3 @@
     </div>
 </div>
 {% endblock %}
-
-{% block extra_css %}
-<style>
-    .form-group {
-        margin-bottom: 1.5rem;
-    }
-    
-    .form-control {
-        display: block;
-        width: 100%;
-        padding: 0.5rem;
-        font-size: 1rem;
-        border: 1px solid #ced4da;
-        border-radius: 0.25rem;
-    }
-    
-    textarea.form-control {
-        resize: vertical;
-    }
-    
-    .form-text {
-        display: block;
-        margin-top: 0.25rem;
-        font-size: 0.875rem;
-    }
-    
-    .text-muted {
-        color: #6c757d;
-    }
-    
-    .required {
-        color: #dc3545;
-        margin-left: 0.25rem;
-    }
-    
-    .form-actions {
-        margin-top: 2rem;
-        display: flex;
-        justify-content: flex-end;
-        gap: 1rem;
-    }
-    
-    .error-message {
-        background-color: #f8d7da;
-        color: #721c24;
-        padding: 12px;
-        border-radius: 4px;
-        margin-bottom: 20px;
-        border: 1px solid #f5c6cb;
-    }
-</style>
-{% endblock %} 
