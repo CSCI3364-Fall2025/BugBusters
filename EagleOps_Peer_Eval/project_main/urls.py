@@ -36,6 +36,7 @@ urlpatterns = [
 
     # Path to the teams page
     path('teams/', page_views.teams, name='teams'),
+    path('courses/<int:course_id>/delete/', page_views.delete_course, name='delete_course'),
 ]
 
 

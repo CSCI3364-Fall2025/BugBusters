@@ -13,6 +13,14 @@
             <h1>{{ course.name }}</h1>
             <div class="course-code">{{ course.code }}</div>
         </div>
+        {% if is_admin %}
+            <div class="delete-button-container">
+                <button id="openDeleteCourseModal" class="btn btn-danger">
+                    <i class="fas fa-trash" style="margin-right: 10px;"></i> Delete Course
+                </button>
+            </div>
+        </div>
+        {% endif %}
     </div>
 
     {% if is_admin %}
@@ -20,7 +28,7 @@
         <div class="section-header">
             <h2>Form Templates</h2>
             <a href="{% url 'template_create' course.id %}" class="btn btn-primary">
-                <i class="fas fa-plus"></i> Create New Template
+                <i class="fas fa-plus" style="margin-right: 10px;"></i> Create New Template
             </a>
         </div>
         
@@ -47,10 +55,10 @@
                         <td>{{ template.question_count }}</td>
                         <td class="actions">
                             <a href="{% url 'template_edit' course.id template.id %}" class="btn-icon" title="Edit">
-                                <i class="fas fa-edit"></i>
+                                <i class="fas fa-edit" style="margin-right: 5px;"></i>
                             </a>
                             <a href="{% url 'template_duplicate' course.id template.id %}" class="btn-icon" title="Duplicate">
-                                <i class="fas fa-copy"></i>
+                                <i class="fas fa-copy" style="margin-right: 5px;"></i>
                             </a>
                             <a href="#" class="btn-icon delete-template" data-id="{{ template.id }}" title="Delete">
                                 <i class="fas fa-trash"></i>
@@ -72,7 +80,7 @@
         <div class="section-header">
             <h2>Peer Assessment Forms</h2>
             <a href="{% url 'form_create' course.id %}" class="btn btn-primary">
-                <i class="fas fa-plus"></i> Create New Form
+                <i class="fas fa-plus" style="margin-right: 10px;"></i> Create New Form
             </a>
         </div>
         
@@ -109,19 +117,19 @@
                         <td>{{ form.completion_rate }}</td>
                         <td class="actions">
                             <a href="{% url 'form_edit' course.id form.id %}" class="btn-icon" title="Edit">
-                                <i class="fas fa-edit"></i>
+                                <i class="fas fa-edit" style="margin-right: 5px;"></i>
                             </a>
                             <a href="#" class="btn-icon results-btn" data-id="{{ form.id }}" title="Results">
-                                <i class="fas fa-chart-bar"></i>
+                                <i class="fas fa-chart-bar" style="margin-right: 5px;"></i>
                             </a>
                             
                             {% if form.status == 'draft' %}
                             <a href="{% url 'form_publish' course.id form.id %}" class="btn-icon publish-btn" title="Publish">
-                                <i class="fas fa-paper-plane"></i>
+                                <i class="fas fa-paper-plane" style="margin-right: 5px;"></i>
                             </a>
                             {% else %}
                             <a href="{% url 'form_unpublish' course.id form.id %}" class="btn-icon unpublish-btn" title="Unpublish">
-                                <i class="fas fa-ban"></i>
+                                <i class="fas fa-ban" style="margin-right: 5px;"></i>
                             </a>
                             {% endif %}
                             
@@ -198,11 +206,33 @@
             </div>
         </div>
     </div>
+
+    <!-- Delete Course Modal (Admin Only) -->
+    {% if is_admin %}
+    <div id="deleteCourseModal" class="modal">
+        <div class="modal-content">
+            <h3>Confirm Course Deletion</h3>
+            <p>Are you sure you want to delete the course "{{ course.name }}"? This action cannot be undone.</p>
+            <div class="modal-actions">
+                <button class="btn btn-secondary cancel-delete">Cancel</button>
+                <form id="deleteCourseForm" method="post" action="{% url 'delete_course' course_id=course.id %}">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger">Delete Course</button>
+                </form>
+            </div>
+        </div>
+    </div>
+    {% endif %}
 </div>
 {% endblock %}
 
 {% block extra_css %}
 <style>
+    .delete-button-container {
+        display: flex;
+        justify-content: flex-start;
+        margin-left: -40px;
+    }
     .page-container {
         max-width: 1200px;
         margin: 0 auto;
@@ -268,24 +298,38 @@
         font-size: 14px;
     }
     
+    /* Primary button (plus) */
     .btn-primary {
-        background-color: #4a86e8;
+        background: linear-gradient(to bottom, #4a86e8, #3a76d8);
         color: white;
+        border: none;
+        box-shadow: 3px 3px 8px rgba(0, 0, 0, 0.3);
     }
     
     .btn-primary:hover {
-        background-color: #3a76d8;
+        opacity: 0.9;
     }
     
+    /* Secondary button */
     .btn-secondary {
         background-color: #f8f9fa;
         border: 1px solid #6c757d;
         color: #333;
     }
     
+    /* Danger button with gradient for deletion */
     .btn-danger {
-        background-color: #dc3545;
+        background: linear-gradient(to bottom, #dc3545, #a71d2a);
         color: white;
+        border: none;
+        box-shadow: 3px 3px 8px rgba(0, 0, 0, 0.3);
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+    }
+    
+    .btn-danger:hover {
+        opacity: 0.9;
     }
     
     .btn-icon {
@@ -407,6 +451,7 @@
         font-size: 12px;
         margin-left: 5px;
     }
+
     
     /* Modal styles */
     .modal {
@@ -470,12 +515,23 @@
             });
         });
         
-        // Close modals
-        const cancelButtons = document.querySelectorAll('.cancel-delete');
-        cancelButtons.forEach(button => {
+        // Course deletion modal
+        const openDeleteCourseModal = document.getElementById('openDeleteCourseModal');
+        const deleteCourseModal = document.getElementById('deleteCourseModal');
+        const cancelDeleteButtons = document.querySelectorAll('.cancel-delete');
+        
+        if(openDeleteCourseModal) {
+            openDeleteCourseModal.addEventListener('click', function() {
+                deleteCourseModal.style.display = 'flex';
+            });
+        }
+        
+        // Close modals on cancel buttons
+        cancelDeleteButtons.forEach(button => {
             button.addEventListener('click', function() {
                 deleteTemplateModal.style.display = 'none';
                 deleteFormModal.style.display = 'none';
+                deleteCourseModal.style.display = 'none';
             });
         });
         
@@ -487,7 +543,10 @@
             if (e.target === deleteFormModal) {
                 deleteFormModal.style.display = 'none';
             }
+            if (e.target === deleteCourseModal) {
+                deleteCourseModal.style.display = 'none';
+            }
         });
     });
 </script>
-{% endblock %} 
+{% endblock %}

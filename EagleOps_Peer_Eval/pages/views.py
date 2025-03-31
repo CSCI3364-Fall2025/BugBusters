@@ -562,3 +562,26 @@ def edit_course(request, course_id):
     }
     
     return render(request, 'course_edit.html', context)
+
+@login_required
+def delete_course(request, course_id):
+    """
+    View for deleting an existing course. Only admins can delete courses.
+    """
+    try:
+        course = Course.objects.get(id=course_id)
+    except Course.DoesNotExist:
+        return redirect('courses')
+    
+    user_profile = request.user.userprofile
+
+    # Only admins are allowed to delete a course.
+    if not user_profile.admin:
+        return redirect('courses')
+    
+    if request.method == 'POST':
+        course.delete()
+        return redirect('courses')
+    
+    # Optionally, render a confirmation page if GET request is used.
+    return render(request, 'confirm_delete_course.html', {'course': course})
