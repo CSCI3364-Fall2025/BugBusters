@@ -1,15 +1,6 @@
 from django.contrib.auth.models import User
 from django.db import models
-<<<<<<< HEAD
-from .storage import NullStorage
-class UserProfile(models.Model):
-    user = models.OneToOneField(User, on_delete=models.CASCADE)  # link default user model to custom UserProfile model
-    first_name = models.CharField(max_length=100, blank=True, null=True)  # Store first name
-    last_name = models.CharField(max_length=100, blank=True, null=True)  # Store last name
-    avatar = models.ImageField(upload_to='avatars/', blank=True, null=True)  # Store user avatar
-    bio = models.TextField(blank=True, null=True)  # New field for user bio
-    admin = models.BooleanField(default=False)  # Admin field to denote if user is admin or not
-=======
+
 from django.utils import timezone
 
 class UserProfile(models.Model):
@@ -21,7 +12,6 @@ class UserProfile(models.Model):
     first_name = models.CharField(max_length=100, blank=True, null=True)
     last_name = models.CharField(max_length=100, blank=True, null=True)
     admin = models.BooleanField(default=False)  # Determines if user has admin privileges
->>>>>>> peer-evaluation-forms
 
     def __str__(self):
         return self.user.username

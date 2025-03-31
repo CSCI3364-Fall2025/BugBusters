@@ -33,7 +33,6 @@ urlpatterns = [
     
     # Allauth URLs come after our custom paths
     path("accounts/", include("allauth.urls")),  # Allauth for authentication
-<<<<<<< HEAD
 
     # Path to the teams page
     path('teams/', page_views.teams, name='teams'),
@@ -42,6 +41,3 @@ urlpatterns = [
 
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
-=======
-]
->>>>>>> peer-evaluation-forms
