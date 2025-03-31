@@ -102,6 +102,99 @@ html, body {
 .role.admin { color: red; }
 .role.member { color: green; }
 
+/* ====== Team Selection - Custom Checkbox ====== */
+.team-selection-container {
+    margin-bottom: 30px;
+}
+
+.team-selection-container h3 {
+    font-size: 20px;
+    margin-bottom: 20px;
+    color: #333;
+}
+
+.team-boxes {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    justify-content: flex-start;
+}
+
+.team-box {
+    background: #f9f9f9;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 20px;
+    width: 220px;
+    text-align: center;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    transition: 0.3s;
+}
+
+.team-box:hover {
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+}
+
+.team-name {
+    font-size: 16px;
+    font-weight: bold;
+    color: #333;
+    margin-top: 10px;
+}
+
+/* ====== Custom Checkbox Styles ====== */
+.team-checkbox {
+    position: relative;
+    display: inline-block;
+    cursor: pointer;
+    padding-left: 30px;
+}
+
+.team-checkbox input[type="checkbox"] {
+    position: absolute;
+    opacity: 0;
+    cursor: pointer;
+}
+
+.team-checkbox .checkbox-custom {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 20px;
+    height: 20px;
+    border: 2px solid #007bff;
+    background-color: #fff;
+    border-radius: 4px;
+    transition: all 0.3s ease;
+}
+
+.team-checkbox input[type="checkbox"]:checked + .checkbox-custom {
+    background-color: #007bff;
+    border-color: #007bff;
+}
+
+.team-checkbox input[type="checkbox"]:checked + .checkbox-custom::after {
+    content: '';
+    position: absolute;
+    left: 6px;
+    top: 2px;
+    width: 6px;
+    height: 10px;
+    border: solid white;
+    border-width: 0 3px 3px 0;
+    transform: rotate(45deg);
+}
+
+.team-checkbox:hover .checkbox-custom {
+    background-color: #f1f1f1;
+    border-color: #007bff;
+}
+
+.team-checkbox input[type="checkbox"]:focus + .checkbox-custom {
+    outline: none;
+    box-shadow: 0 0 3px #007bff;
+}
+
 /* ====== Footer ====== */
 footer {
     background: linear-gradient(to right, #222, #111); color: white;

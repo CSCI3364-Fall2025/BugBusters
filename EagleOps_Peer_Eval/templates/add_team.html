@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+
+<div class="page-container">
+    <div class="section">
+        <h2>Manage Teams for {{ course.name }}</h2>
+
+        <!-- Team Selection Form -->
+        <form id="manageTeamsForm" method="post" action="{% url 'update_course_teams' course.id %}">
+            {% csrf_token %}
+            
+            <div class="team-selection-container">
+                <h3>Select Teams:</h3>
+                <div class="team-boxes">
+                    {% for team in all_teams %}
+                        <div class="team-box">
+                            <label class="team-checkbox">
+                                <input type="checkbox" name="teams" value="{{ team.id }}" 
+                                       id="team_{{ team.id }}" {% if team in course.teams.all %}checked{% endif %}>
+                                <span class="checkbox-custom"></span>
+                                <span class="team-name">{{ team.name }}</span>
+                            </label>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+            
+            <button type="submit" class="btn btn-success">Update Teams</button>
+        </form>
+    </div>
+
+    <!-- Current Teams Display -->
+    <div class="team-boxes">
+        <h2>Current Teams</h2>
+        {% if course.teams.all %}
+            {% for team in course.teams.all %}
+                <div class="team-box">
+                    <div class="team-name">{{ team.name }}</div>
+
+                    <!-- Members List -->
+                    <div class="team-members">
+                        <h3>Members:</h3>
+                        <ul class="member-list">
+                            {% for member in team.members.all %}
+                                <li>
+                                    <span class="role {% if member.admin %}admin{% else %}member{% endif %}">
+                                        {{ member.full_name }}
+                                    </span>
+                                </li>
+                            {% empty %}
+                                <li>No members yet.</li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                </div>
+            {% endfor %}
+        {% else %}
+            <p>No teams assigned yet.</p>
+        {% endif %}
+    </div>
+</div>
+
+{% endblock %}

@@ -11,6 +11,7 @@ from .models import Team, Course, FormTemplate, Question, Form, FormResponse, An
 import json
 from django.contrib.auth import logout
 from django.db.utils import IntegrityError
+from django.contrib import messages
 
 def home_view(request):
     if request.method == "POST":
@@ -562,3 +563,26 @@ def edit_course(request, course_id):
     }
     
     return render(request, 'course_edit.html', context)
+
+@login_required
+def add_team_to_course(request, course_id):
+    course = get_object_or_404(Course, id=course_id)
+    all_teams = Team.objects.all() # Fetch all teams in the system
+    
+    return render(request, 'add_team.html', {
+        'course': course,
+        'all_teams': all_teams  # Pass the teams to the template
+    })
+
+def update_course_teams(request, course_id):
+    course = get_object_or_404(Course, id=course_id)
+
+    if request.method == "POST":
+        selected_team_ids = request.POST.getlist("teams")  # Get selected teams
+        selected_teams = Team.objects.filter(id__in=selected_team_ids)  # Fetch teams in course
+        
+        # Update teams
+        course.teams.set(selected_teams)
+        messages.success(request, "Teams updated successfully!")
+
+    return redirect('course_detail', course_id=course.id)

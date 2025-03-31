@@ -16,6 +16,36 @@
     </div>
 
     {% if is_admin %}
+
+    <h2>Assigned Teams</h2>
+    <div class="team-boxes">
+        {% for team in course.teams.all %}
+            <div class="team-box">
+                <div class="team-name">{{ team.name }}</div>
+                <div class="team-members">
+                    <h3>Members:</h3>
+                    <ul class="member-list">
+                        {% for member in team.members.all %}
+                            <li>
+                                <span class="role {% if member.admin %}admin{% else %}member{% endif %}">
+                                    {{ member.full_name }}
+                                </span>
+                            </li>
+                        {% empty %}
+                            <li>No members yet.</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+        {% empty %}
+            <p>No teams assigned yet.</p>
+        {% endfor %}
+    </div>
+
+    <a href="{% url 'add_team_to_course' course.id %}" class="btn btn-success">
+        <i class="fas fa-users"></i> Add Team
+    </a>
+
     <div class="section">
         <div class="section-header">
             <h2>Form Templates</h2>
@@ -199,6 +229,7 @@
         </div>
     </div>
 </div>
+
 {% endblock %}
 
 {% block extra_css %}
@@ -487,6 +518,51 @@
             if (e.target === deleteFormModal) {
                 deleteFormModal.style.display = 'none';
             }
+        });
+    });
+
+    document.addEventListener('DOMContentLoaded', function() {
+        const teamModal = document.getElementById('teamModal');
+        const openTeamModal = document.getElementById('openTeamModal');
+        const closeTeamModal = document.getElementById('closeTeamModal');
+
+        if (openTeamModal) {
+            openTeamModal.addEventListener('click', function() {
+                teamModal.style.display = 'flex';
+            });
+        }
+
+        if (closeTeamModal) {
+            closeTeamModal.addEventListener('click', function() {
+                teamModal.style.display = 'none';
+            });
+        }
+
+        window.addEventListener('click', function(e) {
+            if (e.target === teamModal) {
+                teamModal.style.display = 'none';
+            }
+        });
+
+        // Delete team functionality
+        const deleteTeamButtons = document.querySelectorAll('.delete-team');
+        deleteTeamButtons.forEach(button => {
+            button.addEventListener('click', function(e) {
+                e.preventDefault();
+                const teamId = this.getAttribute('data-id');
+                if (confirm("Are you sure you want to delete this team?")) {
+                    fetch(`/team/delete/${teamId}/`, {
+                        method: "POST",
+                        headers: { "X-CSRFToken": "{{ csrf_token }}" }
+                    }).then(response => {
+                        if (response.ok) {
+                            location.reload();
+                        } else {
+                            alert("Error deleting team.");
+                        }
+                    });
+                }
+            });
         });
     });
 </script>
