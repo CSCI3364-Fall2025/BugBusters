@@ -25,12 +25,15 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path("", page_views.home_view, name="home"),  # Home Page w/ ifs dependent on user authentication
     path("todo/", page_views.todo_view, name="todo"),
+    path("teams/", page_views.teams, name="teams"),
+    path("courses/", page_views.courses, name="courses"),
 
     # Include our custom URLs first so they take precedence 
     path("", include("pages.urls")),
     
     # Allauth URLs come after our custom paths
     path("accounts/", include("allauth.urls")),  # Allauth for authentication
+<<<<<<< HEAD
 
     # Path to the teams page
     path('teams/', page_views.teams, name='teams'),
@@ -39,3 +42,6 @@ urlpatterns = [
 
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+=======
+]
+>>>>>>> peer-evaluation-forms
