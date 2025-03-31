@@ -67,7 +67,12 @@
           <div class="page-title">
             <div class="text-wrapper-11">EagleOps Peer Evaluation</div>
             <p class="text-wrapper-12">
-              Welcome, Joe! Click the buttons below to begin completing feedback forms for your teammates.
+              Welcome, 
+              {% if user.socialaccount_set.count > 0 %}
+                {{ user.socialaccount_set.first.extra_data.given_name }}!
+            {% else %}
+                {{ user.username }}!
+            {% endif %} Click the buttons below to begin completing feedback forms for your teammates.
             </p>
           </div>
         </div>
@@ -80,9 +85,9 @@
               </p>
             </div>
             <div class="button-group">
-              <button class="button-4"><button class="button-5">Begin</button></button>
+              <button class="button-4"><span class="button-5">Begin</span></button>
             </div>
-            <div class="icon-button"><img class="x" src="img/x.svg" /></div>
+            <div class="icon-button"></div>
           </div>
           <div class="text-wrapper-14">Published on 2/13/25</div>
         </div>
@@ -95,26 +100,31 @@
               </p>
             </div>
             <div class="button-group">
-              <button class="button-6"><button class="button-7">Restart</button></button>
-              <button class="button-4"><button class="button-5">Edit Responses</button></button>
+              <button class="button-6"><span class="button-7">Restart</span></button>
+              <button class="button-4"><span class="button-5">Edit Responses</span></button>
             </div>
-            <div class="icon-button"><img class="x" src="img/x.svg" /></div>
+            <div class="icon-button"></div>
           </div>
           <div class="text-wrapper-14">Published on 2/13/25</div>
         </div>
         <div class="overlap-group-2">
           <div class="dialog-body">
             <div class="text">
-              <div class="text-heading">Joe Schmoe (You)</div>
+              <div class="text-heading">
+                {% if user.socialaccount_set.count > 0 %}
+                  {{ user.socialaccount_set.first.extra_data.given_name }}
+                {% else %}
+                  {{ user.username }}
+                {% endif %} (You)</div>
               <p class="body-text">
                 <span class="span">Due in </span> <span class="text-wrapper-13">4 days, 3 hours, and 21 minutes.</span>
               </p>
             </div>
             <div class="button-group">
-              <button class="button-6"><button class="button-7">Restart</button></button>
-              <button class="button-4"><button class="button-5">Edit Responses</button></button>
+              <button class="button-6"><span class="button-7">Restart</span></button>
+              <button class="button-4"><span class="button-5">Edit Responses</span></button>
             </div>
-            <div class="icon-button"><img class="x" src="img/x.svg" /></div>
+            <div class="icon-button"></div>
           </div>
           <div class="text-wrapper-14">Published on 2/13/25</div>
         </div>
