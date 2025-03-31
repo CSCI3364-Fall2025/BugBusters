@@ -6,7 +6,7 @@ from django.db import migrations
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('pages', '0007_merge_20250331_1754'),
+        ("pages", "0007_merge_20250331_1754"),
     ]
 
     operations = [
@@ -17,5 +17,11 @@ class Migration(migrations.Migration):
         migrations.RemoveField(
             model_name='userprofile',
             name='bio',
+            model_name="userprofile",
+            name="avatar",
+        ),
+        migrations.RemoveField(
+            model_name="userprofile",
+            name="bio",
         ),
     ]

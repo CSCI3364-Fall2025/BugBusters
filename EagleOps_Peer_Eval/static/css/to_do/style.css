@@ -7,10 +7,22 @@ html, body {
   font-family: 'Work Sans', sans-serif;  
 }
 
+.container {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  height: 100vh; /* Full viewport height */
+  padding: 10px;
+}
+
 .content {
   flex-grow: 1;
   text-align: center;
   padding: 50px 20px;
+  max-width: 100%;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .landing-page {
@@ -56,7 +68,8 @@ html, body {
   .landing-page .customer-quote {
     display: flex;
     flex-direction: column;
-    height: 133px;
+    /* height: 133px; */
+    height: auto;
     align-items: flex-start;
     gap: var(--variable-collection-spacing-m);
     padding: var(--variable-collection-spacing-SM);
@@ -116,7 +129,8 @@ html, body {
   }
   
   .landing-page .customer-quote-2 {
-    height: 97px;
+    /* height: 133px; */
+    height: auto;
     margin-right: -1.00px;
     display: flex;
     flex-direction: column;
@@ -581,8 +595,9 @@ html, body {
     all: unset;
     box-sizing: border-box;
     position: relative;
-    width: fit-content;
-    margin-top: -1.00px;
+    /* width: fit-content; */
+    /* margin-top: -1.00px; */
+    margin: 0;
     font-family: var(--single-line-body-base-font-family);
     font-weight: var(--single-line-body-base-font-weight);
     color: var(--color-text-brand-on-brand);
@@ -594,15 +609,30 @@ html, body {
   }
   
   .landing-page .icon-button {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    padding: var(--size-space-200);
     position: absolute;
-    top: 8px;
-    left: 556px;
-    border-radius: var(--typography-primitives-scale-06);
-    overflow: hidden;
+    right: 15px;
+    top: 15px;
+    width: 32px;
+    height: 32px;
+    opacity: 0.5;
+  }
+  .landing-page .icon-button:hover {
+    opacity: 1;
+    cursor: pointer;
+  }
+  .landing-page .icon-button:before, .landing-page .icon-button:after {
+    position: absolute;
+    left: 15px;
+    content: ' ';
+    height: 25px;
+    width: 2px;
+    background-color: #333;
+  }
+  .landing-page .icon-button:before {
+    transform: rotate(45deg);
+  }
+  .landing-page .icon-button:after {
+    transform: rotate(-45deg);
   }
   
   .landing-page .x {
@@ -615,7 +645,7 @@ html, body {
     position: absolute;
     width: 280px;
     top: 138px;
-    left: 32px;
+    left: 0px;
     font-family: "Roboto-Light", Helvetica;
     font-weight: 300;
     color: #000000;
