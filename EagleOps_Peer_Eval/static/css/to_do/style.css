@@ -439,7 +439,8 @@ html, body {
     gap: 40px;
     position: absolute;
     top: 50px;
-    left: 298px;
+    left: 50%; /* Moves the left edge to the center of the parent */
+    transform: translateX(-50%); /* Adjusts the element back by half of its width */
   }
   
   .landing-page .page-title {
@@ -506,7 +507,8 @@ html, body {
     position: absolute;
     width: 600px;
     height: 185px;
-    left: 420px;
+    left: 50%; /* Moves the left edge to the center of the parent */
+    transform: translateX(-50%); /* Adjusts the element back by half of its width */
     border-radius: 8px;
   }
   
@@ -683,7 +685,8 @@ html, body {
     position: absolute;
     width: 600px;
     height: 185px;
-    left: 420px;
+    left: 50%; /* Moves the left edge to the center of the parent */
+    transform: translateX(-50%); /* Adjusts the element back by half of its width */
     border-radius: 8px;
   }
   
@@ -725,7 +728,8 @@ html, body {
     position: absolute;
     width: 600px;
     height: 185px;
-    left: 420px;
+    left: 50%; /* Moves the left edge to the center of the parent */
+    transform: translateX(-50%); /* Adjusts the element back by half of its width */
     border-radius: 8px;
   }
   
