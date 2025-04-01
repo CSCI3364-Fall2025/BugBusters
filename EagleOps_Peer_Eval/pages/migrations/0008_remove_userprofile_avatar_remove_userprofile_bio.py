@@ -8,20 +8,13 @@ class Migration(migrations.Migration):
     dependencies = [
         ("pages", "0007_merge_20250331_1754"),
     ]
-
-    operations = [
-        migrations.RemoveField(
-            model_name='userprofile',
-            name='avatar',
-        ),
-        migrations.RemoveField(
-            model_name='userprofile',
-            name='bio',
-            model_name="userprofile",
-            name="avatar",
-        ),
-        migrations.RemoveField(
-            model_name="userprofile",
-            name="bio",
-        ),
-    ]
+operations = [
+    migrations.RemoveField(
+        model_name='userprofile',
+        name='avatar',
+    ),
+    migrations.RemoveField(
+        model_name='userprofile',
+        name='bio',
+    ),
+]
