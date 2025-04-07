@@ -40,7 +40,33 @@ def signout(request):
     return redirect('home')
 
 def todo_view(request):
-    return render(request, "to_do.html")
+    """View for student to select a course then see their forms for that course"""
+    user_profile = request.user.userprofile
+    # Get courses where user is an instructor
+    instructor_courses = Course.objects.filter(instructors=user_profile)
+        
+    # Get courses where user is in a team
+    team_courses = Course.objects.filter(teams__members=user_profile)
+        
+    # Combine the two querysets and remove duplicates
+    course_list = (instructor_courses | team_courses).distinct().order_by('name')
+
+    course_data = []
+
+    #For each course, get the team that the user is a part of and all the forms for that team
+    for course in course_list:
+        teams = course.teams.all()
+        forms = Form.objects.filter(course=course).order_by('-created_at')
+        self_assess = forms.filter(self_assessment = True)
+        course_data.append({
+            'course_name': course.name,
+            'course_code': course.code,
+            'team': teams,
+            'forms': forms,
+            'self_assess': self_assess,
+        })
+
+    return render(request, "to_do.html", {'course_data': course_data})
 
 @login_required
 def teams(request):

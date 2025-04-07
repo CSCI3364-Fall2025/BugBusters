@@ -212,15 +212,6 @@ html, body {
     font-style: var(--subheading-font-style);
   }
   
-  .landing-page .social-icons {
-    display: inline-flex;
-    align-items: flex-start;
-    gap: var(--variable-collection-spacing-XS);
-    position: absolute;
-    top: 112px;
-    left: 80px;
-  }
-  
   .landing-page .buttons-icon {
     position: relative;
     width: 40px;
