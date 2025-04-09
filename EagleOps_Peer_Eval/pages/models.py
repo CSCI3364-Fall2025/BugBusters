@@ -1,5 +1,6 @@
 from django.contrib.auth.models import User
 from django.db import models
+from django.core.exceptions import ValidationError
 
 from django.utils import timezone
 
@@ -152,11 +153,31 @@ class Form(models.Model):
     def __str__(self):
         return self.title
     
+    def clean(self):
+        """
+        Validate form before saving.
+        """
+        super().clean()
+        
+        # Custom validation: for self-assessment, check teams
+        if self.self_assessment:
+            for team in self.teams.all():
+                if team.members.count() < 2:  # Must have at least 2 members to do self-assessment
+                    raise ValidationError(
+                        f"Team '{team.name}' does not have enough members for self-assessment."
+                    )
+                
+        if self.publication_date >= self.closing_date:
+            raise ValidationError("Publication date must be before closing date.")
+    
     def save(self, *args, **kwargs):
         """
         Override save method to automatically update status based on dates.
         Draft status is only changed if the form is not in draft mode.
         """
+
+        self.full_clean()  # Validate the model before saving
+
         # Update status based on dates
         now = timezone.now()
         
