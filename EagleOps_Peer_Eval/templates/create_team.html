@@ -1,0 +1,45 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Create Team{% endblock %}
+
+{% block content %}
+<div class="form-card">
+    <div class="form-card-header">
+        <h1>Create a New Team</h1>
+        <p>Fill in the details below to set up your new team.</p>
+    </div>
+
+    <form method="post">
+        {% csrf_token %}
+        
+        <div class="form-group">
+            {{ form.as_p }}
+        </div>
+
+        <div class="team-selection-container">
+            <h3>Select Users to Add to the Team</h3>
+            <div class="team-boxes">
+                {% for user_profile in user_profiles %}
+                    <div class="team-box">
+                        <label class="team-checkbox">
+                            <input type="checkbox" name="users" value="{{ user_profile.id }}">
+                            <span class="checkbox-custom"></span>
+                            <div class="user-details">
+                                <div class="user-name">{{ user_profile.full_name }}</div>
+                                <div class="user-email">{{ user_profile.email }}</div>
+                            </div>
+                        </label>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <button type="submit" class="btn" style="margin-top: 15px;">Create Team</button>
+    </form>
+
+    <div class="form-card-footer">
+        <a href="{% url 'teams' %}">← Back to Teams</a>
+    </div>
+</div>
+{% endblock %}

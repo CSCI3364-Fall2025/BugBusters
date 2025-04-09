@@ -36,4 +36,7 @@ urlpatterns = [
     # Form submission for managing teams in courses
     path("courses/<int:course_id>/add-team/", views.add_team_to_course, name="add_team_to_course"),
     path("courses/<int:course_id>/update-teams/", views.update_course_teams, name="update_course_teams"),
+
+    #create team
+    path('teams/create/', views.create_team, name='create-team'),
 ] 

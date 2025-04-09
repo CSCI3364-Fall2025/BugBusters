@@ -12,6 +12,7 @@ import json
 from django.contrib.auth import logout
 from django.db.utils import IntegrityError
 from django.contrib import messages
+from .forms import TeamForm
 
 def home_view(request):
     if request.method == "POST":
@@ -641,3 +642,27 @@ def update_course_teams(request, course_id):
         messages.success(request, "Teams updated successfully!")
 
     return redirect('course_detail', course_id=course.id)
+
+def create_team(request):
+    user_profiles = UserProfile.objects.all()  # Get all user profiles
+
+    if request.method == 'POST':
+        form = TeamForm(request.POST)
+        if form.is_valid():
+            # Create the team
+            team_name = form.cleaned_data['name']  # Assuming the team form has a name field
+            team = Team.objects.create(name=team_name)
+            
+            # Get the selected user IDs
+            selected_user_ids = request.POST.getlist('users')  # Get the list of selected user IDs
+            selected_users = UserProfile.objects.filter(id__in=selected_user_ids)
+
+            # Add users to the team
+            team.members.add(*selected_users)  # Add the selected users to the team
+
+            return redirect('teams')  # Redirect to the teams list or wherever you need
+
+    else:
+        form = TeamForm()
+
+    return render(request, 'create_team.html', {'form': form, 'user_profiles': user_profiles})

@@ -507,3 +507,93 @@ label {
     .navbar { padding: 0 10px; }
     .nav-links a { padding: 20px 10px; }
 }
+
+
+/* Styling for the user tiles */
+.team-selection-container {
+    margin-top: 20px;
+}
+
+.team-boxes {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px; /* Adds spacing between the tiles */
+}
+
+.team-box {
+    background-color: #f4f6f9;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 15px;
+    width: 180px;
+    text-align: center;
+    transition: transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
+    cursor: pointer;
+}
+
+.team-box:hover {
+    transform: translateY(-5px); /* Lift the tile on hover */
+    box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+}
+
+.team-checkbox {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+.team-checkbox input[type="checkbox"] {
+    display: none; /* Hide the default checkbox */
+}
+
+.checkbox-custom {
+    width: 25px;
+    height: 25px;
+    border: 2px solid #4a86e8;
+    border-radius: 4px;
+    margin-bottom: 10px;
+    position: relative;
+    transition: background-color 0.3s ease, border-color 0.3s ease;
+}
+
+/* Custom checked state - display check mark */
+.team-checkbox input[type="checkbox"]:checked + .checkbox-custom {
+    background-color: #4a86e8;
+    border-color: #4a86e8;
+}
+
+.team-checkbox input[type="checkbox"]:checked + .checkbox-custom::after {
+    content: '';
+    position: absolute;
+    left: 6px;
+    top: 2px;
+    width: 6px;
+    height: 10px;
+    border: solid white;
+    border-width: 0 3px 3px 0;
+    transform: rotate(45deg);
+}g
+
+/* Hover effect for checkbox */
+.team-checkbox:hover .checkbox-custom {
+    border-color: #357ae8;
+}
+
+/* User details section */
+.user-details {
+    display: flex;
+    flex-direction: column;
+    margin-top: 10px;
+}
+
+.user-name {
+    font-weight: bold;
+    font-size: 14px;
+    color: #333;
+}
+
+.user-email {
+    font-size: 12px;
+    color: #666;
+}

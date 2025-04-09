@@ -1,5 +1,6 @@
 from django import forms
 from allauth.socialaccount.forms import SignupForm
+from .models import Team
 
 class AutoSocialSignupForm(SignupForm):
     """
@@ -19,3 +20,14 @@ class AutoSocialSignupForm(SignupForm):
         user = super().save(request)
         # We can add additional processing here if needed
         return user 
+    
+class TeamForm(forms.ModelForm):
+    """
+    A form for creating or updating a team.
+    """
+    
+    class Meta:
+        model = Team
+        fields = ['name', 
+                  #'members',
+                  ]
