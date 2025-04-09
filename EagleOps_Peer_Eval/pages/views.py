@@ -80,6 +80,7 @@ def teams(request):
     if user.admin:
         # Admins see all teams
         teams = Team.objects.prefetch_related('members__user').all()
+        courses = Course.objects.all()
     else:
         # Non-admins see only their team(s)
         teams = Team.objects.prefetch_related('members__user').filter(members=user)
