@@ -5,142 +5,76 @@
 {% block title %}To Do - EagleOps{% endblock %}
 
 {% block content %}
-  <head>
-    <meta charset="utf-8" />
-    <link rel="stylesheet" href="{% static 'css/styles.css' %}" />
-    <link rel="stylesheet" href="{% static 'css/to_do/globals.css' %}" />
-    <link rel="stylesheet" href="{% static 'css/to_do/styleguide.css' %}" />
-    <link rel="stylesheet" href="{% static 'css/to_do/style.css' %}" />
-  </head>
-  <body>
-    <div class="landing-page">
-      <div class="div">
-        <div class="text-wrapper">Personal Feedback</div>
-        <div class="cards">
-          <div class="customer-quote"><p class="p">“Great work on the latest delivery!”</p></div>
-          <div class="div-wrapper">
-            <p class="text-wrapper-2">“We could’ve used some more of your critical feedback on the slideshow.”</p>
-          </div>
-          <div class="customer-quote-2"><p class="p">“Nice job in our latest pitch!”</p></div>
-        </div>
-        <div class="navigation-footer">
-          <div class="group">
-            <div class="items"><div class="text-wrapper-3">About</div></div>
-          </div>
-          <div class="items-wrapper">
-            <div class="items"><div class="text-wrapper-3">Settings</div></div>
-          </div>
-          <div class="text-wrapper-4">EagleOps Peer Evaluation</div>
-          <!-- <div class="social-icons">
-            <div class="buttons-icon">
-              <div class="icon"><img class="img" src="img/icon-2.svg" /></div>
+  <div class="copy">
+    <div class="page-title">
+      <div class="text-wrapper-11"><h1>EagleOps Peer Evaluation</h1></div>
+      <p class="text-wrapper-12">
+        Welcome, {{ user.userprofile.first_name }}!
+        Click the buttons below to begin completing feedback forms for your teammates.
+      </p>
+    </div>
+  </div>
+
+  <!-- Dropdown -->
+  <div class="section">
+    <div class="dialog-body">
+      <label for="team-select" class="dropdown-label">Select a course and team:</label>
+      <select name="team" id="team-select" class="form-control dropdown-select">
+        <option value="" disabled selected>------</option>
+        {% for item in course_data %}
+          <option value="{{ item.team.id }}">
+            {{ item.course_name }} - {{ item.team.name }}
+          </option>
+        {% endfor %}
+      </select>
+      
+      <div id="forms-container" class="team-boxes">
+        {% for item in course_data %}
+          {% for form in item.forms %}
+            <div class="form-card team-box" data-team-id="{{ item.team.id }}" style="display: none;">
+              <div class="form-card-inner">
+                <div class="form-card-header">
+                  <div class="text-heading">{{ form.title }}</div> 
+                  <p class="body-text">
+                    <span class="span">Due in </span> 
+                    <span class="text-wrapper-13">{{ form.time_left }}</span>
+                  </p>
+                </div>
+                <div class="button-group">
+                  {% if form.status == 'active' %}
+                    <button class="action-button btn-primary"><span class="button-5">Begin</span></button>
+                  {% elif form.status == 'closed' %}
+                    <button class="action-button btn-danger"><span class="button-7">Closed</span></button>
+                  {% else %}
+                    <button class="action-button btn-secondary"><span class="button-7">Scheduled</span></button>
+                  {% endif %}
+                </div>
+                <div class="form-card-footer">
+                  <div class="text-wrapper-14">Published on {{ form.publication_date|date:"M d, Y" }}</div>
+                </div>
+              </div>
             </div>
-            <div class="buttons-icon">
-              <div class="icon"><img class="icon-2" src="img/image.svg" /></div>
-            </div>
-            <div class="buttons-icon">
-              <div class="icon"><img class="icon-3" src="img/icon-3.svg" /></div>
-            </div>
-            <div class="buttons-icon">
-              <div class="icon"><img class="img" src="img/icon.svg" /></div>
-            </div>
-          </div> -->
-          <!-- <img class="divider" src="img/divider.svg" /> -->
-        </div>
-        <!-- <div class="navigation">
-          <div class="items-2">
-            <div class="text-wrapper-5">To Do</div>
-            <div class="text-wrapper-5">Team</div>
-            <div class="text-wrapper-5">Performance</div>
-            <button class="button"><div class="text-wrapper-6">Profile</div></button>
-          </div>
-          <div class="text-wrapper-7">EagleOps Peer Evaluation</div>
-        </div> -->
-        <!-- <div class="section">
-          <div class="buttons">
-            <button class="button-2"><div class="text-wrapper-8">Button</div></button>
-            <button class="button-3"><div class="text-wrapper-9">Secondary button</div></button>
-          </div>
-          <div class="text-wrapper-10">Section heading</div
-        </div> -->
-        <div class="copy">
-          <div class="page-title">
-            <div class="text-wrapper-11">EagleOps Peer Evaluation</div>
-            <p class="text-wrapper-12">
-              Welcome, 
-              {% if user.socialaccount_set.count > 0 %}
-                {{ user.socialaccount_set.first.extra_data.given_name }}!
-            {% else %}
-                {{ user.username }}!
-            {% endif %} Click the buttons below to begin completing feedback forms for your teammates.
-            </p>
-          </div>
-        </div>
-        <div class="overlap-group-1">
-          <div class="dialog-body">
-            <label for="teams">Select a course:</label>
-            <select name="teams" id="teams">
-              <option value="" disabled selected>------</option>
-              {% for course_info in course_data %}
-                <option value="{{ course_info.course.course_code }}">{{ course_info.course.course_name }}</option>
-              {% endfor %}
-            </select>
-          </div>
-        </div>
-        <div class="overlap">
-          <div class="dialog-body">
-            <div class="text">
-              <div class="text-heading">Jane Doe</div>
-              <p class="body-text">
-                <span class="span">Due in </span> <span class="text-wrapper-13">2 days, 3 hours, and 21 minutes.</span>
-              </p>
-            </div>
-            <div class="button-group">
-              <button class="button-4"><span class="button-5">Begin</span></button>
-            </div>
-            <div class="icon-button"></div>
-          </div>
-          <div class="text-wrapper-14">Published on 2/13/25</div>
-        </div>
-        <div class="overlap-group">
-          <div class="dialog-body">
-            <div class="text">
-              <div class="text-heading">John Doe</div>
-              <p class="body-text">
-                <span class="span">Due in </span> <span class="text-wrapper-13">2 days, 3 hours, and 21 minutes.</span>
-              </p>
-            </div>
-            <div class="button-group">
-              <button class="button-6"><span class="button-7">Restart</span></button>
-              <button class="button-4"><span class="button-5">Edit Responses</span></button>
-            </div>
-            <div class="icon-button"></div>
-          </div>
-          <div class="text-wrapper-14">Published on 2/13/25</div>
-        </div>
-        <div class="overlap-group-2">
-          <div class="dialog-body">
-            <div class="text">
-              <div class="text-heading">
-                {% if user.socialaccount_set.count > 0 %}
-                  {{ user.socialaccount_set.first.extra_data.given_name }}
-                {% else %}
-                  {{ user.username }}
-                {% endif %} (You)</div>
-              <p class="body-text">
-                <span class="span">Due in </span> <span class="text-wrapper-13">4 days, 3 hours, and 21 minutes.</span>
-              </p>
-            </div>
-            <div class="button-group">
-              <button class="button-6"><span class="button-7">Restart</span></button>
-              <button class="button-4"><span class="button-5">Edit Responses</span></button>
-            </div>
-            <div class="icon-button"></div>
-          </div>
-          <div class="text-wrapper-14">Published on 2/13/25</div>
-        </div>
+          {% endfor %}
+        {% endfor %}
       </div>
     </div>
-  </body>
+  </div>
 
+  <!-- JavaScript to control form visibility -->
+  <script>
+    const teamSelect = document.getElementById('team-select');
+    const formCards = document.querySelectorAll('.form-card');
+
+    teamSelect.addEventListener('change', function() {
+      const selectedTeamId = this.value;
+
+      formCards.forEach(card => {
+        if (card.getAttribute('data-team-id') === selectedTeamId) {
+          card.style.display = 'block';
+        } else {
+          card.style.display = 'none';
+        }
+      });
+    });
+  </script>
 {% endblock %}

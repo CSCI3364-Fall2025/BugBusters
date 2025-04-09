@@ -3,6 +3,7 @@ from django.db import models
 from django.core.exceptions import ValidationError
 
 from django.utils import timezone
+from datetime import timedelta
 
 class UserProfile(models.Model):
     """
@@ -209,6 +210,23 @@ class Form(models.Model):
         
         completed = self.responses.filter(submitted=True).count()
         return f"{completed}/{total_expected} completed"
+    
+    def time_left(self):
+        """
+        Returns the time left until the closing date in a human-readable format.
+        """
+        now = timezone.now()
+        time_left = self.closing_date - now
+        
+        if time_left <= timedelta(0):  # If the time left is 0 or negative (already closed)
+            return "Closed"
+        
+        days_left = time_left.days
+        hours_left = time_left.seconds // 3600
+        minutes_left = (time_left.seconds // 60) % 60
+        
+        # Format the remaining time as "X days, Y hours, Z minutes"
+        return f"{days_left} days, {hours_left} hours, and {minutes_left} minutes."
 
 class FormResponse(models.Model):
     """
