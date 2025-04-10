@@ -449,7 +449,7 @@ def form_create_edit(request, course_id, form_id=None):
         form = get_object_or_404(Form, id=form_id, course=course)
     
     templates = FormTemplate.objects.filter(course=course)
-    teams = Team.objects.filter(courses=course)
+    teams = Team.objects.filter(course=course)
     
     if request.method == 'POST':
         try:
