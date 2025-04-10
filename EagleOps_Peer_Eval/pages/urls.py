@@ -16,6 +16,8 @@ urlpatterns = [
     path('signin/', views.signin, name='signin'),
     path('signout/', views.signout, name='signout'),
     path('profile/', views.profile, name='profile'),
+    path('courses/', views.courses, name='courses'),
+    path('courses/join/', views.join_course, name='join_course'),
     path('courses/<int:course_id>/', views.course_detail, name='course_detail'),
     path('courses/create/', views.create_course, name='create_course'),
     path('courses/<int:course_id>/edit/', views.edit_course, name='edit_course'),
@@ -25,6 +27,7 @@ urlpatterns = [
     path('courses/<int:course_id>/templates/<int:template_id>/edit/', views.template_create_edit, name='template_edit'),
     path('courses/<int:course_id>/templates/<int:template_id>/duplicate/', views.template_duplicate, name='template_duplicate'),
     path('courses/<int:course_id>/templates/<int:template_id>/delete/', views.template_delete, name='template_delete'),
+    path('courses/<int:course_id>/templates/<int:template_id>/preview/', views.template_preview, name='template_preview'),
     
     # Form management URLs
     path('courses/<int:course_id>/forms/new/', views.form_create_edit, name='form_create'),
@@ -32,11 +35,9 @@ urlpatterns = [
     path('courses/<int:course_id>/forms/<int:form_id>/publish/', views.form_publish, name='form_publish'),
     path('courses/<int:course_id>/forms/<int:form_id>/unpublish/', views.form_unpublish, name='form_unpublish'),
     path('courses/<int:course_id>/forms/<int:form_id>/delete/', views.form_delete, name='form_delete'),
+    path('courses/<int:course_id>/forms/<int:form_id>/preview/', views.form_preview, name='form_preview'),
     
     # Form submission for managing teams in courses
-    path("courses/<int:course_id>/add-team/", views.add_team_to_course, name="add_team_to_course"),
-    path("courses/<int:course_id>/update-teams/", views.update_course_teams, name="update_course_teams"),
-
-    #create team
-    path('teams/create/', views.create_team, name='create-team'),
+    path("courses/<int:course_id>/teams/create/", views.create_team, name="create_team"),
+    path("teams/<int:team_id>/edit/", views.edit_team, name="edit_team"),
 ] 

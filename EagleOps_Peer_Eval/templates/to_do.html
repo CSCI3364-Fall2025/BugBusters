@@ -28,6 +28,39 @@
         {% endfor %}
       </select>
       
+      <!-- Join Course Section -->
+      <div class="join-course-container">
+        <button id="show-join-course" class="btn btn-outline">+ Join a Course</button>
+        
+        <div id="join-course-form" style="display: none;">
+          <div class="join-course-header">
+            <h3>Join a Course</h3>
+            <button id="hide-join-course" class="btn-icon"><i class="fas fa-times"></i></button>
+          </div>
+          
+          {% if join_error_message %}
+          <div class="error-message">
+            {{ join_error_message }}
+          </div>
+          {% endif %}
+          
+          {% if join_success_message %}
+          <div class="success-message">
+            {{ join_success_message }}
+          </div>
+          {% endif %}
+          
+          <form method="post" action="{% url 'join_course' %}" class="join-course-form">
+            {% csrf_token %}
+            <div class="form-group">
+              <label for="join-code">Course Join Code</label>
+              <input type="text" id="join-code" name="join_code" class="form-control" placeholder="Enter code (e.g., AB12CD34)" required>
+            </div>
+            <button type="submit" class="btn btn-primary">Join</button>
+          </form>
+        </div>
+      </div>
+      
       <div id="forms-container" class="team-boxes">
         {% for item in course_data %}
           {% for form in item.forms %}
@@ -76,5 +109,139 @@
         }
       });
     });
+    
+    // Join course form toggle
+    document.getElementById('show-join-course').addEventListener('click', function() {
+      document.getElementById('join-course-form').style.display = 'block';
+      this.style.display = 'none';
+    });
+    
+    document.getElementById('hide-join-course').addEventListener('click', function() {
+      document.getElementById('join-course-form').style.display = 'none';
+      document.getElementById('show-join-course').style.display = 'block';
+    });
   </script>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+  /* Existing styles */
+  
+  /* Join Course Styles */
+  .join-course-container {
+    margin: 20px 0;
+  }
+  
+  .btn-outline {
+    background-color: transparent;
+    border: 1px dashed #4a86e8;
+    color: #4a86e8;
+    padding: 8px 16px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  
+  .btn-outline:hover {
+    background-color: #f0f5ff;
+  }
+  
+  #join-course-form {
+    background-color: #f8f9fa;
+    border-radius: 8px;
+    padding: 15px;
+    border: 1px solid #dee2e6;
+    margin-top: 10px;
+  }
+  
+  .join-course-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+  }
+  
+  .join-course-header h3 {
+    margin: 0;
+    font-size: 18px;
+    color: #333;
+  }
+  
+  .btn-icon {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: #6c757d;
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+  }
+  
+  .btn-icon:hover {
+    background-color: #e9ecef;
+    color: #343a40;
+  }
+  
+  .join-course-form {
+    margin-top: 15px;
+  }
+  
+  .form-group {
+    margin-bottom: 15px;
+  }
+  
+  .form-group label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: 500;
+  }
+  
+  .form-control {
+    width: 100%;
+    padding: 8px 12px;
+    border: 1px solid #ced4da;
+    border-radius: 4px;
+    font-size: 16px;
+  }
+  
+  .btn-primary {
+    background-color: #4a86e8;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 4px;
+    cursor: pointer;
+  }
+  
+  .btn-primary:hover {
+    background-color: #3a76d8;
+  }
+  
+  .error-message {
+    background-color: #f8d7da;
+    color: #721c24;
+    padding: 10px;
+    border-radius: 4px;
+    margin-bottom: 15px;
+    border: 1px solid #f5c6cb;
+  }
+  
+  .success-message {
+    background-color: #d4edda;
+    color: #155724;
+    padding: 10px;
+    border-radius: 4px;
+    margin-bottom: 15px;
+    border: 1px solid #c3e6cb;
+  }
+  
+  .dropdown-label {
+    margin-top: 5px;
+    display: block;
+    font-weight: 500;
+  }
+</style>
 {% endblock %}

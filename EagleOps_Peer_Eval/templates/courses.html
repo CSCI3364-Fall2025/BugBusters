@@ -5,30 +5,46 @@
 
 {% block content %}
 <div class="page-container">
-    <h1>Courses</h1>
-    
-    {% if user.userprofile.admin %}
-    <div class="action-bar">
-        <a href="{% url 'create_course' %}" class="action-button">Create New Course</a>
+    <div class="page-header">
+        <h1>Courses</h1>
+        <div class="header-actions">
+            {% if is_admin %}
+            <a href="{% url 'create_course' %}" class="btn btn-primary">Create Course</a>
+            {% else %}
+            <a href="{% url 'join_course' %}" class="btn btn-primary">Join Course</a>
+            {% endif %}
+        </div>
     </div>
-    {% endif %}
     
     {% if courses %}
     <div class="course-grid">
         {% for course in courses %}
-        <a class="course-card" href="{% url 'course_detail' course_id=course.id %}">
-            <h2>{{ course.name }}</h2>
-            <div class="course-code">{{ course.code }}</div>
+        <div class="course-card">
+            <a class="course-link" href="{% url 'course_detail' course_id=course.id %}">
+                <h2>{{ course.name }}</h2>
+                <div class="course-code">{{ course.code }}</div>
+            </a>
             
-            {% if course.teams.count %}
-            <div class="course-details">
-                <div class="detail-item">
-                    <i class="fas fa-users"></i>
-                    <span>{{ course.teams.count }} Team{{ course.teams.count|pluralize }}</span>
+            {% if not is_admin %}
+                <div class="course-teams">
+                    <h3>My Teams</h3>
+                    <ul class="teams-list">
+                        {% for team in course.user_teams %}
+                            <li>{{ team.name }}</li>
+                        {% empty %}
+                            <li class="no-teams">Not assigned to any teams</li>
+                        {% endfor %}
+                    </ul>
                 </div>
-            </div>
+            {% elif course.teams.count %}
+                <div class="course-details">
+                    <div class="detail-item">
+                        <i class="fas fa-users"></i>
+                        <span>{{ course.teams.count }} Team{{ course.teams.count|pluralize }}</span>
+                    </div>
+                </div>
             {% endif %}
-        </a>
+        </div>
         {% endfor %}
     </div>
     {% else %}
@@ -78,13 +94,18 @@
         border-radius: 8px;
         padding: 20px;
         box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-        cursor: pointer;
         transition: transform 0.2s, box-shadow 0.2s;
     }
     
     .course-card:hover {
         transform: translateY(-5px);
         box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+    }
+    
+    .course-link {
+        color: inherit;
+        text-decoration: none;
+        display: block;
     }
     
     .course-card h2 {
@@ -112,6 +133,39 @@
         align-items: center;
         gap: 5px;
         color: #666;
+    }
+    
+    .course-teams {
+        margin-top: 15px;
+        border-top: 1px solid #eee;
+        padding-top: 15px;
+    }
+    
+    .course-teams h3 {
+        font-size: 16px;
+        margin-top: 0;
+        margin-bottom: 10px;
+        color: #555;
+    }
+    
+    .teams-list {
+        list-style-type: none;
+        padding: 0;
+        margin: 0;
+    }
+    
+    .teams-list li {
+        padding: 5px 0;
+        border-bottom: 1px dashed #eee;
+    }
+    
+    .teams-list li:last-child {
+        border-bottom: none;
+    }
+    
+    .no-teams {
+        color: #999;
+        font-style: italic;
     }
     
     .no-content {

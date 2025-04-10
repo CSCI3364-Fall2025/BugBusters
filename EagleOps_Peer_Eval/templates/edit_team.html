@@ -1,13 +1,13 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block title %}Create Team - {{ course.name }}{% endblock %}
+{% block title %}Edit Team - {{ team.name }}{% endblock %}
 
 {% block content %}
 <div class="form-card">
     <div class="form-card-header">
-        <h1>Create a New Team</h1>
-        <p>Create a team for <strong>{{ course.name }}</strong> and assign members.</p>
+        <h1>Edit Team: {{ team.name }}</h1>
+        <p>Update team details for <strong>{{ course.name }}</strong> course.</p>
     </div>
 
     <form method="post">
@@ -18,12 +18,12 @@
         </div>
 
         <div class="team-selection-container">
-            <h3>Select Users to Add to the Team</h3>
+            <h3>Team Members</h3>
             <div class="team-boxes">
                 {% for user_profile in user_profiles %}
                     <div class="team-box">
                         <label class="team-checkbox">
-                            <input type="checkbox" name="users" value="{{ user_profile.id }}">
+                            <input type="checkbox" name="users" value="{{ user_profile.id }}" {% if user_profile.id in selected_user_ids %}checked{% endif %}>
                             <span class="checkbox-custom"></span>
                             <div class="user-details">
                                 <div class="user-name">{{ user_profile.full_name }}</div>
@@ -37,7 +37,7 @@
             </div>
         </div>
 
-        <button type="submit" class="btn btn-primary" style="margin-top: 15px;">Create Team</button>
+        <button type="submit" class="btn btn-primary" style="margin-top: 15px;">Save Changes</button>
     </form>
 
     <div class="form-card-footer">
@@ -175,4 +175,4 @@
         border-color: #0062cc;
     }
 </style>
-{% endblock %}
+{% endblock %} 

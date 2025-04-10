@@ -24,10 +24,10 @@ class AutoSocialSignupForm(SignupForm):
 class TeamForm(forms.ModelForm):
     """
     A form for creating or updating a team.
+    The course field is excluded as it's set in the view.
     """
     
     class Meta:
         model = Team
-        fields = ['name', 
-                  #'members',
-                  ]
+        fields = ['name']
+        exclude = ['course']  # Course is set programmatically in the view

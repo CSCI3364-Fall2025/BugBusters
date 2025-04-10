@@ -12,6 +12,15 @@
             </a>
             <h1>{{ course.name }}</h1>
             <div class="course-code">{{ course.code }}</div>
+            {% if is_admin or is_instructor %}
+            <div class="join-code-container">
+                <span class="join-code-label">Join Code:</span>
+                <span class="join-code">{{ course.course_join_code }}</span>
+                <button class="btn-icon copy-code" onclick="copyJoinCode()" title="Copy Join Code">
+                    <i class="fas fa-copy"></i>
+                </button>
+            </div>
+            {% endif %}
         </div>
         {% if is_admin %}
             <div class="delete-button-container">
@@ -25,40 +34,62 @@
 
     {% if is_admin %}
 
-    <h2>Assigned Teams</h2>
-    <div class="team-boxes">
-        {% for team in course.teams.all %}
-            <div class="team-box">
-                <div class="team-name">{{ team.name }}</div>
-                <div class="team-members">
-                    <h3>Members:</h3>
-                    <ul class="member-list">
-                        {% for member in team.members.all %}
-                            <li>
-                                <span class="role {% if member.admin %}admin{% else %}member{% endif %}">
-                                    {{ member.full_name }}
-                                </span>
-                            </li>
-                        {% empty %}
-                            <li>No members yet.</li>
-                        {% endfor %}
-                    </ul>
-                </div>
+    <div class="section">
+        <div class="section-header">
+            <h2>Team Management</h2>
+            <div class="header-actions">
+                <a href="{% url 'create_team' course.id %}" class="btn btn-primary">
+                    <i class="fas fa-plus"></i> Create New Team
+                </a>
             </div>
-        {% empty %}
-            <p>No teams assigned yet.</p>
-        {% endfor %}
-    </div>
+        </div>
 
-    <a href="{% url 'add_team_to_course' course.id %}" class="btn btn-success">
-        <i class="fas fa-users"></i> Edit Teams
-    </a>
+        <div class="team-management">
+            {% if teams %}
+                <div class="team-grid">
+                    {% for team in teams %}
+                        <div class="team-card">
+                            <div class="team-card-header">
+                                <h3 class="team-name">{{ team.name }}</h3>
+                            </div>
+                            <div class="team-members">
+                                <h4>Members ({{ team.members.count }})</h4>
+                                <ul class="member-list">
+                                    {% for member in team.members.all|slice:":5" %}
+                                        <li>
+                                            <span class="member-name {% if member.admin %}admin{% endif %}">
+                                                {{ member.full_name }}
+                                            </span>
+                                        </li>
+                                    {% empty %}
+                                        <li class="no-members">No members assigned</li>
+                                    {% endfor %}
+                                    {% if team.members.count > 5 %}
+                                        <li class="more-members">+{{ team.members.count|add:"-5" }} more</li>
+                                    {% endif %}
+                                </ul>
+                            </div>
+                            <div class="team-actions">
+                                <a href="{% url 'edit_team' team.id %}" class="btn-icon edit-team" title="Edit Team">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="no-teams">
+                    <p>No teams have been created yet for this course. Create your first team to get started.</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
 
     <div class="section">
         <div class="section-header">
             <h2>Form Templates</h2>
             <a href="{% url 'template_create' course.id %}" class="btn btn-primary">
-                <i class="fas fa-plus" style="margin-right: 10px;"></i> Create New Template
+                <i class="fas fa-plus"></i> Create New Template
             </a>
         </div>
         
@@ -207,63 +238,13 @@
         {% endif %}
     </div>
     {% endif %}
-
-    <!-- Delete confirmation modals -->
-    <div id="deleteTemplateModal" class="modal">
-        <div class="modal-content">
-            <h3>Confirm Deletion</h3>
-            <p>Are you sure you want to delete this template? This action cannot be undone.</p>
-            <div class="modal-actions">
-                <button class="btn btn-secondary cancel-delete">Cancel</button>
-                <form id="deleteTemplateForm" method="post" action="">
-                    {% csrf_token %}
-                    <button type="submit" class="btn btn-danger">Delete</button>
-                </form>
-            </div>
-        </div>
-    </div>
-
-    <div id="deleteFormModal" class="modal">
-        <div class="modal-content">
-            <h3>Confirm Deletion</h3>
-            <p>Are you sure you want to delete this form? All responses will be permanently lost.</p>
-            <div class="modal-actions">
-                <button class="btn btn-secondary cancel-delete">Cancel</button>
-                <form id="deleteFormForm" method="post" action="">
-                    {% csrf_token %}
-                    <button type="submit" class="btn btn-danger">Delete</button>
-                </form>
-            </div>
-        </div>
-    </div>
-
-    <!-- Delete Course Modal (Admin Only) -->
-    {% if is_admin %}
-    <div id="deleteCourseModal" class="modal">
-        <div class="modal-content">
-            <h3>Confirm Course Deletion</h3>
-            <p>Are you sure you want to delete the course "{{ course.name }}"? This action cannot be undone.</p>
-            <div class="modal-actions">
-                <button class="btn btn-secondary cancel-delete">Cancel</button>
-                <form id="deleteCourseForm" method="post" action="{% url 'delete_course' course_id=course.id %}">
-                    {% csrf_token %}
-                    <button type="submit" class="btn btn-danger">Delete Course</button>
-                </form>
-            </div>
-        </div>
-    </div>
-    {% endif %}
 </div>
 
 {% endblock %}
 
 {% block extra_css %}
 <style>
-    .delete-button-container {
-        display: flex;
-        justify-content: flex-start;
-        margin-left: -40px;
-    }
+    /* Page Layout */
     .page-container {
         max-width: 1200px;
         margin: 0 auto;
@@ -273,36 +254,54 @@
     .page-header {
         display: flex;
         justify-content: space-between;
-        align-items: center;
+        align-items: flex-start;
         margin-bottom: 30px;
     }
     
+    .header-left {
+        flex: 1;
+    }
+    
     .back-link {
-        display: block;
+        display: inline-block;
         margin-bottom: 10px;
-        color: #4a86e8;
+        color: #6c757d;
         text-decoration: none;
     }
     
     .back-link:hover {
-        text-decoration: underline;
+        color: #343a40;
     }
     
     .course-code {
-        background-color: #f0f0f0;
+        display: inline-block;
+        background-color: #e9ecef;
         padding: 5px 10px;
         border-radius: 4px;
-        display: inline-block;
-        margin: 10px 0;
-        font-size: 0.9em;
+        margin-top: 5px;
+        font-size: 14px;
     }
     
+    .join-code-container {
+        margin-top: 10px;
+    }
+    
+    .join-code-label {
+        font-weight: 500;
+        margin-right: 5px;
+    }
+    
+    .join-code {
+        background-color: #f8f9fa;
+        padding: 4px 8px;
+        border-radius: 4px;
+        border: 1px solid #dee2e6;
+        font-family: monospace;
+    }
+    
+    /* Team Management Section */
     .section {
-        background-color: white;
-        border-radius: 8px;
-        padding: 24px;
-        margin-bottom: 30px;
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        margin-bottom: 40px;
     }
     
     .section-header {
@@ -310,71 +309,239 @@
         justify-content: space-between;
         align-items: center;
         margin-bottom: 20px;
-        padding-bottom: 10px;
-        border-bottom: 1px solid #eee;
     }
     
-    .btn, .btn-icon {
-        display: inline-flex;
+    .team-management {
+        margin-bottom: 30px;
+    }
+    
+    .team-filters {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 20px;
+    }
+    
+    .filter-btn {
+        padding: 8px 16px;
+        background-color: #f8f9fa;
+        border: 1px solid #dee2e6;
+        border-radius: 4px;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+    
+    .filter-btn.active {
+        background-color: #007bff;
+        color: white;
+        border-color: #007bff;
+    }
+    
+    .team-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        gap: 20px;
+        margin-bottom: 20px;
+    }
+    
+    .team-card {
+        background-color: white;
+        border: 1px solid #dee2e6;
+        border-radius: 8px;
+        overflow: hidden;
+        transition: all 0.2s;
+    }
+    
+    .team-card:hover {
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        transform: translateY(-3px);
+    }
+    
+    .team-card.assigned {
+        border-color: #28a745;
+    }
+    
+    .team-card-header {
+        display: flex;
+        justify-content: space-between;
         align-items: center;
-        justify-content: center;
+        padding: 15px;
+        background-color: #f8f9fa;
+        border-bottom: 1px solid #dee2e6;
+    }
+    
+    .team-name {
+        margin: 0;
+        font-size: 18px;
+        font-weight: 500;
+    }
+    
+    .team-status {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+    
+    .status-badge {
+        padding: 3px 8px;
+        border-radius: 12px;
+        font-size: 12px;
+        font-weight: 500;
+    }
+    
+    .status-badge.assigned {
+        background-color: #d4edda;
+        color: #155724;
+    }
+    
+    .status-badge.unassigned {
+        background-color: #f8f9fa;
+        color: #6c757d;
+    }
+    
+    .team-checkbox {
+        width: 18px;
+        height: 18px;
+        cursor: pointer;
+    }
+    
+    .team-members {
+        padding: 15px;
+    }
+    
+    .team-members h4 {
+        margin-top: 0;
+        margin-bottom: 10px;
+        font-size: 14px;
+        color: #6c757d;
+    }
+    
+    .member-list {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+    
+    .member-list li {
+        padding: 5px 0;
+        border-bottom: 1px solid #f8f9fa;
+    }
+    
+    .member-list li:last-child {
+        border-bottom: none;
+    }
+    
+    .member-name.admin {
+        font-weight: 500;
+        color: #007bff;
+    }
+    
+    .no-members {
+        color: #6c757d;
+        font-style: italic;
+    }
+    
+    .more-members {
+        color: #6c757d;
+        font-style: italic;
+        text-align: center;
+    }
+    
+    .team-actions {
+        display: flex;
+        justify-content: flex-end;
+        padding: 10px 15px;
+        background-color: #f8f9fa;
+        border-top: 1px solid #dee2e6;
+    }
+    
+    .form-actions {
+        margin-top: 20px;
+        display: flex;
+        justify-content: flex-end;
+    }
+    
+    .no-teams {
+        grid-column: 1 / -1;
+        text-align: center;
+        padding: 40px;
+        background-color: #f8f9fa;
+        border-radius: 8px;
+        color: #6c757d;
+    }
+    
+    /* Buttons */
+    .btn {
+        display: inline-block;
+        font-weight: 400;
+        text-align: center;
+        white-space: nowrap;
+        vertical-align: middle;
+        user-select: none;
+        border: 1px solid transparent;
+        padding: 0.375rem 0.75rem;
+        font-size: 1rem;
+        line-height: 1.5;
+        border-radius: 0.25rem;
+        transition: all 0.15s ease-in-out;
         text-decoration: none;
         cursor: pointer;
-        transition: all 0.2s ease;
     }
     
-    .btn {
-        padding: 8px 16px;
-        border-radius: 4px;
-        font-size: 14px;
-    }
-    
-    /* Primary button (plus) */
     .btn-primary {
-        background: linear-gradient(to bottom, #4a86e8, #3a76d8);
-        color: white;
-        border: none;
-        box-shadow: 3px 3px 8px rgba(0, 0, 0, 0.3);
+        color: #fff;
+        background-color: #007bff;
+        border-color: #007bff;
     }
     
     .btn-primary:hover {
-        opacity: 0.9;
+        background-color: #0069d9;
+        border-color: #0062cc;
     }
     
-    /* Secondary button */
-    .btn-secondary {
-        background-color: #f8f9fa;
-        border: 1px solid #6c757d;
-        color: #333;
+    .btn-success {
+        color: #fff;
+        background-color: #28a745;
+        border-color: #28a745;
     }
     
-    /* Danger button with gradient for deletion */
+    .btn-success:hover {
+        background-color: #218838;
+        border-color: #1e7e34;
+    }
+    
     .btn-danger {
-        background: linear-gradient(to bottom, #dc3545, #a71d2a);
-        color: white;
-        border: none;
-        box-shadow: 3px 3px 8px rgba(0, 0, 0, 0.3);
-        display: inline-flex;
-        align-items: center;
-        gap: 8px;
+        color: #fff;
+        background-color: #dc3545;
+        border-color: #dc3545;
     }
     
     .btn-danger:hover {
-        opacity: 0.9;
+        background-color: #c82333;
+        border-color: #bd2130;
     }
     
     .btn-icon {
-        width: 32px;
-        height: 32px;
-        border-radius: 4px;
-        color: #555;
+        color: #6c757d;
+        padding: 5px;
+        border-radius: 50%;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.15s ease-in-out;
+        text-decoration: none;
     }
     
     .btn-icon:hover {
-        background-color: #f0f0f0;
-        color: #000;
+        color: #343a40;
+        background-color: #e9ecef;
     }
     
+    .header-actions {
+        display: flex;
+        gap: 10px;
+    }
+    
+    /* Table Styles */
     .table-responsive {
         overflow-x: auto;
     }
@@ -385,25 +552,34 @@
     }
     
     .data-table th, .data-table td {
-        padding: 12px;
+        padding: 12px 15px;
         text-align: left;
-        border-bottom: 1px solid #eee;
+        border-bottom: 1px solid #dee2e6;
     }
     
     .data-table th {
-        font-weight: 600;
-        color: #555;
+        background-color: #f8f9fa;
+        font-weight: 500;
     }
     
-    .data-table tbody tr:hover {
-        background-color: #f9f9f9;
+    .data-table tr:hover {
+        background-color: #f8f9fa;
     }
     
-    .actions {
-        display: flex;
-        gap: 8px;
+    .data-table .actions {
+        white-space: nowrap;
     }
     
+    /* Others */
+    .no-content {
+        text-align: center;
+        padding: 40px;
+        background-color: #f8f9fa;
+        border-radius: 8px;
+        color: #6c757d;
+    }
+    
+    /* Status badges */
     .status-badge {
         display: inline-block;
         padding: 4px 8px;
@@ -412,217 +588,70 @@
         font-weight: 500;
     }
     
-    .status-draft {
+    .status-badge.status-draft {
         background-color: #e9ecef;
         color: #495057;
     }
     
-    .status-scheduled {
-        background-color: #cfe2ff;
-        color: #0a58ca;
+    .status-badge.status-scheduled {
+        background-color: #cce5ff;
+        color: #004085;
     }
     
-    .status-active {
-        background-color: #d1e7dd;
-        color: #198754;
+    .status-badge.status-active {
+        background-color: #d4edda;
+        color: #155724;
     }
     
-    .status-closed {
-        background-color: #fff3cd;
-        color: #664d03;
-    }
-    
-    .publish-btn {
-        color: #198754;
-    }
-    
-    .unpublish-btn {
-        color: #dc3545;
-    }
-    
-    .no-content {
-        text-align: center;
-        padding: 30px;
-        color: #6c757d;
-        background-color: #f8f9fa;
-        border-radius: 4px;
-    }
-    
-    .teams-container {
-        display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-        gap: 20px;
-    }
-    
-    .team-card {
-        padding: 15px;
-        border-radius: 8px;
-        border: 1px solid #eee;
-    }
-    
-    .team-members {
-        list-style: none;
-        padding: 0;
-    }
-    
-    .team-members li {
-        padding: 8px 0;
-        border-bottom: 1px solid #f0f0f0;
-    }
-    
-    .team-members li:last-child {
-        border-bottom: none;
-    }
-    
-    .badge {
-        background-color: #4a86e8;
-        color: white;
-        padding: 2px 6px;
-        border-radius: 4px;
-        font-size: 12px;
-        margin-left: 5px;
-    }
-
-    
-    /* Modal styles */
-    .modal {
-        display: none;
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background-color: rgba(0, 0, 0, 0.5);
-        z-index: 1000;
-        justify-content: center;
-        align-items: center;
-    }
-    
-    .modal-content {
-        background-color: white;
-        padding: 20px;
-        border-radius: 8px;
-        max-width: 500px;
-        width: 100%;
-    }
-    
-    .modal-actions {
-        display: flex;
-        justify-content: flex-end;
-        gap: 10px;
-        margin-top: 20px;
+    .status-badge.status-closed {
+        background-color: #f8d7da;
+        color: #721c24;
     }
 </style>
-{% endblock %}
 
-{% block extra_js %}
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        // Template deletion
-        const deleteTemplateButtons = document.querySelectorAll('.delete-template');
-        const deleteTemplateModal = document.getElementById('deleteTemplateModal');
-        const deleteTemplateForm = document.getElementById('deleteTemplateForm');
+        // Copy join code functionality
+        window.copyJoinCode = function() {
+            const joinCode = document.querySelector('.join-code').innerText;
+            navigator.clipboard.writeText(joinCode).then(function() {
+                alert('Join code copied to clipboard!');
+            });
+        };
         
+        // Delete template confirmation
+        const deleteTemplateButtons = document.querySelectorAll('.delete-template');
         deleteTemplateButtons.forEach(button => {
             button.addEventListener('click', function(e) {
                 e.preventDefault();
                 const templateId = this.getAttribute('data-id');
-                deleteTemplateForm.action = "{% url 'template_delete' course.id 0 %}".replace('0', templateId);
-                deleteTemplateModal.style.display = 'flex';
+                if (confirm('Are you sure you want to delete this template? This action cannot be undone.')) {
+                    window.location.href = `{% url 'course_detail' course.id %}templates/${templateId}/delete/`;
+                }
             });
         });
         
-        // Form deletion
+        // Delete form confirmation
         const deleteFormButtons = document.querySelectorAll('.delete-form');
-        const deleteFormModal = document.getElementById('deleteFormModal');
-        const deleteFormForm = document.getElementById('deleteFormForm');
-        
         deleteFormButtons.forEach(button => {
             button.addEventListener('click', function(e) {
                 e.preventDefault();
                 const formId = this.getAttribute('data-id');
-                deleteFormForm.action = "{% url 'form_delete' course.id 0 %}".replace('0', formId);
-                deleteFormModal.style.display = 'flex';
-            });
-        });
-        
-        // Course deletion modal
-        const openDeleteCourseModal = document.getElementById('openDeleteCourseModal');
-        const deleteCourseModal = document.getElementById('deleteCourseModal');
-        const cancelDeleteButtons = document.querySelectorAll('.cancel-delete');
-        
-        if(openDeleteCourseModal) {
-            openDeleteCourseModal.addEventListener('click', function() {
-                deleteCourseModal.style.display = 'flex';
-            });
-        }
-        
-        // Close modals on cancel buttons
-        cancelDeleteButtons.forEach(button => {
-            button.addEventListener('click', function() {
-                deleteTemplateModal.style.display = 'none';
-                deleteFormModal.style.display = 'none';
-                deleteCourseModal.style.display = 'none';
-            });
-        });
-        
-        // Close modals when clicking outside
-        window.addEventListener('click', function(e) {
-            if (e.target === deleteTemplateModal) {
-                deleteTemplateModal.style.display = 'none';
-            }
-            if (e.target === deleteFormModal) {
-                deleteFormModal.style.display = 'none';
-            }
-            if (e.target === deleteCourseModal) {
-                deleteCourseModal.style.display = 'none';
-            }
-        });
-    });
-
-    document.addEventListener('DOMContentLoaded', function() {
-        const teamModal = document.getElementById('teamModal');
-        const openTeamModal = document.getElementById('openTeamModal');
-        const closeTeamModal = document.getElementById('closeTeamModal');
-
-        if (openTeamModal) {
-            openTeamModal.addEventListener('click', function() {
-                teamModal.style.display = 'flex';
-            });
-        }
-
-        if (closeTeamModal) {
-            closeTeamModal.addEventListener('click', function() {
-                teamModal.style.display = 'none';
-            });
-        }
-
-        window.addEventListener('click', function(e) {
-            if (e.target === teamModal) {
-                teamModal.style.display = 'none';
-            }
-        });
-
-        // Delete team functionality
-        const deleteTeamButtons = document.querySelectorAll('.delete-team');
-        deleteTeamButtons.forEach(button => {
-            button.addEventListener('click', function(e) {
-                e.preventDefault();
-                const teamId = this.getAttribute('data-id');
-                if (confirm("Are you sure you want to delete this team?")) {
-                    fetch(`/team/delete/${teamId}/`, {
-                        method: "POST",
-                        headers: { "X-CSRFToken": "{{ csrf_token }}" }
-                    }).then(response => {
-                        if (response.ok) {
-                            location.reload();
-                        } else {
-                            alert("Error deleting team.");
-                        }
-                    });
+                if (confirm('Are you sure you want to delete this form? This action cannot be undone.')) {
+                    window.location.href = `{% url 'course_detail' course.id %}forms/${formId}/delete/`;
                 }
             });
         });
+        
+        // Open delete course modal
+        const openDeleteCourseModalButton = document.getElementById('openDeleteCourseModal');
+        if (openDeleteCourseModalButton) {
+            openDeleteCourseModalButton.addEventListener('click', function() {
+                if (confirm('Are you sure you want to delete this course? This action cannot be undone.')) {
+                    window.location.href = `{% url 'delete_course' course.id %}`;
+                }
+            });
+        }
     });
 </script>
 {% endblock %}

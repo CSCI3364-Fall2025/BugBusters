@@ -43,18 +43,57 @@ def signout(request):
 def todo_view(request):
     """View for student to select a course then see their forms for that course"""
     user_profile = request.user.userprofile
+    join_error_message = None
+    join_success_message = None
+    
+    # Handle join course requests directly from the to_do page
+    if request.method == 'POST' and 'join_code' in request.POST:
+        join_code = request.POST.get('join_code', '').strip().upper()
+        
+        if not join_code:
+            join_error_message = 'Please enter a course join code'
+        else:
+            try:
+                course = Course.objects.get(course_join_code=join_code)
+                
+                # Check if already enrolled
+                if course.students.filter(id=user_profile.id).exists():
+                    join_error_message = f'You are already enrolled in {course.name}'
+                else:
+                    # Add student to course
+                    course.students.add(user_profile)
+                    join_success_message = f'Successfully joined {course.name}'
+            except Course.DoesNotExist:
+                join_error_message = 'Invalid course code. Please check and try again.'
 
     # Get courses where user is an instructor
     instructor_courses = Course.objects.filter(instructors=user_profile)
 
     # Get courses where user is in a team
     team_courses = Course.objects.filter(teams__members=user_profile)
+    
+    # Get courses where user is directly enrolled
+    enrolled_courses = Course.objects.filter(students=user_profile)
 
-    # Combine the two querysets and remove duplicates
-    course_list = (instructor_courses | team_courses).distinct().order_by('name')
+    # Combine the querysets and remove duplicates
+    course_list = (instructor_courses | team_courses | enrolled_courses).distinct().order_by('name')
 
+    # Prepare course data for My Courses section
+    unique_courses = []
+    for course in course_list:
+        # Get teams the user belongs to for this course
+        user_teams = course.teams.filter(members=user_profile)
+        
+        course_data = {
+            'id': course.id,
+            'name': course.name,
+            'code': course.code,
+            'user_teams': user_teams,
+        }
+        unique_courses.append(course_data)
+
+    # Prepare data for forms section
     course_data = []
-
     for course in course_list:
         # Only get teams that the user belongs to for this course
         user_teams = course.teams.filter(members=user_profile)
@@ -72,7 +111,14 @@ def todo_view(request):
                 'self_assess': self_assess,
             })
 
-    return render(request, "to_do.html", {'course_data': course_data})
+    context = {
+        'course_data': course_data,
+        'unique_courses': unique_courses,
+        'join_error_message': join_error_message,
+        'join_success_message': join_success_message
+    }
+
+    return render(request, "to_do.html", context)
 
 @login_required
 def teams(request):
@@ -107,8 +153,16 @@ def courses(request):
         # Get courses where user is in a team
         team_courses = Course.objects.filter(teams__members=user_profile)
         
-        # Combine the two querysets and remove duplicates
-        course_list = (instructor_courses | team_courses).distinct().order_by('name')
+        # Get courses where user is directly enrolled
+        enrolled_courses = Course.objects.filter(students=user_profile)
+        
+        # Combine the querysets and remove duplicates
+        course_list = (instructor_courses | team_courses | enrolled_courses).distinct().order_by('name')
+    
+    # For non-admin users, attach the teams they belong to for each course
+    if not user_profile.admin:
+        for course in course_list:
+            course.user_teams = course.teams.filter(members=user_profile)
     
     context = {
         'courses': course_list,
@@ -118,9 +172,46 @@ def courses(request):
     return render(request, 'courses.html', context)
 
 @login_required
+def join_course(request):
+    """View for students to join a course using a join code"""
+    user_profile = request.user.userprofile
+    error_message = None
+    success_message = None
+    
+    if request.method == 'POST':
+        join_code = request.POST.get('join_code', '').strip().upper()
+        
+        if not join_code:
+            error_message = 'Please enter a course join code'
+        else:
+            try:
+                course = Course.objects.get(course_join_code=join_code)
+                
+                # Check if already enrolled
+                if course.students.filter(id=user_profile.id).exists():
+                    error_message = f'You are already enrolled in {course.name}'
+                else:
+                    # Add student to course
+                    course.students.add(user_profile)
+                    success_message = f'Successfully joined {course.name}'
+            except Course.DoesNotExist:
+                error_message = 'Invalid course code. Please check and try again.'
+    
+    # Get courses where user is enrolled
+    enrolled_courses = Course.objects.filter(students=user_profile)
+    
+    context = {
+        'error_message': error_message,
+        'success_message': success_message,
+        'enrolled_courses': enrolled_courses
+    }
+    
+    return render(request, 'join_course.html', context)
+
+@login_required
 def course_detail(request, course_id):
     """
-    View for displaying course details including form templates and forms.
+    View for displaying course details including form templates, forms, and teams.
     """
     try:
         course = Course.objects.get(id=course_id)
@@ -129,8 +220,15 @@ def course_detail(request, course_id):
     
     user_profile = request.user.userprofile
     
+    # Get all teams for this course
+    course_teams = course.teams.all()
+    
     # Check if user has access to this course
-    if not user_profile.admin and not course.instructors.filter(id=user_profile.id).exists() and not course.teams.filter(members=user_profile).exists():
+    is_team_member = course_teams.filter(members=user_profile).exists()
+    is_instructor = course.instructors.filter(id=user_profile.id).exists()
+    is_student = course.students.filter(id=user_profile.id).exists()
+    
+    if not user_profile.admin and not is_instructor and not is_team_member and not is_student:
         return redirect('courses')
     
     # Get form templates for this course
@@ -139,22 +237,20 @@ def course_detail(request, course_id):
     # Get forms for this course
     forms = Form.objects.filter(course=course).order_by('-created_at')
     
-    # Get teams for this course
-    teams = course.teams.all()
+    # Find teams the user is a member of
+    user_teams = course_teams.filter(members=user_profile)
     
-    # Find if the user is in any of these teams
-    user_teams = []
-    for team in teams:
-        if team.members.filter(id=user_profile.id).exists():
-            user_teams.append(team)
+    # Get all students in the course
+    enrolled_students = course.students.all()
     
     context = {
         'course': course,
         'templates': templates,
         'forms': forms,
-        'teams': teams,
+        'teams': course_teams,
         'user_teams': user_teams,
-        'is_instructor': course.instructors.filter(id=user_profile.id).exists(),
+        'enrolled_students': enrolled_students,
+        'is_instructor': is_instructor,
         'is_admin': user_profile.admin,
     }
     
@@ -184,6 +280,9 @@ def template_create_edit(request, course_id, template_id=None):
         try:
             # Determine if this is an AJAX request or regular form submit
             is_ajax = request.headers.get('Content-Type') == 'application/json'
+            
+            # Check if this is a preview request
+            is_preview = request.GET.get('preview') == '1'
             
             # Extract data based on request type
             if is_ajax:
@@ -273,12 +372,14 @@ def template_create_edit(request, course_id, template_id=None):
                     except Exception as e:
                         print(f"Error creating question: {str(e)}")
             
-            # Return response based on request type
+            # Return response based on request type and action
             if is_ajax:
                 return JsonResponse({'status': 'success', 'template_id': template.id})
             else:
-                # Redirect based on save_exit flag
-                if save_exit:
+                # Redirect based on save_exit flag or preview flag
+                if is_preview:
+                    return redirect('template_preview', course_id=course_id, template_id=template.id)
+                elif save_exit:
                     return redirect('course_detail', course_id=course_id)
                 else:
                     return redirect('template_edit', course_id=course_id, template_id=template.id)
@@ -351,65 +452,111 @@ def form_create_edit(request, course_id, form_id=None):
     teams = Team.objects.filter(courses=course)
     
     if request.method == 'POST':
-        # Handle save action
-        data = json.loads(request.body)
-        title = data.get('title', '')
-        template_id = data.get('template_id')
-        publication_date = data.get('publication_date')
-        closing_date = data.get('closing_date')
-        team_ids = data.get('team_ids', [])
-        self_assessment = data.get('self_assessment', False)
-        
-        if not title or not template_id or not publication_date or not closing_date:
-            return JsonResponse({'status': 'error', 'message': 'All required fields must be provided'}, status=400)
-        
-        if not team_ids:
-            return JsonResponse({'status': 'error', 'message': 'At least one team must be selected'}, status=400)
-        
-        template = get_object_or_404(FormTemplate, id=template_id, course=course)
-        
-        if form:
-            # Update existing form
-            form.title = title
-            form.template = template
-            form.publication_date = publication_date
-            form.closing_date = closing_date
-            form.self_assessment = self_assessment
-            form.save()
+        try:
+            # Handle save action
+            data = json.loads(request.body)
+            print(f"Received POST data: {data}")
             
-            # Update teams
-            form.teams.set(team_ids)
-        else:
-            # Create new form
-            form = Form.objects.create(
-                title=title,
-                template=template,
-                course=course,
-                created_by=user,
-                publication_date=publication_date,
-                closing_date=closing_date,
-                self_assessment=self_assessment
-            )
+            title = data.get('title', '')
+            template_id = data.get('template_id')
+            publication_date = data.get('publication_date')
+            closing_date = data.get('closing_date')
+            team_ids = data.get('team_ids', [])
+            self_assessment = data.get('self_assessment', False)
             
-            # Set teams
-            form.teams.set(team_ids)
+            # Validate required fields
+            if not title:
+                return JsonResponse({'status': 'error', 'message': 'Form title is required'}, status=400)
             
-            # Create FormResponse objects for each evaluation
-            for team in Team.objects.filter(id__in=team_ids):
-                members = team.members.all()
-                for evaluator in members:
-                    for evaluatee in members:
-                        # If self-assessment is disabled, skip self-evaluations
-                        if not self_assessment and evaluator == evaluatee:
-                            continue
-                            
-                        FormResponse.objects.create(
-                            form=form,
-                            evaluator=evaluator,
-                            evaluatee=evaluatee
-                        )
-        
-        return JsonResponse({'status': 'success', 'form_id': form.id})
+            if not template_id:
+                return JsonResponse({'status': 'error', 'message': 'Template selection is required'}, status=400)
+            
+            if not publication_date:
+                return JsonResponse({'status': 'error', 'message': 'Publication date is required'}, status=400)
+                
+            if not closing_date:
+                return JsonResponse({'status': 'error', 'message': 'Closing date is required'}, status=400)
+            
+            if not team_ids:
+                return JsonResponse({'status': 'error', 'message': 'At least one team must be selected'}, status=400)
+            
+            # Make sure template exists
+            try:
+                template = FormTemplate.objects.get(id=template_id, course=course)
+            except FormTemplate.DoesNotExist:
+                return JsonResponse({
+                    'status': 'error', 
+                    'message': f'Template with ID {template_id} does not exist for this course'
+                }, status=404)
+            
+            # Convert team_ids to integers if they're strings
+            team_ids = [int(team_id) for team_id in team_ids]
+            
+            # Verify teams exist
+            teams_to_assign = Team.objects.filter(id__in=team_ids)
+            if len(teams_to_assign) != len(team_ids):
+                missing = set(team_ids) - set(team.id for team in teams_to_assign)
+                return JsonResponse({
+                    'status': 'error', 
+                    'message': f'Some teams do not exist: {missing}'
+                }, status=400)
+            
+            if form:
+                # Update existing form
+                print(f"Updating existing form: {form.id}")
+                form.title = title
+                form.template = template
+                form.publication_date = publication_date
+                form.closing_date = closing_date
+                form.self_assessment = self_assessment
+                form.save()
+                
+                # Update teams
+                form.teams.set(teams_to_assign)
+                
+                # Since this is an edit, we don't need to recreate form responses
+                # We might need to update them if teams have changed, but that's more complex
+                
+                return JsonResponse({'status': 'success', 'form_id': form.id})
+            else:
+                # Create new form
+                print(f"Creating new form with template: {template.id}")
+                form = Form.objects.create(
+                    title=title,
+                    template=template,
+                    course=course,
+                    created_by=user,
+                    publication_date=publication_date,
+                    closing_date=closing_date,
+                    self_assessment=self_assessment
+                )
+                
+                # Set teams
+                form.teams.set(teams_to_assign)
+                
+                # Create FormResponse objects for each evaluation
+                for team in teams_to_assign:
+                    members = team.members.all()
+                    for evaluator in members:
+                        for evaluatee in members:
+                            # If self-assessment is disabled, skip self-evaluations
+                            if not self_assessment and evaluator == evaluatee:
+                                continue
+                                
+                            FormResponse.objects.create(
+                                form=form,
+                                evaluator=evaluator,
+                                evaluatee=evaluatee
+                            )
+                
+                return JsonResponse({'status': 'success', 'form_id': form.id})
+        except Exception as e:
+            # Handle unexpected errors
+            print(f"Error in form_create_edit: {str(e)}")
+            import traceback
+            traceback.print_exc()  # Print full traceback for debugging
+            error_message = f"An error occurred: {str(e)}"
+            return JsonResponse({'status': 'error', 'message': error_message}, status=500)
     
     # Display the create/edit form
     context = {
@@ -621,48 +768,137 @@ def delete_course(request, course_id):
     return render(request, 'confirm_delete_course.html', {'course': course})
 
 @login_required
-def add_team_to_course(request, course_id):
-    course = get_object_or_404(Course, id=course_id)
-    all_teams = Team.objects.all() # Fetch all teams in the system
-    
-    return render(request, 'add_team.html', {
-        'course': course,
-        'all_teams': all_teams  # Pass the teams to the template
-    })
-
-def update_course_teams(request, course_id):
-    course = get_object_or_404(Course, id=course_id)
-
-    if request.method == "POST":
-        selected_team_ids = request.POST.getlist("teams")  # Get selected teams
-        selected_teams = Team.objects.filter(id__in=selected_team_ids)  # Fetch teams in course
-        
-        # Update teams
-        course.teams.set(selected_teams)
-        messages.success(request, "Teams updated successfully!")
-
-    return redirect('course_detail', course_id=course.id)
-
 def create_team(request):
-    user_profiles = UserProfile.objects.all()  # Get all user profiles
-
+    """View for creating a new team within a course"""
+    user_profile = request.user.userprofile
+    
+    # A course_id is now required to create a team
+    course_id = request.GET.get('course_id')
+    if not course_id:
+        # Redirect to courses page if no course ID provided
+        return redirect('courses')
+    
+    # Get the course
+    course = get_object_or_404(Course, id=course_id)
+    
+    # Only admins can create teams
+    if not user_profile.admin:
+        return redirect('course_detail', course_id=course_id)
+    
+    # Get all potential team members (students enrolled in the course and instructors)
+    course_students = course.students.all()
+    course_instructors = course.instructors.all()
+    available_users = (course_students | course_instructors).distinct()
+    
     if request.method == 'POST':
         form = TeamForm(request.POST)
         if form.is_valid():
-            # Create the team
-            team_name = form.cleaned_data['name']  # Assuming the team form has a name field
-            team = Team.objects.create(name=team_name)
+            # Create the team without saving to DB yet
+            team = form.save(commit=False)
+            team.course = course  # Assign the team to the course
+            team.save()  # Save team with course relationship
             
-            # Get the selected user IDs
-            selected_user_ids = request.POST.getlist('users')  # Get the list of selected user IDs
+            # Now form.save_m2m() is needed since we used commit=False
+            form.save_m2m()
+            
+            # Get the selected user IDs and update members
+            selected_user_ids = request.POST.getlist('users')
             selected_users = UserProfile.objects.filter(id__in=selected_user_ids)
-
-            # Add users to the team
-            team.members.add(*selected_users)  # Add the selected users to the team
-
-            return redirect('teams')  # Redirect to the teams list or wherever you need
-
+            team.members.set(selected_users)
+            
+            # Redirect back to the course detail page
+            return redirect('course_detail', course_id=course_id)
     else:
         form = TeamForm()
+    
+    context = {
+        'form': form,
+        'user_profiles': available_users,
+        'course': course
+    }
+    return render(request, 'create_team.html', context)
 
-    return render(request, 'create_team.html', {'form': form, 'user_profiles': user_profiles})
+@login_required
+def edit_team(request, team_id):
+    """View for editing an existing team"""
+    user_profile = request.user.userprofile
+    team = get_object_or_404(Team, id=team_id)
+    course = team.course  # Get the course directly from the team
+    
+    # Only admins can edit teams
+    if not user_profile.admin:
+        return redirect('course_detail', course_id=course.id)
+    
+    # Get all potential team members (students enrolled in the course and instructors)
+    course_students = course.students.all()
+    course_instructors = course.instructors.all()
+    available_users = (course_students | course_instructors).distinct()
+    
+    if request.method == 'POST':
+        form = TeamForm(request.POST, instance=team)
+        if form.is_valid():
+            # Save the team - no need to set course as it's already set
+            team = form.save()
+            
+            # Get the selected user IDs and update members
+            selected_user_ids = request.POST.getlist('users')
+            selected_users = UserProfile.objects.filter(id__in=selected_user_ids)
+            team.members.set(selected_users)
+            
+            # Redirect back to the course detail page
+            return redirect('course_detail', course_id=course.id)
+    else:
+        form = TeamForm(instance=team)
+    
+    context = {
+        'form': form,
+        'team': team,
+        'user_profiles': available_users,
+        'selected_user_ids': [user.id for user in team.members.all()],
+        'course': course
+    }
+    
+    return render(request, 'edit_team.html', context)
+
+@login_required
+def template_preview(request, course_id, template_id):
+    """Preview a form template"""
+    user = request.user.userprofile
+    course = get_object_or_404(Course, id=course_id)
+    template = get_object_or_404(FormTemplate, id=template_id, course=course)
+    
+    # Only admins can preview templates
+    if not user.admin:
+        raise PermissionDenied
+    
+    context = {
+        'course': course,
+        'template': template,
+        'questions': template.questions.all().order_by('order'),
+        'preview_mode': True,
+    }
+    
+    return render(request, 'template_preview.html', context)
+
+@login_required
+def form_preview(request, course_id, form_id):
+    """Preview a form instance"""
+    user = request.user.userprofile
+    course = get_object_or_404(Course, id=course_id)
+    form = get_object_or_404(Form, id=form_id, course=course)
+    
+    # Only admins can preview forms
+    if not user.admin:
+        raise PermissionDenied
+    
+    # Get all questions from the template
+    questions = form.template.questions.all().order_by('order')
+    
+    context = {
+        'course': course,
+        'form': form,
+        'questions': questions,
+        'preview_mode': True,
+    }
+    
+    return render(request, 'form_preview.html', context)

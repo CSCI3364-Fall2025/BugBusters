@@ -29,10 +29,7 @@
     <!-- Main form for template submission -->
     <form id="template-form" method="post" action="{% if template %}{% url 'template_edit' course.id template.id %}{% else %}{% url 'template_create' course.id %}{% endif %}">
         {% csrf_token %}
-        <input type="hidden" name="template-title" id="form-template-title">
-        <input type="hidden" name="template-description" id="form-template-description">
-        <input type="hidden" name="questions-data" id="form-questions-data">
-        <input type="hidden" name="save-exit" id="form-save-exit" value="0">
+        <!-- Hidden fields removed as they're no longer needed with AJAX -->
         
         <!-- Template information section -->
         <div class="section">
@@ -632,12 +629,12 @@
         
         // Save button - Just save the form
         saveBtn.addEventListener('click', function() {
-            saveTemplate(false);
+            saveTemplateAjax(false);
         });
         
         // Save and Exit button
         saveExitBtn.addEventListener('click', function() {
-            saveTemplate(true);
+            saveTemplateAjax(true);
         });
         
         // Discard changes button
@@ -647,36 +644,125 @@
             }
         });
         
-        // Preview button - Not implemented yet
-        previewBtn.addEventListener('click', function() {
-            alert('Preview functionality is not implemented yet.');
+        // Preview button
+        previewBtn.addEventListener('click', function(e) {
+            e.preventDefault(); // Prevent default button behavior
+            console.log('Preview button clicked');
+            
+            try {
+                // Save template first using AJAX, then navigate to preview
+                saveTemplateAjax(false, true);
+            } catch (error) {
+                console.error('Error in preview button handler:', error);
+                alert('An error occurred while trying to preview the template');
+            }
         });
         
         // --------------------------
         // FUNCTIONS
         // --------------------------
         
+        // Get questions data from the UI
+        function getQuestionsData() {
+            const questionCards = document.querySelectorAll('.question-card');
+            const questions = [];
+            
+            questionCards.forEach((card, index) => {
+                const questionId = card.getAttribute('data-id');
+                const questionType = card.getAttribute('data-type');
+                const questionText = card.querySelector('.question-text').innerText || card.querySelector('.question-text').textContent;
+                
+                questions.push({
+                    id: questionId,
+                    text: questionText,
+                    type: questionType,
+                    order: index
+                });
+            });
+            
+            return questions;
+        }
+        
         // Save template function - prepares form data and submits
-        function saveTemplate(redirectAfterSave = false) {
-            // Validate form fields
-            if (!templateTitle.value.trim()) {
-                alert('Template title is required');
-                return;
+        async function saveTemplate(saveAndExit = false) {
+            // This function is maintained for backward compatibility
+            // but redirects to the AJAX version for consistency
+            return saveTemplateAjax(saveAndExit);
+        }
+        
+        // Save template using AJAX
+        async function saveTemplateAjax(saveAndExit = false, navigateToPreview = false) {
+            console.log('Saving template via AJAX...');
+            
+            // Validate required fields
+            const title = document.getElementById('template-title').value.trim();
+            const description = document.getElementById('template-description').value.trim();
+            const questions = getQuestionsData();
+            
+            if (!title) {
+                alert('Please enter a title for the template');
+                return null;
             }
             
             if (questions.length === 0) {
-                alert('At least one question is required');
-                return;
+                alert('Please add at least one question to the template');
+                return null;
             }
             
-            // Set form field values
-            document.getElementById('form-template-title').value = templateTitle.value.trim();
-            document.getElementById('form-template-description').value = templateDescription.value.trim();
-            document.getElementById('form-questions-data').value = JSON.stringify(questions);
-            document.getElementById('form-save-exit').value = redirectAfterSave ? '1' : '0';
-            
-            // Submit the form
-            templateForm.submit();
+            try {
+                // Get CSRF token
+                const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+                
+                // Prepare data in the format expected by the server
+                const data = {
+                    title: title,
+                    description: description,
+                    questions: questions,
+                    save_exit: saveAndExit
+                };
+                
+                // Add preview parameter to URL if navigating to preview
+                let url = templateForm.action;
+                if (navigateToPreview) {
+                    const separator = url.includes('?') ? '&' : '?';
+                    url = url + separator + 'preview=1';
+                }
+                
+                // Make AJAX request
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': csrfToken
+                    },
+                    body: JSON.stringify(data)
+                });
+                
+                // Parse response
+                const result = await response.json();
+                
+                if (result.status === 'success') {
+                    if (navigateToPreview && result.template_id) {
+                        // Navigate to preview page
+                        window.location.href = `/courses/${courseId}/templates/${result.template_id}/preview/`;
+                    } else if (saveAndExit) {
+                        // Navigate back to course detail
+                        window.location.href = `/courses/${courseId}/`;
+                    } else {
+                        // Show success message
+                        alert('Template saved successfully');
+                    }
+                    return result;
+                } else {
+                    console.error('Error saving template:', result.message);
+                    alert(result.message || 'An error occurred while saving the template');
+                    return null;
+                }
+            } catch (error) {
+                console.error('Error saving template:', error);
+                alert('An error occurred while saving the template');
+                return null;
+            }
         }
         
         // Update questions UI based on questions array

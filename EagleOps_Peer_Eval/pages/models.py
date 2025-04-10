@@ -13,7 +13,6 @@ class UserProfile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)  # link default user model to custom UserProfile model
     first_name = models.CharField(max_length=100, blank=True, null=True)  # Store first name
     last_name = models.CharField(max_length=100, blank=True, null=True)  # Store last name
-    avatar = models.ImageField(blank=True, null=True)  # New field for user avatar
     avatar = models.ImageField(upload_to='avatars/', blank=True, null=True)  # Store user avatar
     bio = models.TextField(blank=True, null=True)  # New field for user bio
     admin = models.BooleanField(default=False)  # Admin field to denote if user is admin or not
@@ -31,28 +30,55 @@ class UserProfile(models.Model):
     
 class Team(models.Model):
     """
-    Represents a team of users that can be assigned to courses and assessments.
+    Represents a team of users within a specific course.
+    Teams belong to exactly one course and cannot exist independently.
     """
     name = models.CharField(max_length=100)
+    course = models.ForeignKey('Course', on_delete=models.CASCADE, related_name='teams')
     members = models.ManyToManyField(UserProfile, related_name='teams')
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return self.name
+        return f"{self.name} - {self.course.code}"
+    
+    class Meta:
+        unique_together = ['name', 'course']  # Prevent duplicate team names within the same course
 
 class Course(models.Model):
     """
     Represents an academic course with teams, instructors and associated forms.
+    Teams are now a child entity of courses rather than a many-to-many relationship.
     """
     name = models.CharField(max_length=100)
     code = models.CharField(max_length=20, unique=True)
+    course_join_code = models.CharField(max_length=10, unique=True, blank=True, null=True)
     description = models.TextField(blank=True, null=True)
-    teams = models.ManyToManyField(Team, related_name='courses', blank=True)
     instructors = models.ManyToManyField(UserProfile, related_name='instructor_courses')
+    students = models.ManyToManyField(UserProfile, related_name='enrolled_courses', blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
         return f"{self.code}: {self.name}"
+        
+    def save(self, *args, **kwargs):
+        # Generate a unique join code if one doesn't exist
+        if not self.course_join_code:
+            self.course_join_code = self.generate_unique_join_code()
+        super().save(*args, **kwargs)
+    
+    @staticmethod
+    def generate_unique_join_code():
+        """Generate a unique 8-character alphanumeric code"""
+        import random
+        import string
+        
+        while True:
+            # Generate a random 8-character code
+            code = ''.join(random.choices(string.ascii_uppercase + string.digits, k=8))
+            
+            # Check if this code already exists
+            if not Course.objects.filter(course_join_code=code).exists():
+                return code
 
 class FormTemplate(models.Model):
     """
@@ -143,7 +169,7 @@ class Form(models.Model):
     template = models.ForeignKey(FormTemplate, on_delete=models.CASCADE, related_name='forms')
     course = models.ForeignKey(Course, on_delete=models.CASCADE, related_name='forms')
     created_by = models.ForeignKey(UserProfile, on_delete=models.CASCADE, related_name='created_forms')
-    teams = models.ManyToManyField(Team, related_name='assigned_forms')
+    teams = models.ManyToManyField(Team, related_name='assigned_forms', limit_choices_to={'course': models.OuterRef('course')})
     self_assessment = models.BooleanField(default=False)  # Whether users can evaluate themselves
     publication_date = models.DateTimeField()  # When the form becomes visible to users
     closing_date = models.DateTimeField()  # When the form stops accepting responses
@@ -159,6 +185,13 @@ class Form(models.Model):
         Validate form before saving.
         """
         super().clean()
+        
+        # Ensure all assigned teams belong to the course
+        for team in self.teams.all():
+            if team.course.id != self.course.id:
+                raise ValidationError(
+                    f"Team '{team.name}' does not belong to course '{self.course.name}'. Teams must belong to the same course as the form."
+                )
         
         # Custom validation: for self-assessment, check teams
         if self.self_assessment:
