@@ -75,7 +75,7 @@
                 </div>
                 <div class="button-group">
                   {% if form.status == 'active' %}
-                    <button class="action-button btn-primary"><span class="button-5">Begin</span></button>
+                    <a href="{% url 'form_evaluations' course_id=form.course.id form_id=form.id %}" class="action-button btn-primary"><span class="button-5">Begin</span></a>
                   {% elif form.status == 'closed' %}
                     <button class="action-button btn-danger"><span class="button-7">Closed</span></button>
                   {% else %}

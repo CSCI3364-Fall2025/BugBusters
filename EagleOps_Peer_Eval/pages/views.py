@@ -583,15 +583,22 @@ def form_publish(request, course_id, form_id):
     
     form = get_object_or_404(Form, id=form_id, course=course)
     
+    # Print the current form status for debugging
+    print(f"Current form status: {form.status}")
+    
     # Change status to scheduled or active based on current time
     now = timezone.now()
     if now < form.publication_date:
         form.status = Form.SCHEDULED
+        print(f"Setting form to SCHEDULED: {Form.SCHEDULED}")
     else:
         form.status = Form.ACTIVE
+        print(f"Setting form to ACTIVE: {Form.ACTIVE}")
     
-    form.save()
+    # Save with force_status=True to prevent automatic status updates
+    form.save(force_status=True)
     
+    messages.success(request, f"Form '{form.title}' has been published.")
     return redirect('course_detail', course_id=course_id)
 
 @login_required
@@ -607,8 +614,11 @@ def form_unpublish(request, course_id, form_id):
     
     form = get_object_or_404(Form, id=form_id, course=course)
     form.status = Form.DRAFT
-    form.save()
     
+    # Save with force_status=True to prevent automatic status updates
+    form.save(force_status=True)
+    
+    messages.success(request, f"Form '{form.title}' has been unpublished.")
     return redirect('course_detail', course_id=course_id)
 
 @login_required
@@ -902,3 +912,186 @@ def form_preview(request, course_id, form_id):
     }
     
     return render(request, 'form_preview.html', context)
+
+@login_required
+def form_response(request, course_id, form_id, evaluatee_id):
+    """View for filling out a form response for a specific evaluatee"""
+    user = request.user.userprofile
+    course = get_object_or_404(Course, id=course_id)
+    form = get_object_or_404(Form, id=form_id, course=course)
+    evaluatee = get_object_or_404(UserProfile, id=evaluatee_id)
+    
+    # Check if this form is active
+    if form.status not in [Form.ACTIVE, Form.SCHEDULED]:
+        messages.error(request, "This form is not currently active.")
+        return redirect('form_evaluations', course_id=course.id, form_id=form.id)
+    
+    # Check if user is in a team assigned to this form
+    user_teams = form.teams.filter(members=user)
+    if not user_teams.exists():
+        messages.error(request, "You are not assigned to this form.")
+        return redirect('form_evaluations', course_id=course.id, form_id=form.id)
+    
+    # Check if evaluatee is in user's team
+    evaluatee_teams = form.teams.filter(members=evaluatee)
+    if not evaluatee_teams.filter(pk__in=user_teams.values_list('pk', flat=True)).exists():
+        messages.error(request, "You cannot evaluate this person.")
+        return redirect('form_evaluations', course_id=course.id, form_id=form.id)
+    
+    # Check if self-assessment is allowed, or if not evaluating self
+    if not form.self_assessment and user.id == evaluatee.id:
+        messages.error(request, "Self-assessment is not enabled for this form.")
+        return redirect('form_evaluations', course_id=course.id, form_id=form.id)
+    
+    # Get or create form response
+    form_response, created = FormResponse.objects.get_or_create(
+        form=form,
+        evaluator=user,
+        evaluatee=evaluatee
+    )
+    
+    # Check if form is closed (past deadline)
+    if timezone.now() > form.closing_date and not form_response.submitted:
+        messages.warning(request, "The deadline for this form has passed. New evaluations cannot be submitted.")
+        return redirect('form_evaluations', course_id=course.id, form_id=form.id)
+    
+    # If already submitted and past deadline, only allow viewing
+    readonly = timezone.now() > form.closing_date and form_response.submitted
+    
+    # Get questions from template
+    questions = form.template.questions.all().order_by('order')
+    
+    # Get existing answers to pre-fill the form
+    existing_answers = {}
+    for answer in form_response.answers.all():
+        if answer.question.question_type == Question.LIKERT_SCALE:
+            existing_answers[answer.question.id] = answer.likert_answer
+        else:
+            existing_answers[answer.question.id] = answer.text_answer
+    
+    context = {
+        'course': course,
+        'form': form,
+        'evaluatee': evaluatee,
+        'form_response': form_response,
+        'questions': questions,
+        'existing_answers': existing_answers,
+        'readonly': readonly,
+    }
+    
+    return render(request, 'form_response.html', context)
+
+@login_required
+@require_POST
+def submit_form_response(request, response_id):
+    """Handle submission of a completed form response"""
+    form_response = get_object_or_404(FormResponse, id=response_id, evaluator=request.user.userprofile)
+    
+    # Check if form is still active
+    form = form_response.form
+    if form.status != Form.ACTIVE:
+        messages.error(request, "This form is no longer active.")
+        return redirect('form_evaluations', course_id=form.course.id, form_id=form.id)
+    
+    # Check if form closing date has passed
+    if timezone.now() > form.closing_date:
+        messages.error(request, "The deadline for this form has passed. Evaluations can no longer be submitted or edited.")
+        return redirect('form_evaluations', course_id=form.course.id, form_id=form.id)
+    
+    # Process answers
+    questions = form.template.questions.all()
+    for question in questions:
+        if question.question_type == Question.LIKERT_SCALE:
+            likert_value = request.POST.get(f'likert_{question.id}')
+            text_value = None
+            
+            # Validate likert value
+            try:
+                likert_value = int(likert_value)
+                if likert_value < 1 or likert_value > 5:
+                    messages.error(request, f"Invalid rating for question {question.text}")
+                    return redirect('form_response', course_id=form.course.id, form_id=form.id, evaluatee_id=form_response.evaluatee.id)
+            except (ValueError, TypeError):
+                messages.error(request, f"Rating required for question {question.text}")
+                return redirect('form_response', course_id=form.course.id, form_id=form.id, evaluatee_id=form_response.evaluatee.id)
+        else:
+            likert_value = None
+            text_value = request.POST.get(f'text_{question.id}', '').strip()
+            
+            # Validate text answer
+            if not text_value:
+                messages.error(request, f"Response required for question {question.text}")
+                return redirect('form_response', course_id=form.course.id, form_id=form.id, evaluatee_id=form_response.evaluatee.id)
+        
+        # Create or update answer
+        answer, created = Answer.objects.update_or_create(
+            response=form_response,
+            question=question,
+            defaults={
+                'likert_answer': likert_value,
+                'text_answer': text_value
+            }
+        )
+    
+    # Mark response as submitted if it hasn't been already
+    was_already_submitted = form_response.submitted
+    if not was_already_submitted:
+        form_response.submit()
+        messages.success(request, f"Your evaluation for {form_response.evaluatee.full_name} has been submitted.")
+    else:
+        # Just update the answers but keep the original submission date
+        form_response.save()
+        messages.success(request, f"Your evaluation for {form_response.evaluatee.full_name} has been updated.")
+    
+    # Redirect back to form evaluations page instead of todo
+    return redirect('form_evaluations', course_id=form.course.id, form_id=form.id)
+
+@login_required
+def form_evaluations(request, course_id, form_id):
+    """View to show all team members that need to be evaluated for a form"""
+    user = request.user.userprofile
+    course = get_object_or_404(Course, id=course_id)
+    form = get_object_or_404(Form, id=form_id, course=course)
+    
+    # Check if user is in a team assigned to this form
+    user_teams = form.teams.filter(members=user)
+    if not user_teams.exists():
+        messages.error(request, "You are not assigned to this form.")
+        return redirect('todo')
+    
+    # Check if form is active
+    if form.status not in [Form.ACTIVE, Form.SCHEDULED]:
+        messages.error(request, "This form is not currently active.")
+        return redirect('todo')
+    
+    # Get all team members that the user needs to evaluate
+    evaluatees = []
+    for team in user_teams:
+        team_members = team.members.all()
+        
+        for member in team_members:
+            # Skip if not self and self-assessment is not enabled
+            if not form.self_assessment and member.id == user.id:
+                continue
+                
+            # Check if response already exists
+            response = FormResponse.objects.filter(
+                form=form,
+                evaluator=user,
+                evaluatee=member
+            ).first()
+            
+            evaluatees.append({
+                'member': member,
+                'response': response,
+                'completed': response and response.submitted,
+                'submission_date': response.submission_date if response and response.submitted else None
+            })
+    
+    context = {
+        'course': course,
+        'form': form,
+        'evaluatees': evaluatees,
+    }
+    
+    return render(request, 'form_evaluations.html', context)

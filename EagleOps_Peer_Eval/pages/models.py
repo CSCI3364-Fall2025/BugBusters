@@ -212,10 +212,13 @@ class Form(models.Model):
 
         self.full_clean()  # Validate the model before saving
 
-        # Update status based on dates
+        # Update status based on dates if status isn't being explicitly set
         now = timezone.now()
         
-        if self.status != self.DRAFT:
+        # Only auto-update status if it's not in draft mode
+        # and the status isn't being explicitly changed
+        force_status = kwargs.pop('force_status', False)
+        if not force_status and self.status != self.DRAFT:
             if now < self.publication_date:
                 self.status = self.SCHEDULED
             elif now >= self.publication_date and now < self.closing_date:
@@ -282,9 +285,14 @@ class FormResponse(models.Model):
     
     def submit(self):
         """Marks the response as submitted and records the submission date"""
-        self.submitted = True
-        self.submission_date = timezone.now()
-        self.save()
+        # Only set the submission date if this is the first submission
+        if not self.submitted:
+            self.submitted = True
+            self.submission_date = timezone.now()
+            self.save()
+        else:
+            # If already submitted, just save the updated answers
+            self.save()
 
 class Answer(models.Model):
     """

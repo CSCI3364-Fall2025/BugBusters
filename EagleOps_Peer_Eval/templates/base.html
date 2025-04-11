@@ -18,9 +18,9 @@
     <nav class="navbar">
         <a href="/" class="brand">EagleOps Peer Evaluation</a>
         <ul class="nav-links">
-            <li><a href="/todo/">To Do</a></li>
-            <li><a href="/teams/">Team</a></li>
-            <li><a href="/courses/">Courses</a></li>
+            <li><a href="{% url 'todo' %}">To Do</a></li>
+            <li><a href="{% url 'teams' %}">Team</a></li>
+            <li><a href="{% url 'courses' %}">Courses</a></li>
             <li><a href="#">Performance</a></li>
             <li class="dropdown">
                 <a href="/" class="active">Profile</a>
@@ -31,6 +31,18 @@
             </li>
         </ul>
     </nav>
+    {% endif %}
+
+    <!-- Messages display -->
+    {% if messages %}
+    <div class="messages-container">
+        {% for message in messages %}
+        <div class="message {% if message.tags %}{{ message.tags }}{% endif %}">
+            {{ message }}
+            <button class="close-message" onclick="this.parentElement.style.display='none';">&times;</button>
+        </div>
+        {% endfor %}
+    </div>
     {% endif %}
 
     <div class="content">
@@ -49,5 +61,70 @@
 </footer>
 
 {% block extra_js %}{% endblock %}
+
+<style>
+    .messages-container {
+        max-width: 1000px;
+        margin: 10px auto;
+        padding: 0 20px;
+    }
+    
+    .message {
+        padding: 12px 15px;
+        margin-bottom: 10px;
+        border-radius: 4px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    
+    .message.success {
+        background-color: #d4edda;
+        color: #155724;
+        border: 1px solid #c3e6cb;
+    }
+    
+    .message.warning {
+        background-color: #fff3cd;
+        color: #856404;
+        border: 1px solid #ffeeba;
+    }
+    
+    .message.error {
+        background-color: #f8d7da;
+        color: #721c24;
+        border: 1px solid #f5c6cb;
+    }
+    
+    .close-message {
+        background: none;
+        border: none;
+        font-size: 18px;
+        cursor: pointer;
+        padding: 0 0 0 10px;
+        color: inherit;
+        opacity: 0.7;
+    }
+    
+    .close-message:hover {
+        opacity: 1;
+    }
+</style>
+
+<script>
+    // Auto-hide messages after 5 seconds
+    document.addEventListener('DOMContentLoaded', function() {
+        const messages = document.querySelectorAll('.message');
+        messages.forEach(message => {
+            setTimeout(() => {
+                message.style.opacity = '0';
+                message.style.transition = 'opacity 0.5s ease';
+                setTimeout(() => {
+                    message.style.display = 'none';
+                }, 500);
+            }, 5000);
+        });
+    });
+</script>
 </body>
 </html>
