@@ -193,19 +193,19 @@
                             <a href="{% url 'form_edit' course.id form.id %}" class="btn-icon" title="Edit">
                                 <i class="fas fa-edit" style="margin-right: 5px;"></i>
                             </a>
-                            <a href="#" class="btn-icon results-btn" data-id="{{ form.id }}" title="Results">
+                            <a href="{% url 'form_results' course.id form.id %}" class="btn-icon" title="Results">
                                 <i class="fas fa-chart-bar" style="margin-right: 5px;"></i>
                             </a>
                             
                             {% if form.status == 'draft' %}
-                            <form method="post" action="{% url 'form_publish' course.id form.id %}" style="display: inline;">
+                            <form method="post" action="{% url 'form_publish' course_id=course.id form_id=form.id %}" style="display: inline;">
                                 {% csrf_token %}
                                 <button type="submit" class="btn-icon publish-btn" title="Publish">
                                     <i class="fas fa-paper-plane" style="margin-right: 5px;"></i>
                                 </button>
                             </form>
                             {% else %}
-                            <form method="post" action="{% url 'form_unpublish' course.id form.id %}" style="display: inline;">
+                            <form method="post" action="{% url 'form_unpublish' course_id=course.id form_id=form.id %}" style="display: inline;">
                                 {% csrf_token %}
                                 <button type="submit" class="btn-icon unpublish-btn" title="Unpublish">
                                     <i class="fas fa-ban" style="margin-right: 5px;"></i>

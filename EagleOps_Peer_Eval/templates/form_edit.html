@@ -98,9 +98,15 @@
         <div>
             <a href="{% url 'course_detail' course.id %}" class="btn btn-secondary">Back to Forms</a>
             {% if form and form.status == 'draft' %}
-            <button id="publish-btn" class="btn btn-success">Publish Form</button>
+            <form method="post" action="{% url 'form_publish' course.id form.id %}" style="display: inline;">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-success">Publish Form</button>
+            </form>
             {% elif form %}
-            <button id="unpublish-btn" class="btn btn-danger">Unpublish Form</button>
+            <form method="post" action="{% url 'form_unpublish' course.id form.id %}" style="display: inline;">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-danger">Unpublish Form</button>
+            </form>
             {% endif %}
         </div>
     </div>
@@ -369,11 +375,6 @@
         const discardBtn = document.getElementById('discard-btn');
         const previewBtn = document.getElementById('preview-btn');
         
-        {% if form %}
-        const publishBtn = document.getElementById('publish-btn');
-        const unpublishBtn = document.getElementById('unpublish-btn');
-        {% endif %}
-        
         // Add event listeners to clear messages when user makes changes
         formTitle.addEventListener('input', clearMessages);
         if (templateSelect) templateSelect.addEventListener('change', clearMessages);
@@ -406,17 +407,6 @@
                 window.location.href = `/courses/${courseId}/`;
             }
         });
-        
-        // Publish button
-        {% if form and form.status == 'draft' %}
-        publishBtn.addEventListener('click', function() {
-            window.location.href = `/courses/${courseId}/forms/${formId}/publish/`;
-        });
-        {% elif form %}
-        unpublishBtn.addEventListener('click', function() {
-            window.location.href = `/courses/${courseId}/forms/${formId}/unpublish/`;
-        });
-        {% endif %}
         
         // Preview button
         previewBtn.addEventListener('click', async function() {

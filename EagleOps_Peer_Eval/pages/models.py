@@ -169,7 +169,7 @@ class Form(models.Model):
     template = models.ForeignKey(FormTemplate, on_delete=models.CASCADE, related_name='forms')
     course = models.ForeignKey(Course, on_delete=models.CASCADE, related_name='forms')
     created_by = models.ForeignKey(UserProfile, on_delete=models.CASCADE, related_name='created_forms')
-    teams = models.ManyToManyField(Team, related_name='assigned_forms', limit_choices_to={'course': models.OuterRef('course')})
+    teams = models.ManyToManyField(Team, related_name='assigned_forms')
     self_assessment = models.BooleanField(default=False)  # Whether users can evaluate themselves
     publication_date = models.DateTimeField()  # When the form becomes visible to users
     closing_date = models.DateTimeField()  # When the form stops accepting responses
@@ -186,21 +186,23 @@ class Form(models.Model):
         """
         super().clean()
         
-        # Ensure all assigned teams belong to the course
-        for team in self.teams.all():
-            if team.course.id != self.course.id:
-                raise ValidationError(
-                    f"Team '{team.name}' does not belong to course '{self.course.name}'. Teams must belong to the same course as the form."
-                )
-        
-        # Custom validation: for self-assessment, check teams
-        if self.self_assessment:
+        # Only validate teams if the form has been saved (has an ID)
+        if self.pk is not None:
+            # Ensure all assigned teams belong to the course
             for team in self.teams.all():
-                if team.members.count() < 2:  # Must have at least 2 members to do self-assessment
+                if team.course.id != self.course.id:
                     raise ValidationError(
-                        f"Team '{team.name}' does not have enough members for self-assessment."
+                        f"Team '{team.name}' does not belong to course '{self.course.name}'. Teams must belong to the same course as the form."
                     )
-                
+            
+            # Custom validation: for self-assessment, check teams
+            if self.self_assessment:
+                for team in self.teams.all():
+                    if team.members.count() < 2:  # Must have at least 2 members to do self-assessment
+                        raise ValidationError(
+                            f"Team '{team.name}' does not have enough members for self-assessment."
+                        )
+        
         if self.publication_date >= self.closing_date:
             raise ValidationError("Publication date must be before closing date.")
     

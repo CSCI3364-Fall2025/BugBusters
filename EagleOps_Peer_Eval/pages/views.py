@@ -8,6 +8,7 @@ from django.db.models import Count, Q
 from django.core.exceptions import PermissionDenied
 from django.conf import settings
 from .models import Team, Course, FormTemplate, Question, Form, FormResponse, Answer, UserProfile
+from .utils import calculate_team_scores, get_member_feedback
 import json
 from django.contrib.auth import logout
 from django.db.utils import IntegrityError
@@ -531,8 +532,8 @@ def form_create_edit(request, course_id, form_id=None):
                     self_assessment=self_assessment
                 )
                 
-                # Set teams
-                form.teams.set(teams_to_assign)
+                # Now we can set the teams
+                form.teams.add(*teams_to_assign)
                 
                 # Create FormResponse objects for each evaluation
                 for team in teams_to_assign:
@@ -542,11 +543,16 @@ def form_create_edit(request, course_id, form_id=None):
                             # If self-assessment is disabled, skip self-evaluations
                             if not self_assessment and evaluator == evaluatee:
                                 continue
-                                
-                            FormResponse.objects.create(
+                            
+                            # Use get_or_create to safely handle existing responses
+                            FormResponse.objects.get_or_create(
                                 form=form,
                                 evaluator=evaluator,
-                                evaluatee=evaluatee
+                                evaluatee=evaluatee,
+                                defaults={
+                                    'submitted': False,
+                                    'submission_date': None
+                                }
                             )
                 
                 return JsonResponse({'status': 'success', 'form_id': form.id})
@@ -571,54 +577,21 @@ def form_create_edit(request, course_id, form_id=None):
     return render(request, 'form_edit.html', context)
 
 @login_required
-@require_POST
 def form_publish(request, course_id, form_id):
-    """Publish a form"""
-    user = request.user.userprofile
-    course = get_object_or_404(Course, id=course_id)
-    
-    # Only admins can publish forms
-    if not user.admin:
-        raise PermissionDenied
-    
-    form = get_object_or_404(Form, id=form_id, course=course)
-    
-    # Print the current form status for debugging
-    print(f"Current form status: {form.status}")
-    
-    # Change status to scheduled or active based on current time
-    now = timezone.now()
-    if now < form.publication_date:
-        form.status = Form.SCHEDULED
-        print(f"Setting form to SCHEDULED: {Form.SCHEDULED}")
-    else:
-        form.status = Form.ACTIVE
-        print(f"Setting form to ACTIVE: {Form.ACTIVE}")
-    
-    # Save with force_status=True to prevent automatic status updates
-    form.save(force_status=True)
-    
-    messages.success(request, f"Form '{form.title}' has been published.")
+    if request.method == 'POST':
+        form = get_object_or_404(Form, id=form_id, course_id=course_id)
+        if form.status == 'draft':
+            form.status = 'scheduled'
+            form.save()
     return redirect('course_detail', course_id=course_id)
 
 @login_required
-@require_POST
 def form_unpublish(request, course_id, form_id):
-    """Unpublish a form"""
-    user = request.user.userprofile
-    course = get_object_or_404(Course, id=course_id)
-    
-    # Only admins can unpublish forms
-    if not user.admin:
-        raise PermissionDenied
-    
-    form = get_object_or_404(Form, id=form_id, course=course)
-    form.status = Form.DRAFT
-    
-    # Save with force_status=True to prevent automatic status updates
-    form.save(force_status=True)
-    
-    messages.success(request, f"Form '{form.title}' has been unpublished.")
+    if request.method == 'POST':
+        form = get_object_or_404(Form, id=form_id, course_id=course_id)
+        if form.status == 'scheduled':
+            form.status = 'draft'
+            form.save()
     return redirect('course_detail', course_id=course_id)
 
 @login_required
@@ -778,15 +751,9 @@ def delete_course(request, course_id):
     return render(request, 'confirm_delete_course.html', {'course': course})
 
 @login_required
-def create_team(request):
+def create_team(request, course_id):
     """View for creating a new team within a course"""
     user_profile = request.user.userprofile
-    
-    # A course_id is now required to create a team
-    course_id = request.GET.get('course_id')
-    if not course_id:
-        # Redirect to courses page if no course ID provided
-        return redirect('courses')
     
     # Get the course
     course = get_object_or_404(Course, id=course_id)
@@ -1095,3 +1062,94 @@ def form_evaluations(request, course_id, form_id):
     }
     
     return render(request, 'form_evaluations.html', context)
+
+@login_required
+def form_results(request, course_id, form_id):
+    """View for professors to see and manage form results"""
+    user = request.user.userprofile
+    course = get_object_or_404(Course, id=course_id)
+    form = get_object_or_404(Form, id=form_id, course=course)
+    
+    # Check if user is an instructor or admin
+    if not user.admin and not course.instructors.filter(id=user.id).exists():
+        messages.error(request, "You do not have permission to view these results.")
+        return redirect('course_detail', course_id=course_id)
+    
+    # Get all teams assigned to this form
+    teams = form.teams.all()
+    
+    # Calculate scores for each team
+    team_scores = {}
+    for team in teams:
+        team_scores[team] = calculate_team_scores(form, team)
+    
+    # Get selected member if specified
+    selected_member_id = request.GET.get('member')
+    selected_member = None
+    member_feedback = None
+    
+    if selected_member_id:
+        try:
+            selected_member = UserProfile.objects.get(id=selected_member_id)
+            member_feedback = get_member_feedback(form, selected_member)
+        except UserProfile.DoesNotExist:
+            messages.error(request, "Selected member not found.")
+    
+    context = {
+        'course': course,
+        'form': form,
+        'teams': teams,
+        'team_scores': team_scores,
+        'is_published': form.status == Form.CLOSED,
+        'selected_member': selected_member,
+        'member_feedback': member_feedback
+    }
+    
+    return render(request, 'form_results.html', context)
+
+@login_required
+@require_POST
+def edit_response(request, response_id):
+    """View for professors to edit form responses"""
+    response = get_object_or_404(FormResponse, id=response_id)
+    form = response.form
+    course = form.course
+    user = request.user.userprofile
+    
+    # Check if user is an instructor or admin
+    if not user.admin and not course.instructors.filter(id=user.id).exists():
+        return JsonResponse({'error': 'Permission denied'}, status=403)
+    
+    # Get the answer to edit
+    answer_id = request.POST.get('answer_id')
+    answer = get_object_or_404(Answer, id=answer_id, response=response)
+    
+    # Update the answer
+    if answer.question.question_type == Question.OPEN_ENDED:
+        answer.text_answer = request.POST.get('text_answer', '')
+    else:
+        answer.likert_answer = request.POST.get('likert_answer')
+    
+    answer.save()
+    
+    return JsonResponse({'success': True})
+
+@login_required
+@require_POST
+def publish_results(request, form_id):
+    """View for publishing form results"""
+    form = get_object_or_404(Form, id=form_id)
+    course = form.course
+    user = request.user.userprofile
+    
+    # Check if user is an instructor or admin
+    if not user.admin and not course.instructors.filter(id=user.id).exists():
+        messages.error(request, "You do not have permission to publish results.")
+        return redirect('course_detail', course_id=course.id)
+    
+    # Close the form to publish results
+    form.status = Form.CLOSED
+    form.save()
+    
+    messages.success(request, "Results have been published successfully.")
+    return redirect('form_results', course_id=course.id, form_id=form.id)
