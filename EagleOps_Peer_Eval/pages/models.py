@@ -179,14 +179,17 @@ class Form(models.Model):
     
     def __str__(self):
         return self.title
-    
+
     def clean(self):
         """
         Validate form before saving.
         """
+        from django.utils import timezone
+
         super().clean()
-        
-        # Only validate teams if the form has been saved (has an ID)
+        now = timezone.now()
+
+        # Only validate if the form has an ID (meaning it already exists)
         if self.pk is not None:
             # Ensure all assigned teams belong to the course
             for team in self.teams.all():
@@ -194,18 +197,30 @@ class Form(models.Model):
                     raise ValidationError(
                         f"Team '{team.name}' does not belong to course '{self.course.name}'. Teams must belong to the same course as the form."
                     )
-            
+
             # Custom validation: for self-assessment, check teams
             if self.self_assessment:
                 for team in self.teams.all():
-                    if team.members.count() < 2:  # Must have at least 2 members to do self-assessment
+                    if team.members.count() < 2:
                         raise ValidationError(
                             f"Team '{team.name}' does not have enough members for self-assessment."
                         )
+
+            # Prevent changing publication_date if it's already passed and the form is active or closed
+            try:
+                existing = Form.objects.get(pk=self.pk)
+                if existing.publication_date < now and self.publication_date != existing.publication_date:
+                    # Ensure that publication date cannot be changed if form is already published
+                    if existing.status in [Form.ACTIVE, Form.CLOSED]:
+                        raise ValidationError("You cannot change the publication date after it has passed.")
+            except Form.DoesNotExist:
+                pass  # No existing record found, likely during initial creation
+
+        # Ensure publish date is before closing date
+        if self.publication_date and self.closing_date:
+            if self.publication_date >= self.closing_date:
+                raise ValidationError("Publication date must be before closing date.")
         
-        if self.publication_date >= self.closing_date:
-            raise ValidationError("Publication date must be before closing date.")
-    
     def save(self, *args, **kwargs):
         """
         Override save method to automatically update status based on dates.
@@ -229,7 +244,7 @@ class Form(models.Model):
                 self.status = self.CLOSED
                 
         super().save(*args, **kwargs)
-    
+
     @property
     def completion_rate(self):
         """
@@ -265,6 +280,13 @@ class Form(models.Model):
         
         # Format the remaining time as "X days, Y hours, Z minutes"
         return f"{days_left} days, {hours_left} hours, and {minutes_left} minutes."
+    
+    def unpublish(self):
+        """
+        Reverts form to draft state and makes it unavailable to users.
+        """
+        self.status = self.DRAFT
+        self.save(force_status=True)
 
 class FormResponse(models.Model):
     """

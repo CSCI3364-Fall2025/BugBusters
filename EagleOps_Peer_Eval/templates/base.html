@@ -18,8 +18,10 @@
     <nav class="navbar">
         <a href="/" class="brand">EagleOps Peer Evaluation</a>
         <ul class="nav-links">
-            <li><a href="{% url 'todo' %}">To Do</a></li>
-            <li><a href="{% url 'teams' %}">Team</a></li>
+            {% if not user.userprofile.admin %}
+                <li><a href="{% url 'todo' %}">To Do</a></li> <!-- Link to To Do list hidden for now -->
+                <li><a href="{% url 'teams' %}">Team</a></li> <!-- Link to Team page hidden for now -->
+            {% endif %}
             <li><a href="{% url 'courses' %}">Courses</a></li>
             <li><a href="#">Performance</a></li>
             <li class="dropdown">

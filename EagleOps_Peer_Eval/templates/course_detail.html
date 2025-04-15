@@ -207,8 +207,8 @@
                             {% else %}
                             <form method="post" action="{% url 'form_unpublish' course_id=course.id form_id=form.id %}" style="display: inline;">
                                 {% csrf_token %}
-                                <button type="submit" class="btn-icon unpublish-btn" title="Unpublish">
-                                    <i class="fas fa-ban" style="margin-right: 5px;"></i>
+                                <button type="submit" class="btn btn-warning btn-sm" title="Unpublish Form" onclick="return confirm('Are you sure you want to unpublish this form?');">
+                                    <i class="fas fa-ban" aria-hidden="true" style="margin-right: 5px;"></i> Unpublish
                                 </button>
                             </form>
                             {% endif %}

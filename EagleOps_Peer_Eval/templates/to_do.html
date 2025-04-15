@@ -69,9 +69,11 @@
                 <div class="form-card-header">
                   <div class="text-heading">{{ form.title }}</div> 
                   <p class="body-text">
-                    <span class="span">Due in </span> 
-                    <span class="text-wrapper-13">{{ form.time_left }}</span>
-                  </p>
+                    <span class="span">Due in </span>
+                    <span class="text-wrapper-13">
+                        {{ form.time_left }}
+                    </span>
+                </p>
                 </div>
                 <div class="button-group">
                   {% if form.status == 'active' %}
@@ -79,11 +81,12 @@
                   {% elif form.status == 'closed' %}
                     <button class="action-button btn-danger"><span class="button-7">Closed</span></button>
                   {% else %}
-                    <button class="action-button btn-secondary"><span class="button-7">Scheduled</span></button>
+                    <button class="action-button btn-secondary"><span class="button-7">Not Open</span></button>
+                    <!-- Changed from "Scheduled" for clarification purposes since scheduling not working-->
                   {% endif %}
                 </div>
                 <div class="form-card-footer">
-                  <div class="text-wrapper-14">Published on {{ form.publication_date|date:"M d, Y" }}</div>
+                  <div class="text-wrapper-14">Created on {{ form.publication_date|date:"M d, Y" }}</div>
                 </div>
               </div>
             </div>

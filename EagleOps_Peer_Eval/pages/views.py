@@ -95,19 +95,22 @@ def todo_view(request):
 
     # Prepare data for forms section
     course_data = []
-    for course in course_list:
-        # Only get teams that the user belongs to for this course
-        user_teams = course.teams.filter(members=user_profile)
+    now = timezone.now()
 
+    for course in course_list:
+        user_teams = course.teams.filter(members=user_profile)
         for team in user_teams:
             forms = Form.objects.filter(course=course, teams=team).order_by('-created_at')
+
+            for form in forms:
+                form.save()
 
             self_assess = forms.filter(self_assessment=True)
 
             course_data.append({
                 'course_name': course.name,
                 'course_code': course.code,
-                'team': team,  # now a *single* team
+                'team': team,
                 'forms': forms,
                 'self_assess': self_assess,
             })
@@ -1153,3 +1156,16 @@ def publish_results(request, form_id):
     
     messages.success(request, "Results have been published successfully.")
     return redirect('form_results', course_id=course.id, form_id=form.id)
+
+@login_required
+def form_unpublish(request, course_id, form_id):
+    form = get_object_or_404(Form, id=form_id)
+    
+    # Optional: Check if user has permission to unpublish
+    if request.user.userprofile != form.created_by:
+        messages.error(request, "You don't have permission to unpublish this form.")
+        return redirect('some_view')
+
+    form.unpublish()
+    messages.success(request, f"'{form.title}' has been unpublished.")
+    return redirect('course_detail', course_id=course_id)
