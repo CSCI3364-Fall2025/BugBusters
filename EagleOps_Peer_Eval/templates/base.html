@@ -19,15 +19,24 @@
         <a href="/" class="brand">EagleOps Peer Evaluation</a>
         <ul class="nav-links">
             {% if not user.userprofile.admin %}
-                <li><a href="{% url 'todo' %}">To Do</a></li> <!-- Link to To Do list hidden for now -->
-                <li><a href="{% url 'teams' %}">Team</a></li> <!-- Link to Team page hidden for now -->
+                <li><a href="{% url 'todo' %}">To Do</a></li>
+                <li><a href="{% url 'teams' %}">Team</a></li>
             {% endif %}
             <li><a href="{% url 'courses' %}">Courses</a></li>
             <li><a href="#">Performance</a></li>
+            <li class="course-selector">
+                <select id="course-select" onchange="updateSelectedCourse(this.value)">
+                    {% for course in available_courses %}
+                        <option value="{{ course.id }}" {% if course.id == selected_course.id %}selected{% endif %}>
+                            {{ course.code }}: {{ course.name }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </li>
             <li class="dropdown">
                 <a href="/" class="active">Profile</a>
                 <div class="dropdown-content">
-                    <a href="{% url 'home' %}">My Profile</a>  <!-- Link to user profile -->
+                    <a href="{% url 'home' %}">My Profile</a>
                     <a href="{% url 'account_logout' %}?next=/">Logout</a>
                 </div>
             </li>
@@ -111,6 +120,27 @@
     .close-message:hover {
         opacity: 1;
     }
+    
+    .course-selector {
+        margin: 0 10px;
+    }
+    
+    .course-selector select {
+        padding: 8px 12px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        background-color: white;
+        font-size: 14px;
+        color: #333;
+        cursor: pointer;
+        min-width: 200px;
+    }
+    
+    .course-selector select:focus {
+        outline: none;
+        border-color: #4a90e2;
+        box-shadow: 0 0 0 2px rgba(74, 144, 226, 0.2);
+    }
 </style>
 
 <script>
@@ -127,6 +157,37 @@
             }, 5000);
         });
     });
+    
+    function updateSelectedCourse(courseId) {
+        fetch('/update-selected-course/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken')
+            },
+            body: JSON.stringify({ course_id: courseId })
+        }).then(response => {
+            if (response.ok) {
+                // Reload the page to update the content
+                window.location.reload();
+            }
+        });
+    }
+    
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
 </script>
 </body>
 </html>

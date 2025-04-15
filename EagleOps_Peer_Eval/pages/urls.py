@@ -51,4 +51,6 @@ urlpatterns = [
     # Form submission for managing teams in courses
     path("courses/<int:course_id>/teams/create/", views.create_team, name="create_team"),
     path("teams/<int:team_id>/edit/", views.edit_team, name="edit_team"),
+    path('form/<int:course_id>/<int:form_id>/results/<int:member_id>/', views.member_feedback, name='member_feedback'),
+    path('update-selected-course/', views.update_selected_course, name='update_selected_course'),
 ] 

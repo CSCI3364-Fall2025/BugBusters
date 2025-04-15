@@ -14,6 +14,7 @@ from django.contrib.auth import logout
 from django.db.utils import IntegrityError
 from django.contrib import messages
 from .forms import TeamForm
+from datetime import timedelta
 
 def home_view(request):
     if request.method == "POST":
@@ -41,6 +42,7 @@ def signout(request):
     logout(request)
     return redirect('home')
 
+@login_required
 def todo_view(request):
     """View for student to select a course then see their forms for that course"""
     user_profile = request.user.userprofile
@@ -79,47 +81,76 @@ def todo_view(request):
     # Combine the querysets and remove duplicates
     course_list = (instructor_courses | team_courses | enrolled_courses).distinct().order_by('name')
 
-    # Prepare course data for My Courses section
-    unique_courses = []
-    for course in course_list:
-        # Get teams the user belongs to for this course
-        user_teams = course.teams.filter(members=user_profile)
-        
-        course_data = {
-            'id': course.id,
-            'name': course.name,
-            'code': course.code,
-            'user_teams': user_teams,
-        }
-        unique_courses.append(course_data)
+    # Get the selected course from session
+    selected_course_id = request.session.get('selected_course_id')
+    selected_course = None
+    
+    if selected_course_id:
+        try:
+            selected_course = course_list.get(id=selected_course_id)
+        except Course.DoesNotExist:
+            pass
+    
+    # If no course is selected or the selected course is not in the user's courses,
+    # select the most recent course
+    if not selected_course or selected_course not in course_list:
+        selected_course = course_list.first() if course_list else None
+        if selected_course:
+            request.session['selected_course_id'] = selected_course.id
 
     # Prepare data for forms section
     course_data = []
     now = timezone.now()
 
-    for course in course_list:
-        user_teams = course.teams.filter(members=user_profile)
+    # If a course is selected, only show forms for that course
+    if selected_course:
+        user_teams = selected_course.teams.filter(members=user_profile)
+        
+        # Create a list of team data with their forms
+        team_data = []
         for team in user_teams:
-            forms = Form.objects.filter(course=course, teams=team).order_by('-created_at')
-
+            forms = Form.objects.filter(course=selected_course, teams=team).order_by('-created_at')
+            
+            # Add is_urgent property to each form
             for form in forms:
-                form.save()
-
-            self_assess = forms.filter(self_assessment=True)
-
-            course_data.append({
-                'course_name': course.name,
-                'course_code': course.code,
+                form.save()  # Ensure status is up to date
+                # A form is urgent if it's active and due within 24 hours
+                form.is_urgent = (
+                    form.status == 'active' and 
+                    form.closing_date - now <= timedelta(hours=24)
+                )
+            
+            # Calculate team urgency score (lower is more urgent)
+            urgency_score = float('inf')
+            for form in forms:
+                if form.status == 'active':
+                    time_left = form.closing_date - now
+                    if time_left.total_seconds() > 0:
+                        urgency_score = min(urgency_score, time_left.total_seconds())
+            
+            team_data.append({
                 'team': team,
                 'forms': forms,
-                'self_assess': self_assess,
+                'urgency_score': urgency_score
+            })
+        
+        # Sort teams by urgency (most urgent first)
+        team_data.sort(key=lambda x: x['urgency_score'])
+        
+        # Prepare final course data
+        for team_info in team_data:
+            course_data.append({
+                'course_name': selected_course.name,
+                'course_code': selected_course.code,
+                'team': team_info['team'],
+                'forms': team_info['forms'],
             })
 
     context = {
         'course_data': course_data,
-        'unique_courses': unique_courses,
         'join_error_message': join_error_message,
-        'join_success_message': join_success_message
+        'join_success_message': join_success_message,
+        'selected_course': selected_course,
     }
 
     return render(request, "to_do.html", context)
@@ -128,15 +159,37 @@ def todo_view(request):
 def teams(request):
     user = request.user.userprofile
 
+    # Get the selected course from session
+    selected_course_id = request.session.get('selected_course_id')
+    selected_course = None
+    
+    if selected_course_id:
+        try:
+            selected_course = Course.objects.get(id=selected_course_id)
+        except Course.DoesNotExist:
+            pass
+
     if user.admin:
         # Admins see all teams
-        teams = Team.objects.prefetch_related('members__user').all()
+        if selected_course:
+            teams = Team.objects.prefetch_related('members__user').filter(course=selected_course)
+        else:
+            teams = Team.objects.prefetch_related('members__user').all()
         courses = Course.objects.all()
     else:
         # Non-admins see only their team(s)
-        teams = Team.objects.prefetch_related('members__user').filter(members=user)
+        if selected_course:
+            teams = Team.objects.prefetch_related('members__user').filter(
+                members=user,
+                course=selected_course
+            )
+        else:
+            teams = Team.objects.prefetch_related('members__user').filter(members=user)
     
-    return render(request, 'teams.html', {'teams': teams})
+    return render(request, 'teams.html', {
+        'teams': teams,
+        'selected_course': selected_course
+    })
 
 @login_required
 def courses(request):
@@ -1245,3 +1298,48 @@ def member_feedback(request, course_id, form_id, member_id):
     }
     
     return render(request, 'member_feedback.html', context)
+
+@require_POST
+def update_selected_course(request):
+    """
+    View to update the selected course in the user's session.
+    """
+    try:
+        data = json.loads(request.body)
+        course_id = data.get('course_id')
+        
+        if not course_id:
+            return JsonResponse({'error': 'No course ID provided'}, status=400)
+            
+        # Verify the course exists and user has access to it
+        user_profile = request.user.userprofile
+        if user_profile.admin:
+            course = Course.objects.get(id=course_id)
+        else:
+            # Get courses where user is an instructor
+            instructor_courses = Course.objects.filter(instructors=user_profile)
+            
+            # Get courses where user is in a team
+            team_courses = Course.objects.filter(teams__members=user_profile)
+            
+            # Get courses where user is directly enrolled
+            enrolled_courses = Course.objects.filter(students=user_profile)
+            
+            # Combine the querysets and remove duplicates
+            available_courses = (instructor_courses | team_courses | enrolled_courses).distinct()
+            
+            try:
+                course = available_courses.get(id=course_id)
+            except Course.DoesNotExist:
+                return JsonResponse({'error': 'Course not found or access denied'}, status=403)
+        
+        # Update the session
+        request.session['selected_course_id'] = course.id
+        return JsonResponse({'success': True})
+        
+    except json.JSONDecodeError:
+        return JsonResponse({'error': 'Invalid JSON'}, status=400)
+    except Course.DoesNotExist:
+        return JsonResponse({'error': 'Course not found'}, status=404)
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)

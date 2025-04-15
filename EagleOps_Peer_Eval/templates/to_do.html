@@ -15,236 +15,362 @@
     </div>
   </div>
 
-  <!-- Dropdown -->
-  <div class="section">
-    <div class="dialog-body">
-      <label for="team-select" class="dropdown-label">Select a course and team:</label>
-      <select name="team" id="team-select" class="form-control dropdown-select">
-        <option value="" disabled selected>------</option>
-        {% for item in course_data %}
-          <option value="{{ item.team.id }}">
-            {{ item.course_name }} - {{ item.team.name }}
-          </option>
-        {% endfor %}
-      </select>
-      
-      <!-- Join Course Section -->
-      <div class="join-course-container">
-        <button id="show-join-course" class="btn btn-outline">+ Join a Course</button>
-        
-        <div id="join-course-form" style="display: none;">
-          <div class="join-course-header">
-            <h3>Join a Course</h3>
-            <button id="hide-join-course" class="btn-icon"><i class="fas fa-times"></i></button>
-          </div>
-          
-          {% if join_error_message %}
-          <div class="error-message">
-            {{ join_error_message }}
-          </div>
-          {% endif %}
-          
-          {% if join_success_message %}
-          <div class="success-message">
-            {{ join_success_message }}
-          </div>
-          {% endif %}
-          
-          <form method="post" action="{% url 'join_course' %}" class="join-course-form">
-            {% csrf_token %}
-            <div class="form-group">
-              <label for="join-code">Course Join Code</label>
-              <input type="text" id="join-code" name="join_code" class="form-control" placeholder="Enter code (e.g., AB12CD34)" required>
+  <div class="todo-container">
+    <!-- Forms Sections -->
+    <div class="forms-sections">
+      <!-- Active Forms Section -->
+      <div class="section active-forms">
+        <div class="section-header">
+          <h2>Active Forms</h2>
+          <button class="collapse-toggle" data-target="active-forms-content">
+            <i class="fas fa-chevron-down"></i>
+          </button>
+        </div>
+        <div class="section-content" id="active-forms-content">
+          {% if has_active_forms %}
+            {% for item in course_data %}
+              {% if item.forms %}
+                <div class="team-section">
+                  <div class="team-header">
+                    <h3>{{ item.team.name }}</h3>
+                    <span class="team-course">{{ item.course_name }}</span>
+                  </div>
+                  <div class="team-forms">
+                    {% for form in item.forms %}
+                      {% if form.status == 'active' %}
+                        <div class="form-card">
+                          <div class="form-card-inner">
+                            <div class="form-card-header">
+                              <div class="text-heading">{{ form.title }}</div>
+                              <div class="due-date {% if form.is_urgent %}urgent{% endif %}">
+                                <i class="fas fa-clock"></i>
+                                <span>{{ form.time_left }}</span>
+                              </div>
+                            </div>
+                            <div class="form-card-body">
+                              <div class="form-info">
+                                <div class="form-status">
+                                  <span class="status-indicator active"></span>
+                                  <span>Active</span>
+                                </div>
+                                <div class="form-date">
+                                  Created on {{ form.publication_date|date:"M d, Y" }}
+                                </div>
+                              </div>
+                              <a href="{% url 'form_evaluations' course_id=form.course.id form_id=form.id %}" 
+                                 class="action-button btn-primary">
+                                <span>Begin</span>
+                              </a>
+                            </div>
+                          </div>
+                        </div>
+                      {% endif %}
+                    {% endfor %}
+                  </div>
+                </div>
+              {% endif %}
+            {% endfor %}
+          {% else %}
+            <div class="empty-state">
+              <i class="fas fa-check-circle"></i>
+              <h3>No Active Forms</h3>
+              <p>You're all caught up! There are no active forms that need your attention right now.</p>
             </div>
-            <button type="submit" class="btn btn-primary">Join</button>
-          </form>
+          {% endif %}
         </div>
       </div>
-      
-      <div id="forms-container" class="team-boxes">
-        {% for item in course_data %}
-          {% for form in item.forms %}
-            <div class="form-card team-box" data-team-id="{{ item.team.id }}" style="display: none;">
-              <div class="form-card-inner">
-                <div class="form-card-header">
-                  <div class="text-heading">{{ form.title }}</div> 
-                  <p class="body-text">
-                    <span class="span">Due in </span>
-                    <span class="text-wrapper-13">
-                        {{ form.time_left }}
-                    </span>
-                </p>
+
+      <!-- Scheduled Forms Section -->
+      <div class="section scheduled-forms">
+        <div class="section-header">
+          <h2>Scheduled Forms</h2>
+          <button class="collapse-toggle" data-target="scheduled-forms-content">
+            <i class="fas fa-chevron-right"></i>
+          </button>
+        </div>
+        <div class="section-content" id="scheduled-forms-content" style="display: none;">
+          {% if has_scheduled_forms %}
+            {% for item in course_data %}
+              {% if item.forms %}
+                <div class="team-section">
+                  <div class="team-header">
+                    <h3>{{ item.team.name }}</h3>
+                    <span class="team-course">{{ item.course_name }}</span>
+                  </div>
+                  <div class="team-forms">
+                    {% for form in item.forms %}
+                      {% if form.status == 'scheduled' %}
+                        <div class="form-card">
+                          <div class="form-card-inner">
+                            <div class="form-card-header">
+                              <div class="text-heading">{{ form.title }}</div>
+                              <div class="due-date">
+                                <i class="fas fa-calendar"></i>
+                                <span>Opens {{ form.publication_date|date:"M d, Y" }}</span>
+                              </div>
+                            </div>
+                            <div class="form-card-body">
+                              <div class="form-info">
+                                <div class="form-status">
+                                  <span class="status-indicator scheduled"></span>
+                                  <span>Scheduled</span>
+                                </div>
+                                <div class="form-date">
+                                  Due {{ form.closing_date|date:"M d, Y" }}
+                                </div>
+                              </div>
+                              <button class="action-button btn-secondary" disabled>
+                                <span>Not Open</span>
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      {% endif %}
+                    {% endfor %}
+                  </div>
                 </div>
-                <div class="button-group">
-                  {% if form.status == 'active' %}
-                    <a href="{% url 'form_evaluations' course_id=form.course.id form_id=form.id %}" class="action-button btn-primary"><span class="button-5">Begin</span></a>
-                  {% elif form.status == 'closed' %}
-                    <button class="action-button btn-danger"><span class="button-7">Closed</span></button>
-                  {% else %}
-                    <button class="action-button btn-secondary"><span class="button-7">Not Open</span></button>
-                    <!-- Changed from "Scheduled" for clarification purposes since scheduling not working-->
-                  {% endif %}
-                </div>
-                <div class="form-card-footer">
-                  <div class="text-wrapper-14">Created on {{ form.publication_date|date:"M d, Y" }}</div>
-                </div>
-              </div>
+              {% endif %}
+            {% endfor %}
+          {% else %}
+            <div class="empty-state">
+              <i class="fas fa-calendar-alt"></i>
+              <h3>No Scheduled Forms</h3>
+              <p>There are no forms scheduled for the future. Check back later for new evaluations.</p>
             </div>
-          {% endfor %}
-        {% endfor %}
+          {% endif %}
+        </div>
       </div>
     </div>
   </div>
 
-  <!-- JavaScript to control form visibility -->
   <script>
-    const teamSelect = document.getElementById('team-select');
-    const formCards = document.querySelectorAll('.form-card');
-
-    teamSelect.addEventListener('change', function() {
-      const selectedTeamId = this.value;
-
-      formCards.forEach(card => {
-        if (card.getAttribute('data-team-id') === selectedTeamId) {
-          card.style.display = 'block';
+    // Collapsible sections
+    document.querySelectorAll('.collapse-toggle').forEach(toggle => {
+      toggle.addEventListener('click', function() {
+        const targetId = this.getAttribute('data-target');
+        const content = document.getElementById(targetId);
+        const icon = this.querySelector('i');
+        
+        if (content.style.display === 'none') {
+          content.style.display = 'block';
+          icon.classList.remove('fa-chevron-right');
+          icon.classList.add('fa-chevron-down');
         } else {
-          card.style.display = 'none';
+          content.style.display = 'none';
+          icon.classList.remove('fa-chevron-down');
+          icon.classList.add('fa-chevron-right');
         }
       });
-    });
-    
-    // Join course form toggle
-    document.getElementById('show-join-course').addEventListener('click', function() {
-      document.getElementById('join-course-form').style.display = 'block';
-      this.style.display = 'none';
-    });
-    
-    document.getElementById('hide-join-course').addEventListener('click', function() {
-      document.getElementById('join-course-form').style.display = 'none';
-      document.getElementById('show-join-course').style.display = 'block';
     });
   </script>
 {% endblock %}
 
 {% block extra_css %}
 <style>
-  /* Existing styles */
-  
-  /* Join Course Styles */
-  .join-course-container {
-    margin: 20px 0;
+  .todo-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
   }
-  
-  .btn-outline {
-    background-color: transparent;
-    border: 1px dashed #4a86e8;
-    color: #4a86e8;
-    padding: 8px 16px;
-    border-radius: 4px;
-    cursor: pointer;
-    transition: all 0.2s;
+
+  .forms-sections {
+    margin-top: 30px;
   }
-  
-  .btn-outline:hover {
-    background-color: #f0f5ff;
-  }
-  
-  #join-course-form {
-    background-color: #f8f9fa;
+
+  .section {
+    background: white;
     border-radius: 8px;
-    padding: 15px;
-    border: 1px solid #dee2e6;
-    margin-top: 10px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    margin-bottom: 20px;
   }
-  
-  .join-course-header {
+
+  .section-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 15px;
+    padding: 15px 20px;
+    border-bottom: 1px solid #eee;
   }
-  
-  .join-course-header h3 {
+
+  .section-header h2 {
     margin: 0;
-    font-size: 18px;
+    font-size: 1.5em;
     color: #333;
   }
-  
-  .btn-icon {
+
+  .collapse-toggle {
     background: none;
     border: none;
     cursor: pointer;
-    color: #6c757d;
-    width: 30px;
-    height: 30px;
+    color: #666;
+    font-size: 1.2em;
+  }
+
+  .section-content {
+    padding: 20px;
+  }
+
+  .team-section {
+    margin-bottom: 30px;
+  }
+
+  .team-header {
     display: flex;
     align-items: center;
-    justify-content: center;
-    border-radius: 50%;
+    margin-bottom: 15px;
+    padding-bottom: 10px;
+    border-bottom: 2px solid #4a86e8;
   }
-  
-  .btn-icon:hover {
-    background-color: #e9ecef;
-    color: #343a40;
+
+  .team-header h3 {
+    margin: 0;
+    font-size: 1.2em;
+    color: #333;
   }
-  
-  .join-course-form {
-    margin-top: 15px;
+
+  .team-course {
+    margin-left: 10px;
+    color: #666;
+    font-size: 0.9em;
   }
-  
-  .form-group {
+
+  .team-forms {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 20px;
+  }
+
+  .form-card {
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    transition: transform 0.2s;
+  }
+
+  .form-card:hover {
+    transform: translateY(-2px);
+  }
+
+  .form-card-inner {
+    padding: 15px;
+  }
+
+  .form-card-header {
     margin-bottom: 15px;
   }
-  
-  .form-group label {
-    display: block;
+
+  .text-heading {
+    font-size: 1.1em;
+    font-weight: 600;
+    color: #333;
     margin-bottom: 5px;
-    font-weight: 500;
   }
-  
-  .form-control {
-    width: 100%;
-    padding: 8px 12px;
-    border: 1px solid #ced4da;
-    border-radius: 4px;
-    font-size: 16px;
+
+  .due-date {
+    display: flex;
+    align-items: center;
+    color: #666;
+    font-size: 0.9em;
   }
-  
-  .btn-primary {
-    background-color: #4a86e8;
-    color: white;
-    border: none;
+
+  .due-date i {
+    margin-right: 5px;
+  }
+
+  .due-date.urgent {
+    color: #dc3545;
+  }
+
+  .form-card-body {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .form-info {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .form-status {
+    display: flex;
+    align-items: center;
+    margin-bottom: 5px;
+  }
+
+  .status-indicator {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    margin-right: 5px;
+  }
+
+  .status-indicator.active {
+    background-color: #28a745;
+  }
+
+  .status-indicator.scheduled {
+    background-color: #ffc107;
+  }
+
+  .form-date {
+    font-size: 0.8em;
+    color: #666;
+  }
+
+  .action-button {
     padding: 8px 16px;
     border-radius: 4px;
+    border: none;
     cursor: pointer;
+    font-weight: 500;
+    text-decoration: none;
+    display: inline-block;
   }
-  
-  .btn-primary:hover {
+
+  .action-button.btn-primary {
+    background-color: #4a86e8;
+    color: white;
+  }
+
+  .action-button.btn-primary:hover {
     background-color: #3a76d8;
   }
-  
-  .error-message {
-    background-color: #f8d7da;
-    color: #721c24;
-    padding: 10px;
-    border-radius: 4px;
-    margin-bottom: 15px;
-    border: 1px solid #f5c6cb;
+
+  .action-button.btn-secondary {
+    background-color: #6c757d;
+    color: white;
   }
-  
-  .success-message {
-    background-color: #d4edda;
-    color: #155724;
-    padding: 10px;
-    border-radius: 4px;
-    margin-bottom: 15px;
-    border: 1px solid #c3e6cb;
+
+  .action-button.btn-secondary:disabled {
+    opacity: 0.65;
+    cursor: not-allowed;
   }
-  
-  .dropdown-label {
-    margin-top: 5px;
-    display: block;
-    font-weight: 500;
+
+  /* Empty State Styles */
+  .empty-state {
+    text-align: center;
+    padding: 40px 20px;
+    color: #666;
+  }
+
+  .empty-state i {
+    font-size: 48px;
+    color: #4a86e8;
+    margin-bottom: 20px;
+  }
+
+  .empty-state h3 {
+    font-size: 1.5em;
+    color: #333;
+    margin-bottom: 10px;
+  }
+
+  .empty-state p {
+    font-size: 1.1em;
+    max-width: 500px;
+    margin: 0 auto;
+    line-height: 1.5;
   }
 </style>
 {% endblock %}
