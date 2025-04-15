@@ -198,19 +198,19 @@
                             </a>
                             
                             {% if form.status == 'draft' %}
-                            <form method="post" action="{% url 'form_publish' course_id=course.id form_id=form.id %}" style="display: inline;">
-                                {% csrf_token %}
-                                <button type="submit" class="btn-icon publish-btn" title="Publish">
-                                    <i class="fas fa-paper-plane" style="margin-right: 5px;"></i>
-                                </button>
-                            </form>
+                                <form method="post" action="{% url 'form_publish' course_id=course.id form_id=form.id %}" style="display: inline;">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-primary btn-sm" title="Publish" style="min-width: 120px;">
+                                        <i class="fas fa-paper-plane" style="margin-right: 5px;"></i> Publish
+                                    </button>
+                                </form>
                             {% else %}
-                            <form method="post" action="{% url 'form_unpublish' course_id=course.id form_id=form.id %}" style="display: inline;">
-                                {% csrf_token %}
-                                <button type="submit" class="btn btn-warning btn-sm" title="Unpublish Form" onclick="return confirm('Are you sure you want to unpublish this form?');">
-                                    <i class="fas fa-ban" aria-hidden="true" style="margin-right: 5px;"></i> Unpublish
-                                </button>
-                            </form>
+                                <form method="post" action="{% url 'form_unpublish' course_id=course.id form_id=form.id %}" style="display: inline;">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-warning btn-sm" title="Unpublish" onclick="return confirm('Are you sure you want to unpublish this form?');" style="min-width: 120px;">
+                                        <i class="fas fa-ban" style="margin-right: 5px;"></i> Unpublish
+                                    </button>
+                                </form>
                             {% endif %}
                             
                             <a href="#" class="btn-icon delete-form" data-id="{{ form.id }}" title="Delete">
