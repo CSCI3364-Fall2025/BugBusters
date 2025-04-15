@@ -98,14 +98,14 @@
         <div>
             <a href="{% url 'course_detail' course.id %}" class="btn btn-secondary">Back to Forms</a>
             {% if form and form.status == 'draft' %}
-            <form method="post" action="{% url 'form_publish' course.id form.id %}" style="display: inline;">
+            <form method="post" action="{% url 'form_open' course.id form.id %}" style="display: inline;">
                 {% csrf_token %}
-                <button type="submit" class="btn btn-success">Publish Form</button>
+                <button type="submit" class="btn btn-success">Open Form</button>
             </form>
             {% elif form %}
-            <form method="post" action="{% url 'form_unpublish' course.id form.id %}" style="display: inline;">
+            <form method="post" action="{% url 'form_close' course.id form.id %}" style="display: inline;">
                 {% csrf_token %}
-                <button type="submit" class="btn btn-danger">Unpublish Form</button>
+                <button type="submit" class="btn btn-danger">Close Form</button>
             </form>
             {% endif %}
         </div>

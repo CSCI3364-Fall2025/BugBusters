@@ -157,12 +157,14 @@ class Form(models.Model):
     SCHEDULED = 'scheduled'
     ACTIVE = 'active'
     CLOSED = 'closed'
+    PUBLISHED = 'published'
     
     STATUS_CHOICES = [
         (DRAFT, 'Draft'),
         (SCHEDULED, 'Scheduled'),
         (ACTIVE, 'Active'),
         (CLOSED, 'Closed'),
+        (PUBLISHED, 'Published'),
     ]
     
     title = models.CharField(max_length=200)

@@ -30,10 +30,10 @@ urlpatterns = [
     path('courses/<int:course_id>/templates/<int:template_id>/preview/', views.template_preview, name='template_preview'),
     
     # Form management URLs
-    path('courses/<int:course_id>/forms/new/', views.form_create_edit, name='form_create'),
+    path('courses/<int:course_id>/forms/create/', views.form_create_edit, name='form_create'),
     path('courses/<int:course_id>/forms/<int:form_id>/edit/', views.form_create_edit, name='form_edit'),
-    path('courses/<int:course_id>/forms/<int:form_id>/publish/', views.form_publish, name='form_publish'),
-    path('courses/<int:course_id>/forms/<int:form_id>/unpublish/', views.form_unpublish, name='form_unpublish'),
+    path('courses/<int:course_id>/forms/<int:form_id>/open/', views.form_open, name='form_open'),
+    path('courses/<int:course_id>/forms/<int:form_id>/close/', views.form_close, name='form_close'),
     path('courses/<int:course_id>/forms/<int:form_id>/delete/', views.form_delete, name='form_delete'),
     path('courses/<int:course_id>/forms/<int:form_id>/preview/', views.form_preview, name='form_preview'),
     
@@ -44,6 +44,7 @@ urlpatterns = [
     
     # Form results management URLs
     path('courses/<int:course_id>/forms/<int:form_id>/results/', views.form_results, name='form_results'),
+    path('courses/<int:course_id>/forms/<int:form_id>/member/<int:member_id>/', views.member_feedback, name='member_feedback'),
     path('responses/<int:response_id>/edit/', views.edit_response, name='edit_response'),
     path('forms/<int:form_id>/publish/', views.publish_results, name='publish_results'),
     

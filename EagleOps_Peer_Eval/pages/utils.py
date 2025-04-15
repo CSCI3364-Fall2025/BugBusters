@@ -39,10 +39,28 @@ def calculate_team_scores(form, team):
         total_evaluations = member_responses.count()
         completed_evaluations = member_responses.filter(submitted=True).count()
         
+        # Get a preview feedback (first text response)
+        preview_feedback = None
+        text_responses = member_responses.filter(
+            answers__question__question_type='open'
+        ).prefetch_related('answers__question').first()
+        
+        if text_responses:
+            text_answer = text_responses.answers.filter(
+                question__question_type='open'
+            ).first()
+            if text_answer:
+                preview_feedback = {
+                    'question': text_answer.question.text,
+                    'text': text_answer.text_answer,
+                    'evaluator': text_responses.evaluator.full_name
+                }
+        
         member_scores[member] = {
             'average_score': member_avg,
             'completion': f"{completed_evaluations}/{total_evaluations}",
-            'responses': member_responses
+            'responses': member_responses,
+            'preview_feedback': preview_feedback
         }
     
     # Calculate question averages

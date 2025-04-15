@@ -580,21 +580,32 @@ def form_create_edit(request, course_id, form_id=None):
     return render(request, 'form_edit.html', context)
 
 @login_required
-def form_publish(request, course_id, form_id):
+def form_open(request, course_id, form_id):
     if request.method == 'POST':
         form = get_object_or_404(Form, id=form_id, course_id=course_id)
         if form.status == 'draft':
             form.status = 'scheduled'
             form.save()
+            messages.success(request, f"Form '{form.title}' has been scheduled to open.")
+        elif form.status == 'closed':
+            form.status = 'active'
+            form.save(force_status=True)
+            messages.success(request, f"Form '{form.title}' has been reopened.")
+        else:
+            messages.warning(request, f"Form '{form.title}' cannot be opened in its current state.")
     return redirect('course_detail', course_id=course_id)
 
 @login_required
-def form_unpublish(request, course_id, form_id):
+def form_close(request, course_id, form_id):
     if request.method == 'POST':
         form = get_object_or_404(Form, id=form_id, course_id=course_id)
-        if form.status == 'scheduled':
-            form.status = 'draft'
-            form.save()
+        # Only allow closing if form is scheduled or active
+        if form.status in [Form.SCHEDULED, Form.ACTIVE]:
+            form.status = Form.CLOSED
+            form.save(force_status=True)
+            messages.success(request, f"Form '{form.title}' has been closed. Results can now be published.")
+        else:
+            messages.warning(request, f"Form '{form.title}' cannot be closed in its current state.")
     return redirect('course_detail', course_id=course_id)
 
 @login_required
@@ -768,7 +779,7 @@ def create_team(request, course_id):
     # Get all potential team members (students enrolled in the course and instructors)
     course_students = course.students.all()
     course_instructors = course.instructors.all()
-    available_users = (course_students | course_instructors).distinct()
+    available_users = (course_students | course_instructors).exclude(id=user_profile.id).distinct()
     
     if request.method == 'POST':
         form = TeamForm(request.POST)
@@ -812,7 +823,7 @@ def edit_team(request, team_id):
     # Get all potential team members (students enrolled in the course and instructors)
     course_students = course.students.all()
     course_instructors = course.instructors.all()
-    available_users = (course_students | course_instructors).distinct()
+    available_users = (course_students | course_instructors).exclude(id=user_profile.id).distinct()
     
     if request.method == 'POST':
         form = TeamForm(request.POST, instance=team)
@@ -1103,7 +1114,7 @@ def form_results(request, course_id, form_id):
         'form': form,
         'teams': teams,
         'team_scores': team_scores,
-        'is_published': form.status == Form.CLOSED,
+        'is_published': form.status == Form.PUBLISHED,
         'selected_member': selected_member,
         'member_feedback': member_feedback
     }
@@ -1147,15 +1158,41 @@ def publish_results(request, form_id):
     
     # Check if user is an instructor or admin
     if not user.admin and not course.instructors.filter(id=user.id).exists():
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            return JsonResponse({'error': 'You do not have permission to publish results.'}, status=403)
         messages.error(request, "You do not have permission to publish results.")
         return redirect('course_detail', course_id=course.id)
     
-    # Close the form to publish results
-    form.status = Form.CLOSED
-    form.save()
+    # Check if form is already published
+    if form.status == Form.PUBLISHED:
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            return JsonResponse({'error': 'Results are already published.'}, status=400)
+        messages.warning(request, "Results are already published.")
+        return redirect('form_results', course_id=course.id, form_id=form.id)
     
-    messages.success(request, "Results have been published successfully.")
-    return redirect('form_results', course_id=course.id, form_id=form.id)
+    # Check if form is still active
+    if form.status == Form.ACTIVE:
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            return JsonResponse({'error': 'Cannot publish results while form is still active.'}, status=400)
+        messages.warning(request, "Cannot publish results while form is still active.")
+        return redirect('form_results', course_id=course.id, form_id=form.id)
+    
+    try:
+        # Update form status to published
+        form.status = Form.PUBLISHED
+        form.save(force_status=True)  # Use force_status to prevent automatic status changes
+        
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            return JsonResponse({'success': True})
+        
+        messages.success(request, "Results have been published successfully.")
+        return redirect('form_results', course_id=course.id, form_id=form.id)
+        
+    except Exception as e:
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            return JsonResponse({'error': str(e)}, status=500)
+        messages.error(request, f"Error publishing results: {str(e)}")
+        return redirect('form_results', course_id=course.id, form_id=form.id)
 
 @login_required
 def form_unpublish(request, course_id, form_id):
@@ -1169,3 +1206,42 @@ def form_unpublish(request, course_id, form_id):
     form.unpublish()
     messages.success(request, f"'{form.title}' has been unpublished.")
     return redirect('course_detail', course_id=course_id)
+
+@login_required
+def member_feedback(request, course_id, form_id, member_id):
+    """View for moderating feedback for a specific team member"""
+    user = request.user.userprofile
+    course = get_object_or_404(Course, id=course_id)
+    form = get_object_or_404(Form, id=form_id, course=course)
+    member = get_object_or_404(UserProfile, id=member_id)
+    
+    # Check if user is an instructor or admin
+    if not user.admin and not course.instructors.filter(id=user.id).exists():
+        messages.error(request, "You do not have permission to moderate feedback.")
+        return redirect('course_detail', course_id=course_id)
+    
+    # Get member feedback
+    feedback_data = get_member_feedback(form, member)
+    
+    if request.method == 'POST':
+        # Handle feedback moderation
+        for response in feedback_data['text_responses']:
+            for answer in response['answers']:
+                answer_id = f"answer_{answer.id}"
+                if answer_id in request.POST:
+                    new_text = request.POST[answer_id]
+                    if new_text != answer.text_answer:
+                        answer.text_answer = new_text
+                        answer.save()
+        
+        messages.success(request, "Feedback has been updated successfully.")
+        return redirect('member_feedback', course_id=course_id, form_id=form_id, member_id=member_id)
+    
+    context = {
+        'course': course,
+        'form': form,
+        'member': member,
+        'member_feedback': feedback_data
+    }
+    
+    return render(request, 'member_feedback.html', context)

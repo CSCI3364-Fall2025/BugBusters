@@ -198,17 +198,24 @@
                             </a>
                             
                             {% if form.status == 'draft' %}
-                                <form method="post" action="{% url 'form_publish' course_id=course.id form_id=form.id %}" style="display: inline;">
+                                <form method="post" action="{% url 'form_open' course_id=course.id form_id=form.id %}" style="display: inline;">
                                     {% csrf_token %}
-                                    <button type="submit" class="btn btn-primary btn-sm" title="Publish" style="min-width: 120px;">
-                                        <i class="fas fa-paper-plane" style="margin-right: 5px;"></i> Publish
+                                    <button type="submit" class="btn btn-primary btn-sm" title="Open Form" style="min-width: 120px;">
+                                        <i class="fas fa-door-open" style="margin-right: 5px;"></i> Open Form
+                                    </button>
+                                </form>
+                            {% elif form.status == 'closed' %}
+                                <form method="post" action="{% url 'form_open' course_id=course.id form_id=form.id %}" style="display: inline;">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-primary btn-sm" title="Reopen Form" style="min-width: 120px;">
+                                        <i class="fas fa-door-open" style="margin-right: 5px;"></i> Reopen Form
                                     </button>
                                 </form>
                             {% else %}
-                                <form method="post" action="{% url 'form_unpublish' course_id=course.id form_id=form.id %}" style="display: inline;">
+                                <form method="post" action="{% url 'form_close' course_id=course.id form_id=form.id %}" style="display: inline;">
                                     {% csrf_token %}
-                                    <button type="submit" class="btn btn-warning btn-sm" title="Unpublish" onclick="return confirm('Are you sure you want to unpublish this form?');" style="min-width: 120px;">
-                                        <i class="fas fa-ban" style="margin-right: 5px;"></i> Unpublish
+                                    <button type="submit" class="btn btn-warning btn-sm" title="Close Form" onclick="return confirm('Are you sure you want to close this form?');" style="min-width: 120px;">
+                                        <i class="fas fa-door-closed" style="margin-right: 5px;"></i> Close Form
                                     </button>
                                 </form>
                             {% endif %}
