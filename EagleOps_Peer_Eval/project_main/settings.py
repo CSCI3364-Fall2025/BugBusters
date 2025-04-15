@@ -30,7 +30,7 @@ ALLOWED_HOSTS = []
 
 # Application definition
 
-SITE_ID = 3 # CHANGED SITE_ID TO 3 -Barry
+SITE_ID = 3  # Keep this as is since it matches our migration
 
 INSTALLED_APPS = [
     "django.contrib.admin",
@@ -39,8 +39,8 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    "django.contrib.sites",  # Must be before allauth
     'pages',
-    'django.contrib.sites',
     'allauth',
     'allauth.account',
     'allauth.socialaccount',
@@ -79,6 +79,7 @@ SOCIALACCOUNT_ADAPTER = "pages.adapters.CustomSocialAccountAdapter"
 SOCIALACCOUNT_QUERY_EMAIL = False
 
 AUTHENTICATION_BACKENDS = [
+    'django.contrib.auth.backends.ModelBackend',
     'allauth.account.auth_backends.AuthenticationBackend',
     'social_core.backends.google.GoogleOAuth2',
 ]
@@ -115,7 +116,7 @@ MIDDLEWARE = [
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     'allauth.account.middleware.AccountMiddleware',
-    'pages.middleware.NoSignupMiddleware',  # Custom middleware to prevent signup redirects
+    'pages.middleware.NoSignupMiddleware',
 ]
 
 ROOT_URLCONF = "project_main.urls"
