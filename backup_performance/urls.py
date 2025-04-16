@@ -22,9 +22,6 @@ urlpatterns = [
     path('courses/create/', views.create_course, name='create_course'),
     path('courses/<int:course_id>/edit/', views.edit_course, name='edit_course'),
     
-    # Forms dashboard for admins
-    path('forms-dashboard/', views.forms_dashboard, name='forms_dashboard'),
-    
     # Form template management URLs
     path('courses/<int:course_id>/templates/new/', views.template_create_edit, name='template_create'),
     path('courses/<int:course_id>/templates/<int:template_id>/edit/', views.template_create_edit, name='template_edit'),
@@ -57,8 +54,4 @@ urlpatterns = [
     path('form/<int:course_id>/<int:form_id>/results/<int:member_id>/', views.member_feedback, name='member_feedback'),
     path('update-selected-course/', views.update_selected_course, name='update_selected_course'),
     path('course/<int:course_id>/performance/', views.performance_view, name='performance'),
-    
-    # Roster page
-    path('courses/<int:course_id>/roster/', views.roster, name='roster'),
-    path('roster/', views.roster, name='roster_current'),
 ] 

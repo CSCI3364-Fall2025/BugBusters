@@ -32,6 +32,12 @@
                 <li><a href="{% url 'teams' %}">Team</a></li>
             {% endif %}
             <li><a href="{% url 'courses' %}">Courses</a></li>
+            {% if user.userprofile.admin %}
+                <li><a href="{% url 'forms_dashboard' %}">Forms</a></li>
+                {% if selected_course %}
+                    <li><a href="{% url 'roster_current' %}">Roster</a></li>
+                {% endif %}
+            {% endif %}
             {% if selected_course %}
                 <li><a href="{% url 'performance' course_id=selected_course.id %}">Performance</a></li>
             {% else %}

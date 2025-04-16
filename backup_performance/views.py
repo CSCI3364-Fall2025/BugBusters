@@ -101,8 +101,6 @@ def todo_view(request):
     # Prepare data for forms section
     course_data = []
     now = timezone.now()
-    has_active_forms = False
-    has_scheduled_forms = False
 
     # If a course is selected, only show forms for that course
     if selected_course:
@@ -172,7 +170,6 @@ def todo_view(request):
         'join_success_message': join_success_message,
         'selected_course': selected_course,
         'has_active_forms': has_active_forms,
-        'has_scheduled_forms': has_scheduled_forms,
     }
 
     return render(request, "to_do.html", context)
@@ -320,13 +317,7 @@ def course_detail(request, course_id):
     user_teams = course_teams.filter(members=user_profile)
     
     # Get all students in the course
-    enrolled_students = course.students.all().select_related('user').order_by('last_name', 'first_name')
-    
-    # Get all students that are members of any team in this course but might not be directly enrolled
-    team_members = UserProfile.objects.filter(teams__course=course).select_related('user').distinct()
-    
-    # Combine both querysets using union to avoid the "Cannot combine a unique query with a non-unique query" error
-    all_students = enrolled_students.union(team_members).order_by('last_name', 'first_name')
+    enrolled_students = course.students.all()
     
     context = {
         'course': course,
@@ -1374,6 +1365,91 @@ def update_selected_course(request):
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=500)
 
+# @login_required
+# def performance_view(request, course_id):
+#     """
+#     View for admins to see performance metrics and assessment results for team members.
+#     """
+#     course = get_object_or_404(Course, id=course_id)
+#     user_profile = request.user.userprofile
+    
+#     # Check if user is admin or instructor
+#     if not (user_profile.admin or user_profile in course.instructors.all()):
+#         raise PermissionDenied("You don't have permission to view this page.")
+    
+#     # Get all teams in the course
+#     teams = Team.objects.filter(course=course)
+    
+#     # Get all forms for this course
+#     forms = Form.objects.filter(course=course, status=Form.PUBLISHED)
+    
+#     # Prepare performance data
+#     performance_data = []
+#     for team in teams:
+#         team_data = {
+#             'team': team,
+#             'members': [],
+#         }
+        
+#         for member in team.members.all():
+#             member_data = {
+#                 'member': member,
+#                 'forms': [],
+#                 'average_score': 0,
+#             }
+            
+#             total_score = 0
+#             form_count = 0
+            
+#             for form in forms:
+#                 if form in team.assigned_forms.all():
+#                     # Get all responses for this member in this form
+#                     responses = FormResponse.objects.filter(
+#                         form=form,
+#                         evaluatee=member,
+#                         submitted=True
+#                     )
+                    
+#                     if responses.exists():
+#                         form_score = 0
+#                         response_count = 0
+                        
+#                         for response in responses:
+#                             # Calculate average score for this response
+#                             likert_answers = Answer.objects.filter(
+#                                 response=response,
+#                                 question__question_type=Question.LIKERT_SCALE
+#                             )
+                            
+#                             if likert_answers.exists():
+#                                 avg_score = sum(a.likert_answer for a in likert_answers) / len(likert_answers)
+#                                 form_score += avg_score
+#                                 response_count += 1
+                        
+#                         if response_count > 0:
+#                             form_score = form_score / response_count
+#                             total_score += form_score
+#                             form_count += 1
+                            
+#                             member_data['forms'].append({
+#                                 'form': form,
+#                                 'score': round(form_score, 2),
+#                             })
+            
+#             if form_count > 0:
+#                 member_data['average_score'] = round(total_score / form_count, 2)
+            
+#             team_data['members'].append(member_data)
+        
+#         performance_data.append(team_data)
+    
+#     context = {
+#         'course': course,
+#         'performance_data': performance_data,
+#     }
+    
+#     return render(request, 'performance.html', context)
+
 @login_required
 def performance_view(request, course_id):
     """
@@ -1513,148 +1589,3 @@ def performance_view(request, course_id):
     }
     
     return render(request, 'performance.html', context)
-
-@login_required
-def roster(request, course_id=None):
-    """
-    View for displaying a roster of all students in a course.
-    Only admins can access this view.
-    """
-    user_profile = request.user.userprofile
-    
-    # Only admins can view roster
-    if not user_profile.admin:
-        messages.error(request, "Only administrators can access the roster page.")
-        return redirect('courses')
-    
-    try:
-        # Get the course - either from URL or from session
-        if course_id:
-            course = get_object_or_404(Course, id=course_id)
-        else:
-            # Get course from session (navbar dropdown)
-            selected_course_id = request.session.get('selected_course_id')
-            if not selected_course_id:
-                messages.warning(request, "Please select a course from the dropdown first.")
-                return redirect('courses')
-            
-            course = get_object_or_404(Course, id=selected_course_id)
-        
-        print(f"Processing roster for course: {course.name} (ID: {course.id})")
-        
-        # Get all enrolled students
-        enrolled_students = course.students.all().select_related('user')
-        print(f"Found {enrolled_students.count()} directly enrolled students")
-        
-        # Get all students that are members of any team in this course but might not be directly enrolled
-        team_members = UserProfile.objects.filter(teams__course=course).select_related('user')
-        print(f"Found {team_members.count()} team members")
-        
-        # Since we can't use union() directly due to the error, use a different approach
-        # Create a set of user IDs and then fetch all those users
-        enrolled_ids = set(enrolled_students.values_list('id', flat=True))
-        team_member_ids = set(team_members.values_list('id', flat=True))
-        all_student_ids = enrolled_ids.union(team_member_ids)
-        
-        # Fetch all students with these IDs in one query
-        all_students = UserProfile.objects.filter(id__in=all_student_ids).select_related('user').order_by('last_name', 'first_name')
-        print(f"Combined unique student count: {all_students.count()}")
-        
-        # Count stats
-        student_count = all_students.count()
-        team_count = course.teams.count()
-        
-        context = {
-            'course': course,
-            'students': all_students,
-            'student_count': student_count,
-            'team_count': team_count,
-            'is_admin': user_profile.admin,
-        }
-        
-        return render(request, 'roster.html', context)
-    
-    except Course.DoesNotExist:
-        messages.error(request, "Course not found.")
-        return redirect('courses')
-    except Exception as e:
-        # Better error message and detailed logging
-        error_message = str(e)
-        print(f"Error in roster view: {error_message}")
-        import traceback
-        traceback.print_exc()  # Print full stack trace for debugging
-        messages.error(request, f"An error occurred while loading the roster: {error_message}")
-        return redirect('courses')
-
-@login_required
-def forms_dashboard(request):
-    """
-    Admin dashboard view showing all form templates and forms across all courses,
-    categorized by their status.
-    """
-    user_profile = request.user.userprofile
-    
-    # Only admins can access this dashboard
-    if not user_profile.admin:
-        messages.error(request, "Only administrators can access the forms dashboard.")
-        return redirect('courses')
-    
-    # Get the selected course from session
-    selected_course_id = request.session.get('selected_course_id')
-    selected_course = None
-    
-    if selected_course_id:
-        try:
-            selected_course = Course.objects.get(id=selected_course_id)
-        except Course.DoesNotExist:
-            selected_course = None
-    
-    # Define form statuses for categorization
-    active_status = Form.ACTIVE
-    scheduled_status = Form.SCHEDULED
-    closed_status = Form.CLOSED
-    published_status = Form.PUBLISHED
-    
-    # If a specific course is selected, filter by that course
-    if selected_course:
-        # Get templates for the selected course
-        templates = FormTemplate.objects.filter(course=selected_course).order_by('-created_at')
-        
-        # Get forms for the selected course, categorized by status
-        active_forms = Form.objects.filter(course=selected_course, status=active_status).order_by('closing_date')
-        scheduled_forms = Form.objects.filter(course=selected_course, status=scheduled_status).order_by('publication_date')
-        closed_pending_forms = Form.objects.filter(course=selected_course, status=closed_status).order_by('-closing_date')
-        published_forms = Form.objects.filter(course=selected_course, status=published_status).order_by('-closing_date')
-        
-        # Get courses for the dropdown
-        courses = Course.objects.all().order_by('name')
-    else:
-        # Get all templates across all courses
-        templates = FormTemplate.objects.all().order_by('-created_at')
-        
-        # Get all forms across all courses, categorized by status
-        active_forms = Form.objects.filter(status=active_status).order_by('closing_date')
-        scheduled_forms = Form.objects.filter(status=scheduled_status).order_by('publication_date')
-        closed_pending_forms = Form.objects.filter(status=closed_status).order_by('-closing_date')
-        published_forms = Form.objects.filter(status=published_status).order_by('-closing_date')
-        
-        # Get courses for the dropdown
-        courses = Course.objects.all().order_by('name')
-    
-    # Mark urgent forms (due within 24 hours)
-    now = timezone.now()
-    for form in active_forms:
-        form.is_urgent = form.closing_date - now <= timedelta(hours=24)
-    
-    context = {
-        'selected_course': selected_course,
-        'courses': courses,
-        'templates': templates,
-        'active_forms': active_forms,
-        'scheduled_forms': scheduled_forms,
-        'closed_pending_forms': closed_pending_forms,
-        'published_forms': published_forms,
-        'available_courses': courses,  # For the navbar course selector
-    }
-    
-    return render(request, 'forms_dashboard.html', context)
