@@ -67,11 +67,12 @@
                                     {% if form_data.open_responses %}
                                     <div class="form-result-item mb-2">
                                         <strong>{{ form_data.form.title }} Comments:</strong>
-                                        <ul class="list-unstyled">
+                                        <ul class="list-unstyled mb-0" style="list-style: none; padding-left: 0; margin-bottom: 0;">
                                             {% for comment in form_data.open_responses %}
-                                            <li><i class="fas fa-comment-alt"></i> {{ comment|truncatewords:8 }}</li>
-                                            {% empty %}
-                                            <li>No comments available</li>
+                                            <li class="mb-1">
+                                                <i class="fas fa-comment-alt text-muted"></i>
+                                                <span class="small">{{ comment|truncatewords:8 }}</span>
+                                            </li>
                                             {% endfor %}
                                         </ul>
                                     </div>
@@ -129,7 +130,7 @@
                                 </td>
                                 <td>
                                     {% if form_data.open_responses %}
-                                    <ul class="list-unstyled mb-0">
+                                    <ul class="list-unstyled mb-0" style="list-style: none; padding-left: 0; margin-bottom: 0;">
                                         {% for comment in form_data.open_responses %}
                                         <li class="mb-1">
                                             <i class="fas fa-comment-alt text-muted"></i>
