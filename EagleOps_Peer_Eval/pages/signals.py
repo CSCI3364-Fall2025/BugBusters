@@ -19,12 +19,18 @@ def update_user_profile_on_login(sender, request, user, **kwargs):
     ]  # Existing superuser email
     user_profile, created = UserProfile.objects.get_or_create(user=user)
 
-    # If the user is logged in through Google OAuth, populate first and last name
+    # If the user is logged in through Google OAuth and profile is newly created or names are empty,
+    # populate first and last name
     if user.socialaccount_set.exists():
         social_account = user.socialaccount_set.first()
         extra_data = social_account.extra_data
-        user_profile.first_name = extra_data.get('given_name', '')
-        user_profile.last_name = extra_data.get('family_name', '')
+        
+        # Only update names if they're empty or this is a newly created profile
+        if created or not user_profile.first_name:
+            user_profile.first_name = extra_data.get('given_name', '')
+        
+        if created or not user_profile.last_name:
+            user_profile.last_name = extra_data.get('family_name', '')
 
     if user.email in admin_emails:  # Check if user email is in admin_emails
         user_profile.admin = True
@@ -88,8 +94,14 @@ def auto_login_without_signup_form(sender, request, sociallogin, **kwargs):
             user_profile, created = UserProfile.objects.get_or_create(user=user)
             if sociallogin.account.provider == 'google':
                 extra_data = sociallogin.account.extra_data  # Get Google OAuth extra data
-                user_profile.first_name = extra_data.get('given_name', '')  # Save first name from Google
-                user_profile.last_name = extra_data.get('family_name', '')  # Save last name from Google
+                
+                # Only update names if they're empty or this is a newly created profile
+                if created or not user_profile.first_name:
+                    user_profile.first_name = extra_data.get('given_name', '')
+                
+                if created or not user_profile.last_name:
+                    user_profile.last_name = extra_data.get('family_name', '')
+                
                 user_profile.save()
                 print(f"UserProfile for {user.username} updated with Google data")
 
