@@ -308,7 +308,13 @@ def course_detail(request, course_id):
     user_teams = course_teams.filter(members=user_profile)
     
     # Get all students in the course
-    enrolled_students = course.students.all()
+    enrolled_students = course.students.all().select_related('user').order_by('last_name', 'first_name')
+    
+    # Get all students that are members of any team in this course but might not be directly enrolled
+    team_members = UserProfile.objects.filter(teams__course=course).select_related('user').distinct()
+    
+    # Combine both querysets using union to avoid the "Cannot combine a unique query with a non-unique query" error
+    all_students = enrolled_students.union(team_members).order_by('last_name', 'first_name')
     
     context = {
         'course': course,
@@ -1353,3 +1359,75 @@ def update_selected_course(request):
         return JsonResponse({'error': 'Course not found'}, status=404)
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=500)
+
+@login_required
+def roster(request, course_id=None):
+    """
+    View for displaying a roster of all students in a course.
+    Only admins can access this view.
+    """
+    user_profile = request.user.userprofile
+    
+    # Only admins can view roster
+    if not user_profile.admin:
+        messages.error(request, "Only administrators can access the roster page.")
+        return redirect('courses')
+    
+    try:
+        # Get the course - either from URL or from session
+        if course_id:
+            course = get_object_or_404(Course, id=course_id)
+        else:
+            # Get course from session (navbar dropdown)
+            selected_course_id = request.session.get('selected_course_id')
+            if not selected_course_id:
+                messages.warning(request, "Please select a course from the dropdown first.")
+                return redirect('courses')
+            
+            course = get_object_or_404(Course, id=selected_course_id)
+        
+        print(f"Processing roster for course: {course.name} (ID: {course.id})")
+        
+        # Get all enrolled students
+        enrolled_students = course.students.all().select_related('user')
+        print(f"Found {enrolled_students.count()} directly enrolled students")
+        
+        # Get all students that are members of any team in this course but might not be directly enrolled
+        team_members = UserProfile.objects.filter(teams__course=course).select_related('user')
+        print(f"Found {team_members.count()} team members")
+        
+        # Since we can't use union() directly due to the error, use a different approach
+        # Create a set of user IDs and then fetch all those users
+        enrolled_ids = set(enrolled_students.values_list('id', flat=True))
+        team_member_ids = set(team_members.values_list('id', flat=True))
+        all_student_ids = enrolled_ids.union(team_member_ids)
+        
+        # Fetch all students with these IDs in one query
+        all_students = UserProfile.objects.filter(id__in=all_student_ids).select_related('user').order_by('last_name', 'first_name')
+        print(f"Combined unique student count: {all_students.count()}")
+        
+        # Count stats
+        student_count = all_students.count()
+        team_count = course.teams.count()
+        
+        context = {
+            'course': course,
+            'students': all_students,
+            'student_count': student_count,
+            'team_count': team_count,
+            'is_admin': user_profile.admin,
+        }
+        
+        return render(request, 'roster.html', context)
+    
+    except Course.DoesNotExist:
+        messages.error(request, "Course not found.")
+        return redirect('courses')
+    except Exception as e:
+        # Better error message and detailed logging
+        error_message = str(e)
+        print(f"Error in roster view: {error_message}")
+        import traceback
+        traceback.print_exc()  # Print full stack trace for debugging
+        messages.error(request, f"An error occurred while loading the roster: {error_message}")
+        return redirect('courses')

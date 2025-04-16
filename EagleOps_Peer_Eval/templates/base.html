@@ -23,7 +23,9 @@
                 <li><a href="{% url 'teams' %}">Team</a></li>
             {% endif %}
             <li><a href="{% url 'courses' %}">Courses</a></li>
-            <li><a href="#">Performance</a></li>
+            {% if user.userprofile.admin and selected_course %}
+                <li><a href="{% url 'roster_current' %}">Roster</a></li>
+            {% endif %}
             <li class="course-selector">
                 <select id="course-select" onchange="updateSelectedCourse(this.value)">
                     {% for course in available_courses %}
