@@ -113,12 +113,24 @@ def todo_view(request):
             
             # Add is_urgent property to each form
             for form in forms:
-                form.save()  # Ensure status is up to date
-                # A form is urgent if it's active and due within 24 hours
+                form.refresh_from_db()  # Always pull fresh data
+                if form.status == Form.DRAFT:
+                    continue  # Skip drafts entirely
+
+                # Force update status in memory without saving
+                now = timezone.now()
+                if form.status != Form.DRAFT:
+                    if now < form.publication_date:
+                        form.status = Form.SCHEDULED
+                    elif now >= form.publication_date and now < form.closing_date:
+                        form.status = Form.ACTIVE
+                    elif now >= form.closing_date:
+                        form.status = Form.CLOSED
+
                 form.is_urgent = (
-                    form.status == 'active' and 
+                    form.status == Form.ACTIVE and 
                     form.closing_date - now <= timedelta(hours=24)
-                )
+    )
             
             # Calculate team urgency score (lower is more urgent)
             urgency_score = float('inf')
@@ -145,12 +157,19 @@ def todo_view(request):
                 'team': team_info['team'],
                 'forms': team_info['forms'],
             })
+        
+    has_active_forms = any(
+        form.status == 'active'
+        for item in course_data
+        for form in item['forms']
+    )
 
     context = {
         'course_data': course_data,
         'join_error_message': join_error_message,
         'join_success_message': join_success_message,
         'selected_course': selected_course,
+        'has_active_forms': has_active_forms,
     }
 
     return render(request, "to_do.html", context)
