@@ -53,4 +53,5 @@ urlpatterns = [
     path("teams/<int:team_id>/edit/", views.edit_team, name="edit_team"),
     path('form/<int:course_id>/<int:form_id>/results/<int:member_id>/', views.member_feedback, name='member_feedback'),
     path('update-selected-course/', views.update_selected_course, name='update_selected_course'),
+    path('course/<int:course_id>/performance/', views.performance_view, name='performance'),
 ] 

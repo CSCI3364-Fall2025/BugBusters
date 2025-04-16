@@ -1362,3 +1362,88 @@ def update_selected_course(request):
         return JsonResponse({'error': 'Course not found'}, status=404)
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=500)
+
+@login_required
+def performance_view(request, course_id):
+    """
+    View for admins to see performance metrics and assessment results for team members.
+    """
+    course = get_object_or_404(Course, id=course_id)
+    user_profile = request.user.userprofile
+    
+    # Check if user is admin or instructor
+    if not (user_profile.admin or user_profile in course.instructors.all()):
+        raise PermissionDenied("You don't have permission to view this page.")
+    
+    # Get all teams in the course
+    teams = Team.objects.filter(course=course)
+    
+    # Get all forms for this course
+    forms = Form.objects.filter(course=course, status=Form.PUBLISHED)
+    
+    # Prepare performance data
+    performance_data = []
+    for team in teams:
+        team_data = {
+            'team': team,
+            'members': [],
+        }
+        
+        for member in team.members.all():
+            member_data = {
+                'member': member,
+                'forms': [],
+                'average_score': 0,
+            }
+            
+            total_score = 0
+            form_count = 0
+            
+            for form in forms:
+                if form in team.assigned_forms.all():
+                    # Get all responses for this member in this form
+                    responses = FormResponse.objects.filter(
+                        form=form,
+                        evaluatee=member,
+                        submitted=True
+                    )
+                    
+                    if responses.exists():
+                        form_score = 0
+                        response_count = 0
+                        
+                        for response in responses:
+                            # Calculate average score for this response
+                            likert_answers = Answer.objects.filter(
+                                response=response,
+                                question__question_type=Question.LIKERT_SCALE
+                            )
+                            
+                            if likert_answers.exists():
+                                avg_score = sum(a.likert_answer for a in likert_answers) / len(likert_answers)
+                                form_score += avg_score
+                                response_count += 1
+                        
+                        if response_count > 0:
+                            form_score = form_score / response_count
+                            total_score += form_score
+                            form_count += 1
+                            
+                            member_data['forms'].append({
+                                'form': form,
+                                'score': round(form_score, 2),
+                            })
+            
+            if form_count > 0:
+                member_data['average_score'] = round(total_score / form_count, 2)
+            
+            team_data['members'].append(member_data)
+        
+        performance_data.append(team_data)
+    
+    context = {
+        'course': course,
+        'performance_data': performance_data,
+    }
+    
+    return render(request, 'performance.html', context)
