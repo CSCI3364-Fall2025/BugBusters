@@ -2,9 +2,11 @@
 {% load static %}
 {% load custom_filters %}
 
+
 {% block title %}{{ form.title }} - Results - EagleOps{% endblock %}
 
 {% block content %}
+{% csrf_token %}
 <div class="page-container">
     <div class="page-header">
         <div class="header-left">

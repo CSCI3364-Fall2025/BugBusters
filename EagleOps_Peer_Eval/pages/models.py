@@ -228,23 +228,20 @@ class Form(models.Model):
         Override save method to automatically update status based on dates.
         Draft status is only changed if the form is not in draft mode.
         """
-
+        
         self.full_clean()  # Validate the model before saving
 
-        # Update status based on dates if status isn't being explicitly set
-        now = timezone.now()
-        
-        # Only auto-update status if it's not in draft mode
-        # and the status isn't being explicitly changed
+        # Check for 'force_status' argument to skip automatic status update
         force_status = kwargs.pop('force_status', False)
         if not force_status and self.status != self.DRAFT:
+            now = timezone.now()
             if now < self.publication_date:
                 self.status = self.SCHEDULED
             elif now >= self.publication_date and now < self.closing_date:
                 self.status = self.ACTIVE
             elif now >= self.closing_date:
                 self.status = self.CLOSED
-                
+
         super().save(*args, **kwargs)
 
     @property

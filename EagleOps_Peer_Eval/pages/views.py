@@ -117,20 +117,20 @@ def todo_view(request):
                 if form.status == Form.DRAFT:
                     continue  # Skip drafts entirely
 
-                # Force update status in memory without saving
-                now = timezone.now()
-                if form.status != Form.DRAFT:
-                    if now < form.publication_date:
-                        form.status = Form.SCHEDULED
-                    elif now >= form.publication_date and now < form.closing_date:
-                        form.status = Form.ACTIVE
-                    elif now >= form.closing_date:
-                        form.status = Form.CLOSED
+                calculated_status = form.status  # Default to the current status
+                if now < form.publication_date:
+                    calculated_status = Form.SCHEDULED
+                elif now >= form.publication_date and now < form.closing_date:
+                    calculated_status = Form.ACTIVE
+                elif now >= form.closing_date:
+                    calculated_status = Form.CLOSED
+
+                form.calculated_status = calculated_status
 
                 form.is_urgent = (
                     form.status == Form.ACTIVE and 
                     form.closing_date - now <= timedelta(hours=24)
-    )
+                )
             
             # Calculate team urgency score (lower is more urgent)
             urgency_score = float('inf')
@@ -510,7 +510,9 @@ def template_delete(request, course_id, template_id):
     
     return redirect('course_detail', course_id=course_id)
 
-@login_required
+from django.utils import timezone
+from datetime import datetime
+
 def form_create_edit(request, course_id, form_id=None):
     """View for creating or editing a form"""
     user = request.user.userprofile
@@ -539,6 +541,10 @@ def form_create_edit(request, course_id, form_id=None):
             closing_date = data.get('closing_date')
             team_ids = data.get('team_ids', [])
             self_assessment = data.get('self_assessment', False)
+            
+            # Convert publication_date and closing_date to timezone-aware datetime
+            publication_date = timezone.make_aware(datetime.strptime(publication_date, '%Y-%m-%dT%H:%M'))
+            closing_date = timezone.make_aware(datetime.strptime(closing_date, '%Y-%m-%dT%H:%M'))
             
             # Validate required fields
             if not title:
@@ -590,9 +596,6 @@ def form_create_edit(request, course_id, form_id=None):
                 # Update teams
                 form.teams.set(teams_to_assign)
                 
-                # Since this is an edit, we don't need to recreate form responses
-                # We might need to update them if teams have changed, but that's more complex
-                
                 return JsonResponse({'status': 'success', 'form_id': form.id})
             else:
                 # Create new form
@@ -609,26 +612,6 @@ def form_create_edit(request, course_id, form_id=None):
                 
                 # Now we can set the teams
                 form.teams.add(*teams_to_assign)
-                
-                # Create FormResponse objects for each evaluation
-                for team in teams_to_assign:
-                    members = team.members.all()
-                    for evaluator in members:
-                        for evaluatee in members:
-                            # If self-assessment is disabled, skip self-evaluations
-                            if not self_assessment and evaluator == evaluatee:
-                                continue
-                            
-                            # Use get_or_create to safely handle existing responses
-                            FormResponse.objects.get_or_create(
-                                form=form,
-                                evaluator=evaluator,
-                                evaluatee=evaluatee,
-                                defaults={
-                                    'submitted': False,
-                                    'submission_date': None
-                                }
-                            )
                 
                 return JsonResponse({'status': 'success', 'form_id': form.id})
         except Exception as e:
@@ -655,25 +638,33 @@ def form_create_edit(request, course_id, form_id=None):
 def form_open(request, course_id, form_id):
     if request.method == 'POST':
         form = get_object_or_404(Form, id=form_id, course_id=course_id)
+        
+        # If form is in draft status, change to scheduled
         if form.status == 'draft':
             form.status = 'scheduled'
-            form.save()
+            form.save(force_status=True)  # Ensure the status is updated with force_status
             messages.success(request, f"Form '{form.title}' has been scheduled to open.")
+        
+        # If form is closed, change to active
         elif form.status == 'closed':
             form.status = 'active'
-            form.save(force_status=True)
+            form.save(force_status=True)  # Ensure the status is updated with force_status
             messages.success(request, f"Form '{form.title}' has been reopened.")
+        
         else:
             messages.warning(request, f"Form '{form.title}' cannot be opened in its current state.")
+    
     return redirect('course_detail', course_id=course_id)
 
 @login_required
 def form_close(request, course_id, form_id):
+    print("Closing form")
     if request.method == 'POST':
         form = get_object_or_404(Form, id=form_id, course_id=course_id)
         # Only allow closing if form is scheduled or active
         if form.status in [Form.SCHEDULED, Form.ACTIVE]:
             form.status = Form.CLOSED
+            print(form.status)
             form.save(force_status=True)
             messages.success(request, f"Form '{form.title}' has been closed. Results can now be published.")
         else:

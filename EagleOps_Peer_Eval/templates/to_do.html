@@ -37,34 +37,38 @@
                   </div>
                   <div class="team-forms">
                     {% for form in item.forms %}
-                      {% if form.status == 'active' %}
-                        <div class="form-card">
-                          <div class="form-card-inner">
-                            <div class="form-card-header">
-                              <div class="text-heading">{{ form.title }}</div>
-                              <div class="due-date {% if form.is_urgent %}urgent{% endif %}">
-                                <i class="fas fa-clock"></i>
-                                <span>{{ form.time_left }}</span>
-                              </div>
-                            </div>
-                            <div class="form-card-body">
-                              <div class="form-info">
-                                <div class="form-status">
-                                  <span class="status-indicator active"></span>
-                                  <span>Active</span>
-                                </div>
-                                <div class="form-date">
-                                  Created on {{ form.publication_date|date:"M d, Y" }}
-                                </div>
-                              </div>
-                              <a href="{% url 'form_evaluations' course_id=form.course.id form_id=form.id %}" 
-                                 class="action-button btn-primary">
-                                <span>Begin</span>
-                              </a>
+                      <div class="form-card">
+                        <div class="form-card-inner">
+                          <div class="form-card-header">
+                            <div class="text-heading">{{ form.title }}</div>
+                            <div class="due-date {% if form.is_urgent %}urgent{% endif %}">
+                              <i class="fas fa-clock"></i>
+                              <span>{{ form.time_left }}</span>
                             </div>
                           </div>
+                          <div class="form-card-body">
+                            <div class="form-info">
+                              <div class="form-status">
+                                <span class="status-indicator {% if form.status == 'active' %}active{% elif form.status == 'scheduled' %}scheduled{% endif %}"></span>
+                                <span>{% if form.status == 'active' %}Active{% elif form.status == 'scheduled' %}Scheduled{% endif %}</span>
+                              </div>
+                              <div class="form-date">
+                                Created on {{ form.publication_date|date:"M d, Y" }}
+                              </div>
+                            </div>
+                            <!-- Only show the "Begin" button for active forms -->
+                            {% if form.status == 'active' %}
+                              <a href="{% url 'form_evaluations' course_id=form.course.id form_id=form.id %}" class="action-button btn-primary">
+                                <span>Begin</span>
+                              </a>
+                            {% else %}
+                              <button class="action-button btn-secondary" disabled>
+                                <span>Not Open</span>
+                              </button>
+                            {% endif %}
+                          </div>
                         </div>
-                      {% endif %}
+                      </div>
                     {% endfor %}
                   </div>
                 </div>
