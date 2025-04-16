@@ -240,6 +240,12 @@
                                 <a href="{% url 'form_results' form.course.id form.id %}" class="btn-icon" title="Results">
                                     <i class="fas fa-chart-bar" style="margin-right: 5px;"></i>
                                 </a>
+                                <form method="post" action="{% url 'form_unpublish' form.course.id form.id %}" style="display: inline;">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-warning btn-sm" title="Unpublish Results" onclick="return confirm('Are you sure you want to unpublish these results? This will hide the results from students.');" style="min-width: 120px;">
+                                        <i class="fas fa-eye-slash" style="margin-right: 5px;"></i> Unpublish
+                                    </button>
+                                </form>
                                 <a href="#" class="btn-icon delete-form" data-id="{{ form.id }}" title="Delete">
                                     <i class="fas fa-trash"></i>
                                 </a>

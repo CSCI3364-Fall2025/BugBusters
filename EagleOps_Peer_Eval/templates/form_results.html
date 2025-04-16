@@ -17,9 +17,12 @@
         </div>
         {% if not is_published %}
         <div class="header-actions">
-            <button type="button" class="btn btn-primary" onclick="confirmPublish()">
-                <i class="fas fa-paper-plane" style="margin-right: 10px;"></i> Publish Results
-            </button>
+            <form method="post" action="{% url 'publish_results' form.id %}" style="display: inline;">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-primary" onclick="return confirm('Are you sure you want to publish the results? Students will be able to see their feedback.');">
+                    <i class="fas fa-paper-plane" style="margin-right: 10px;"></i> Publish Results
+                </button>
+            </form>
         </div>
         {% endif %}
     </div>
@@ -485,15 +488,30 @@
             $.ajax({
                 url: "{% url 'publish_results' form.id %}",
                 type: 'POST',
-                data: {
-                    csrfmiddlewaretoken: '{{ csrf_token }}'
+                headers: {
+                    'X-CSRFToken': csrftoken
                 },
                 success: function(response) {
-                    // Reload the page to show updated status
-                    window.location.reload();
+                    if (response.success) {
+                        // Show success message
+                        alert(response.message);
+                        // Reload the page to show updated status
+                        window.location.reload();
+                    } else {
+                        // Show error message
+                        alert(response.error || 'Error publishing results');
+                    }
                 },
                 error: function(xhr, status, error) {
-                    alert('Error publishing results: ' + error);
+                    // Try to get error message from response
+                    let errorMsg = 'Error publishing results';
+                    try {
+                        const response = JSON.parse(xhr.responseText);
+                        errorMsg = response.error || errorMsg;
+                    } catch (e) {
+                        errorMsg = error || errorMsg;
+                    }
+                    alert(errorMsg);
                 }
             });
         }

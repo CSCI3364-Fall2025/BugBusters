@@ -50,6 +50,7 @@ urlpatterns = [
     path('courses/<int:course_id>/forms/<int:form_id>/member/<int:member_id>/', views.member_feedback, name='member_feedback'),
     path('responses/<int:response_id>/edit/', views.edit_response, name='edit_response'),
     path('forms/<int:form_id>/publish/', views.publish_results, name='publish_results'),
+    path('courses/<int:course_id>/forms/<int:form_id>/unpublish/', views.form_unpublish, name='form_unpublish'),
     
     # Form submission for managing teams in courses
     path("courses/<int:course_id>/teams/create/", views.create_team, name="create_team"),
