@@ -101,6 +101,8 @@ def todo_view(request):
     # Prepare data for forms section
     course_data = []
     now = timezone.now()
+    has_active_forms = False
+    has_scheduled_forms = False
 
     # If a course is selected, only show forms for that course
     if selected_course:
@@ -114,6 +116,12 @@ def todo_view(request):
             # Add is_urgent property to each form
             for form in forms:
                 form.save()  # Ensure status is up to date
+                # Check if this form should be considered active or scheduled
+                if form.status == 'active':
+                    has_active_forms = True
+                elif form.status == 'scheduled':
+                    has_scheduled_forms = True
+                
                 # A form is urgent if it's active and due within 24 hours
                 form.is_urgent = (
                     form.status == 'active' and 
@@ -151,6 +159,8 @@ def todo_view(request):
         'join_error_message': join_error_message,
         'join_success_message': join_success_message,
         'selected_course': selected_course,
+        'has_active_forms': has_active_forms,
+        'has_scheduled_forms': has_scheduled_forms,
     }
 
     return render(request, "to_do.html", context)

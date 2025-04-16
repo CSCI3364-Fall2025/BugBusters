@@ -485,7 +485,7 @@
             try {
                 const url = isEdit 
                     ? `/courses/${courseId}/forms/${formId}/edit/` 
-                    : `/courses/${courseId}/forms/new/`;
+                    : `/courses/${courseId}/forms/create/`;
                 
                 console.log('Sending request to:', url);
                 
@@ -516,7 +516,6 @@
                             setTimeout(() => {
                                 window.location.href = `/courses/${courseId}/forms/${result.form_id}/edit/`;
                             }, 1500);
-                            return null;
                         }
                         return result;
                     } else {
@@ -529,14 +528,20 @@
                 } else {
                     let errorMessage = `Error ${response.status}: ${response.statusText}`;
                     try {
-                        const errorData = await response.json();
-                        errorMessage = errorData.message || errorMessage;
-                    } catch (e) {
-                        // If response isn't JSON, try to get text
-                        const errorText = await response.text();
-                        if (errorText) {
-                            errorMessage = errorText;
+                        // Clone the response before attempting to read its body
+                        const responseClone = response.clone();
+                        try {
+                            const errorData = await response.json();
+                            errorMessage = errorData.message || errorMessage;
+                        } catch (jsonError) {
+                            // If response isn't JSON, try to get text from the clone
+                            const errorText = await responseClone.text();
+                            if (errorText) {
+                                errorMessage = errorText;
+                            }
                         }
+                    } catch (e) {
+                        console.error('Error parsing response:', e);
                     }
                     
                     console.error('Server error:', errorMessage);
