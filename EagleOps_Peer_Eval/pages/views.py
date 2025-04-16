@@ -1431,3 +1431,76 @@ def roster(request, course_id=None):
         traceback.print_exc()  # Print full stack trace for debugging
         messages.error(request, f"An error occurred while loading the roster: {error_message}")
         return redirect('courses')
+
+@login_required
+def forms_dashboard(request):
+    """
+    Admin dashboard view showing all form templates and forms across all courses,
+    categorized by their status.
+    """
+    user_profile = request.user.userprofile
+    
+    # Only admins can access this dashboard
+    if not user_profile.admin:
+        messages.error(request, "Only administrators can access the forms dashboard.")
+        return redirect('courses')
+    
+    # Get the selected course from session
+    selected_course_id = request.session.get('selected_course_id')
+    selected_course = None
+    
+    if selected_course_id:
+        try:
+            selected_course = Course.objects.get(id=selected_course_id)
+        except Course.DoesNotExist:
+            selected_course = None
+    
+    # Define form statuses for categorization
+    active_status = Form.ACTIVE
+    scheduled_status = Form.SCHEDULED
+    closed_status = Form.CLOSED
+    published_status = Form.PUBLISHED
+    
+    # If a specific course is selected, filter by that course
+    if selected_course:
+        # Get templates for the selected course
+        templates = FormTemplate.objects.filter(course=selected_course).order_by('-created_at')
+        
+        # Get forms for the selected course, categorized by status
+        active_forms = Form.objects.filter(course=selected_course, status=active_status).order_by('closing_date')
+        scheduled_forms = Form.objects.filter(course=selected_course, status=scheduled_status).order_by('publication_date')
+        closed_pending_forms = Form.objects.filter(course=selected_course, status=closed_status).order_by('-closing_date')
+        published_forms = Form.objects.filter(course=selected_course, status=published_status).order_by('-closing_date')
+        
+        # Get courses for the dropdown
+        courses = Course.objects.all().order_by('name')
+    else:
+        # Get all templates across all courses
+        templates = FormTemplate.objects.all().order_by('-created_at')
+        
+        # Get all forms across all courses, categorized by status
+        active_forms = Form.objects.filter(status=active_status).order_by('closing_date')
+        scheduled_forms = Form.objects.filter(status=scheduled_status).order_by('publication_date')
+        closed_pending_forms = Form.objects.filter(status=closed_status).order_by('-closing_date')
+        published_forms = Form.objects.filter(status=published_status).order_by('-closing_date')
+        
+        # Get courses for the dropdown
+        courses = Course.objects.all().order_by('name')
+    
+    # Mark urgent forms (due within 24 hours)
+    now = timezone.now()
+    for form in active_forms:
+        form.is_urgent = form.closing_date - now <= timedelta(hours=24)
+    
+    context = {
+        'selected_course': selected_course,
+        'courses': courses,
+        'templates': templates,
+        'active_forms': active_forms,
+        'scheduled_forms': scheduled_forms,
+        'closed_pending_forms': closed_pending_forms,
+        'published_forms': published_forms,
+        'available_courses': courses,  # For the navbar course selector
+    }
+    
+    return render(request, 'forms_dashboard.html', context)

@@ -1,0 +1,883 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Forms Dashboard - EagleOps{% endblock %}
+
+{% block content %}
+<div class="page-container">
+    <div class="page-header">
+        <div class="header-left">
+            <h1>Forms Dashboard</h1>
+            <p>Manage all forms across {% if selected_course %}{{ selected_course.name }}{% else %}all courses{% endif %}</p>
+        </div>
+        
+        <div class="header-actions">
+            <button id="templates-btn" class="btn btn-secondary">
+                <i class="fas fa-clipboard-list"></i> Templates
+            </button>
+            {% if selected_course %}
+            <a href="{% url 'form_create' selected_course.id %}" class="btn btn-primary">
+                <i class="fas fa-plus"></i> New Form
+            </a>
+            {% else %}
+            <button class="btn btn-primary" onclick="alert('Please select a course to create a form')">
+                <i class="fas fa-plus"></i> New Form
+            </button>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Tabs Navigation -->
+    <div class="tabs-container">
+        <div class="tabs-header">
+            <button class="tab-btn active" data-tab="active-tab">Active</button>
+            <button class="tab-btn" data-tab="pending-tab">Pending Review</button>
+            <button class="tab-btn" data-tab="published-tab">Published</button>
+        </div>
+
+        <!-- Active Tab Content (Active + Scheduled) -->
+        <div id="active-tab" class="tab-content active">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Form Name</th>
+                        <th>Based On</th>
+                        <th>Status</th>
+                        <th>Publication Date</th>
+                        <th>Closing Date</th>
+                        <th>Completion</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% if active_forms or scheduled_forms %}
+                        <!-- Active Forms -->
+                        {% for form in active_forms %}
+                        <tr>
+                            <td>
+                                <a href="{% url 'form_edit' form.course.id form.id %}">
+                                    {{ form.title }}
+                                </a>
+                            </td>
+                            <td>{{ form.template.title }}</td>
+                            <td>
+                                <span class="status-badge status-{{ form.status }}">
+                                    {{ form.get_status_display }}
+                                </span>
+                            </td>
+                            <td>{{ form.publication_date|date:"M d, Y" }}</td>
+                            <td>{{ form.closing_date|date:"M d, Y" }}</td>
+                            <td>{{ form.completion_rate }}</td>
+                            <td class="actions">
+                                <a href="{% url 'form_edit' form.course.id form.id %}" class="btn-icon" title="Edit">
+                                    <i class="fas fa-edit" style="margin-right: 5px;"></i>
+                                </a>
+                                <a href="{% url 'form_results' form.course.id form.id %}" class="btn-icon" title="Results">
+                                    <i class="fas fa-chart-bar" style="margin-right: 5px;"></i>
+                                </a>
+                                <form method="post" action="{% url 'form_close' course_id=form.course.id form_id=form.id %}" style="display: inline;">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-warning btn-sm" title="Close Form" onclick="return confirm('Are you sure you want to close this form?');" style="min-width: 120px;">
+                                        <i class="fas fa-door-closed" style="margin-right: 5px;"></i> Close Form
+                                    </button>
+                                </form>
+                                <a href="#" class="btn-icon delete-form" data-id="{{ form.id }}" title="Delete">
+                                    <i class="fas fa-trash"></i>
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                        
+                        <!-- Scheduled Forms -->
+                        {% for form in scheduled_forms %}
+                        <tr>
+                            <td>
+                                <a href="{% url 'form_edit' form.course.id form.id %}">
+                                    {{ form.title }}
+                                </a>
+                            </td>
+                            <td>{{ form.template.title }}</td>
+                            <td>
+                                <span class="status-badge status-{{ form.status }}">
+                                    {{ form.get_status_display }}
+                                </span>
+                            </td>
+                            <td>{{ form.publication_date|date:"M d, Y" }}</td>
+                            <td>{{ form.closing_date|date:"M d, Y" }}</td>
+                            <td>{{ form.completion_rate }}</td>
+                            <td class="actions">
+                                <a href="{% url 'form_edit' form.course.id form.id %}" class="btn-icon" title="Edit">
+                                    <i class="fas fa-edit" style="margin-right: 5px;"></i>
+                                </a>
+                                <a href="{% url 'form_results' form.course.id form.id %}" class="btn-icon" title="Results">
+                                    <i class="fas fa-chart-bar" style="margin-right: 5px;"></i>
+                                </a>
+                                <form method="post" action="{% url 'form_open' course_id=form.course.id form_id=form.id %}" style="display: inline;">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-primary btn-sm" title="Open Form" style="min-width: 120px;">
+                                        <i class="fas fa-door-open" style="margin-right: 5px;"></i> Open Form
+                                    </button>
+                                </form>
+                                <a href="#" class="btn-icon delete-form" data-id="{{ form.id }}" title="Delete">
+                                    <i class="fas fa-trash"></i>
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    {% endif %}
+                </tbody>
+            </table>
+            {% if not active_forms and not scheduled_forms %}
+            <div class="no-content">
+                <p>No forms created yet. Create a form to start collecting peer assessments.</p>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Pending Review Tab Content -->
+        <div id="pending-tab" class="tab-content">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Form Name</th>
+                        <th>Based On</th>
+                        <th>Status</th>
+                        <th>Publication Date</th>
+                        <th>Closing Date</th>
+                        <th>Completion</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% if closed_pending_forms %}
+                        {% for form in closed_pending_forms %}
+                        <tr>
+                            <td>
+                                <a href="{% url 'form_edit' form.course.id form.id %}">
+                                    {{ form.title }}
+                                </a>
+                            </td>
+                            <td>{{ form.template.title }}</td>
+                            <td>
+                                <span class="status-badge status-{{ form.status }}">
+                                    {{ form.get_status_display }}
+                                </span>
+                            </td>
+                            <td>{{ form.publication_date|date:"M d, Y" }}</td>
+                            <td>{{ form.closing_date|date:"M d, Y" }}</td>
+                            <td>{{ form.completion_rate }}</td>
+                            <td class="actions">
+                                <a href="{% url 'form_edit' form.course.id form.id %}" class="btn-icon" title="Edit">
+                                    <i class="fas fa-edit" style="margin-right: 5px;"></i>
+                                </a>
+                                <a href="{% url 'form_results' form.course.id form.id %}" class="btn-icon" title="Results">
+                                    <i class="fas fa-chart-bar" style="margin-right: 5px;"></i>
+                                </a>
+                                <form method="post" action="{% url 'form_open' course_id=form.course.id form_id=form.id %}" style="display: inline;">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-primary btn-sm" title="Reopen Form" style="min-width: 120px;">
+                                        <i class="fas fa-door-open" style="margin-right: 5px;"></i> Reopen Form
+                                    </button>
+                                </form>
+                                <form method="post" action="{% url 'publish_results' form.id %}" style="display: inline;">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-success btn-sm" title="Publish Results" onclick="return confirm('Are you sure you want to publish the results? Students will be able to see their feedback.');" style="min-width: 120px;">
+                                        <i class="fas fa-paper-plane" style="margin-right: 5px;"></i> Publish Results
+                                    </button>
+                                </form>
+                                <a href="#" class="btn-icon delete-form" data-id="{{ form.id }}" title="Delete">
+                                    <i class="fas fa-trash"></i>
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    {% endif %}
+                </tbody>
+            </table>
+            {% if not closed_pending_forms %}
+            <div class="no-content">
+                <p>No forms pending review.</p>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Published Tab Content -->
+        <div id="published-tab" class="tab-content">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Form Name</th>
+                        <th>Based On</th>
+                        <th>Status</th>
+                        <th>Publication Date</th>
+                        <th>Closing Date</th>
+                        <th>Completion</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% if published_forms %}
+                        {% for form in published_forms %}
+                        <tr>
+                            <td>
+                                <a href="{% url 'form_edit' form.course.id form.id %}">
+                                    {{ form.title }}
+                                </a>
+                            </td>
+                            <td>{{ form.template.title }}</td>
+                            <td>
+                                <span class="status-badge status-{{ form.status }}">
+                                    {{ form.get_status_display }}
+                                </span>
+                            </td>
+                            <td>{{ form.publication_date|date:"M d, Y" }}</td>
+                            <td>{{ form.closing_date|date:"M d, Y" }}</td>
+                            <td>{{ form.completion_rate }}</td>
+                            <td class="actions">
+                                <a href="{% url 'form_edit' form.course.id form.id %}" class="btn-icon" title="Edit">
+                                    <i class="fas fa-edit" style="margin-right: 5px;"></i>
+                                </a>
+                                <a href="{% url 'form_results' form.course.id form.id %}" class="btn-icon" title="Results">
+                                    <i class="fas fa-chart-bar" style="margin-right: 5px;"></i>
+                                </a>
+                                <a href="#" class="btn-icon delete-form" data-id="{{ form.id }}" title="Delete">
+                                    <i class="fas fa-trash"></i>
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    {% endif %}
+                </tbody>
+            </table>
+            {% if not published_forms %}
+            <div class="no-content">
+                <p>No published forms.</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Templates Modal -->
+<div id="templates-modal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2><i class="fas fa-clipboard-list"></i> Form Templates</h2>
+            <span class="close-modal">&times;</span>
+        </div>
+        <div class="modal-body">
+            {% if templates %}
+            <table class="templates-table">
+                <thead>
+                    <tr>
+                        <th>Template Name</th>
+                        <th>Course</th>
+                        <th>Questions</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for template in templates %}
+                    <tr class="template-row">
+                        <td class="template-name">
+                            <h3>{{ template.title }}</h3>
+                            <p>{{ template.description|truncatechars:60 }}</p>
+                        </td>
+                        <td class="template-course">{{ template.course.code }}</td>
+                        <td class="template-questions">{{ template.questions.count }}</td>
+                        <td class="template-actions">
+                            <a href="{% url 'template_edit' template.course.id template.id %}" class="btn-icon" title="Edit Template">
+                                <i class="fas fa-edit"></i>
+                            </a>
+                            <a href="{% url 'template_preview' template.course.id template.id %}" class="btn-icon" title="Preview Template">
+                                <i class="fas fa-eye"></i>
+                            </a>
+                            <a href="{% url 'template_duplicate' template.course.id template.id %}" class="btn-icon" title="Duplicate Template">
+                                <i class="fas fa-copy"></i>
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <div class="empty-state">
+                <i class="fas fa-clipboard-list"></i>
+                <h3>No Form Templates</h3>
+                <p>{% if selected_course %}No templates have been created for {{ selected_course.name }} yet.{% else %}No templates have been created yet.{% endif %}</p>
+            </div>
+            {% endif %}
+        </div>
+        <div class="modal-footer">
+            {% if selected_course %}
+            <a href="{% url 'template_create' selected_course.id %}" class="btn btn-primary create-template-btn">
+                <i class="fas fa-plus"></i> Create Template
+            </a>
+            {% else %}
+            <button class="btn btn-primary" onclick="alert('Please select a course to create a template')">
+                <i class="fas fa-plus"></i> Create Template
+            </button>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Tab functionality
+    document.addEventListener('DOMContentLoaded', function() {
+        const tabButtons = document.querySelectorAll('.tab-btn');
+        const tabContents = document.querySelectorAll('.tab-content');
+        
+        tabButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                // Remove active class from all buttons and contents
+                tabButtons.forEach(btn => btn.classList.remove('active'));
+                tabContents.forEach(content => content.classList.remove('active'));
+                
+                // Add active class to clicked button and corresponding content
+                button.classList.add('active');
+                const tabId = button.getAttribute('data-tab');
+                document.getElementById(tabId).classList.add('active');
+            });
+        });
+        
+        // Modal functionality
+        const modal = document.getElementById('templates-modal');
+        const modalBtn = document.getElementById('templates-btn');
+        const closeBtn = document.querySelector('.close-modal');
+        
+        modalBtn.addEventListener('click', function() {
+            modal.style.display = 'block';
+        });
+        
+        closeBtn.addEventListener('click', function() {
+            modal.style.display = 'none';
+        });
+        
+        window.addEventListener('click', function(event) {
+            if (event.target === modal) {
+                modal.style.display = 'none';
+            }
+        });
+        
+        // Action button functionality
+        window.closeForm = function(formId) {
+            if (confirm('Are you sure you want to close this form?')) {
+                // Get the form for this specific button
+                let form = document.querySelector(`form[action*="form_close"][data-form-id="${formId}"]`);
+                form.submit();
+            }
+        };
+        
+        window.extendDueDate = function(formId) {
+            alert('This feature is not implemented yet.');
+        };
+        
+        window.duplicateForm = function(formId) {
+            alert('This feature is not implemented yet.');
+        };
+        
+        window.deleteForm = function(formId) {
+            if (confirm('Are you sure you want to delete this form? This action cannot be undone.')) {
+                let form = document.querySelector(`form[action*="form_delete"][data-form-id="${formId}"]`);
+                form.submit();
+            }
+        };
+    });
+</script>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Page Container */
+    .page-container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 20px;
+    }
+    
+    /* Page Header */
+    .page-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 24px;
+    }
+    
+    .page-header h1 {
+        margin: 0 0 8px 0;
+        color: #333;
+        font-size: 28px;
+    }
+    
+    .page-header p {
+        margin: 0;
+        color: #666;
+    }
+    
+    .header-actions {
+        display: flex;
+        gap: 12px;
+    }
+    
+    /* Button Styles */
+    .btn {
+        display: inline-flex;
+        align-items: center;
+        padding: 8px 16px;
+        border-radius: 4px;
+        font-weight: 500;
+        cursor: pointer;
+        text-decoration: none;
+        transition: all 0.2s;
+        border: none;
+        font-size: 14px;
+    }
+    
+    .btn i {
+        margin-right: 8px;
+    }
+    
+    .btn-primary {
+        background-color: #4a86e8;
+        color: white;
+    }
+    
+    .btn-primary:hover {
+        background-color: #3a76d8;
+    }
+    
+    .btn-secondary {
+        background-color: #f1f3f4;
+        color: #202124;
+        border: 1px solid #dadce0;
+    }
+    
+    .btn-secondary:hover {
+        background-color: #e8eaed;
+    }
+    
+    .btn-sm {
+        padding: 5px 10px;
+        font-size: 12px;
+    }
+    
+    .btn-warning {
+        background-color: #f9ab00;
+        color: white;
+    }
+    
+    .btn-warning:hover {
+        background-color: #e8a000;
+    }
+    
+    .btn-danger {
+        background-color: #ea4335;
+        color: white;
+    }
+    
+    .btn-danger:hover {
+        background-color: #d93025;
+    }
+    
+    /* Tabs */
+    .tabs-container {
+        background-color: white;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        overflow: hidden;
+    }
+    
+    .tabs-header {
+        display: flex;
+        border-bottom: 1px solid #e0e0e0;
+        background-color: #f5f5f5;
+    }
+    
+    .tab-btn {
+        padding: 16px 24px;
+        background: none;
+        border: none;
+        cursor: pointer;
+        font-weight: 500;
+        color: #666;
+        position: relative;
+        transition: all 0.2s;
+    }
+    
+    .tab-btn:hover {
+        background-color: #f0f0f0;
+        color: #4a86e8;
+    }
+    
+    .tab-btn.active {
+        color: #4a86e8;
+    }
+    
+    .tab-btn.active::after {
+        content: '';
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        width: 100%;
+        height: 3px;
+        background-color: #4a86e8;
+    }
+    
+    .tab-content {
+        display: none;
+        padding: 0;
+    }
+    
+    .tab-content.active {
+        display: block;
+    }
+    
+    /* Table Styles */
+    .data-table, .templates-table {
+        width: 100%;
+        border-collapse: collapse;
+        table-layout: fixed;
+    }
+    
+    .data-table th, .templates-table th {
+        text-align: left;
+        padding: 12px 16px;
+        font-weight: 600;
+        color: #555;
+        border-bottom: 2px solid #e0e0e0;
+        background-color: #f9f9f9;
+        font-size: 13px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    
+    .data-table td, .templates-table td {
+        padding: 12px 16px;
+        border-bottom: 1px solid #e0e0e0;
+        vertical-align: middle;
+    }
+    
+    .data-table tr:hover, .templates-table tr:hover {
+        background-color: #f5f9ff;
+    }
+    
+    .form-row.scheduled {
+        background-color: #f8f9fa;
+    }
+    
+    .form-row.urgent td {
+        position: relative;
+    }
+    
+    /* Table Column Widths */
+    .data-table th:nth-child(1), .data-table td:nth-child(1) { width: 25%; }
+    .data-table th:nth-child(2), .data-table td:nth-child(2) { width: 12%; }
+    .data-table th:nth-child(3), .data-table td:nth-child(3) { width: 15%; }
+    .data-table th:nth-child(4), .data-table td:nth-child(4) { width: 13%; }
+    .data-table th:nth-child(5), .data-table td:nth-child(5) { width: 15%; }
+    .data-table th:nth-child(6), .data-table td:nth-child(6) { width: 15%; }
+    .data-table th:nth-child(7), .data-table td:nth-child(7) { width: 35%; }
+    
+    /* Table Cell Styles */
+    .name-wrapper h3 {
+        margin: 0 0 4px 0;
+        font-size: 16px;
+        color: #333;
+    }
+    
+    .form-course {
+        font-size: 12px;
+        color: #666;
+        background: #f1f3f4;
+        padding: 2px 6px;
+        border-radius: 4px;
+        display: inline-block;
+    }
+    
+    .teams-list {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 4px;
+        max-width: 100%;
+    }
+    
+    .team-badge {
+        display: inline-block;
+        padding: 3px 8px;
+        border-radius: 12px;
+        background-color: #e8eaed;
+        color: #5f6368;
+        font-size: 12px;
+        margin-bottom: 2px;
+    }
+    
+    .team-badge.more {
+        background-color: #dadce0;
+    }
+    
+    .status {
+        display: inline-block;
+        padding: 4px 10px;
+        border-radius: 12px;
+        font-size: 12px;
+        font-weight: 500;
+        text-align: center;
+        min-width: 80px;
+    }
+    
+    .status-active {
+        background-color: #e6f4ea;
+        color: #137333;
+    }
+    
+    .status-scheduled {
+        background-color: #fef7e0;
+        color: #b06000;
+    }
+    
+    .status-closed {
+        background-color: #f1f3f4;
+        color: #3c4043;
+    }
+    
+    .status-published {
+        background-color: #e8f0fe;
+        color: #1967d2;
+    }
+    
+    .date-info {
+        display: flex;
+        flex-direction: column;
+    }
+    
+    .date-info small {
+        font-size: 11px;
+        color: #666;
+        margin-top: 4px;
+    }
+    
+    .urgent-badge {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        color: #ea4335;
+        margin-left: 6px;
+        font-size: 14px;
+    }
+    
+    /* Progress Bar - More Compact */
+    .progress-container {
+        position: relative;
+        width: 100%;
+        max-width: 100px;
+        height: 8px;
+        background-color: #f1f3f4;
+        border-radius: 4px;
+        overflow: hidden;
+        margin-right: 5px;
+        display: inline-block;
+        vertical-align: middle;
+    }
+    
+    .progress-bar {
+        position: absolute;
+        height: 100%;
+        background-color: #4a86e8;
+        border-radius: 4px;
+    }
+    
+    .progress-text {
+        display: inline-block;
+        vertical-align: middle;
+        font-size: 12px;
+        color: #333;
+        font-weight: 500;
+        margin-left: 5px;
+    }
+    
+    .scheduled-text {
+        color: #666;
+        font-style: italic;
+        font-size: 12px;
+    }
+    
+    /* Actions cell */
+    .actions {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        white-space: nowrap;
+    }
+    
+    .btn-icon {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        color: #5f6368;
+        background: none;
+        border: none;
+        cursor: pointer;
+        padding: 5px;
+        margin-right: 5px;
+        text-decoration: none;
+    }
+    
+    .btn-icon:hover {
+        color: #4a86e8;
+    }
+    
+    .btn-icon i {
+        font-size: 16px;
+    }
+    
+    /* Modal Styles */
+    .modal {
+        display: none;
+        position: fixed;
+        z-index: 100;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.5);
+        overflow-y: auto;
+    }
+    
+    .modal-content {
+        position: relative;
+        background-color: white;
+        margin: 50px auto;
+        width: 90%;
+        max-width: 900px;
+        border-radius: 8px;
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+        animation: modalFadeIn 0.3s;
+    }
+    
+    @keyframes modalFadeIn {
+        from {
+            opacity: 0;
+            transform: translateY(-20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    
+    .modal-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 16px 24px;
+        border-bottom: 1px solid #e0e0e0;
+    }
+    
+    .modal-header h2 {
+        margin: 0;
+        font-size: 20px;
+        color: #333;
+        display: flex;
+        align-items: center;
+    }
+    
+    .modal-header h2 i {
+        margin-right: 10px;
+        color: #4a86e8;
+    }
+    
+    .close-modal {
+        font-size: 24px;
+        color: #5f6368;
+        background: none;
+        border: none;
+        cursor: pointer;
+    }
+    
+    .modal-body {
+        padding: 0;
+        max-height: 70vh;
+        overflow-y: auto;
+    }
+    
+    .modal-footer {
+        padding: 16px 24px;
+        border-top: 1px solid #e0e0e0;
+        text-align: right;
+    }
+    
+    /* Template-specific styles */
+    .template-name h3 {
+        margin: 0 0 4px 0;
+        font-size: 16px;
+    }
+    
+    .template-name p {
+        margin: 0;
+        font-size: 12px;
+        color: #666;
+    }
+    
+    .template-actions {
+        display: flex;
+        gap: 8px;
+        justify-content: flex-end;
+    }
+    
+    /* Empty State */
+    .empty-state {
+        text-align: center;
+        padding: 40px 20px;
+        color: #5f6368;
+    }
+    
+    .empty-state i {
+        font-size: 36px;
+        color: #4a86e8;
+        margin-bottom: 16px;
+    }
+    
+    .empty-state h3 {
+        font-size: 18px;
+        margin-bottom: 8px;
+        color: #333;
+    }
+    
+    .empty-state p {
+        margin-bottom: 16px;
+        max-width: 400px;
+        margin-left: auto;
+        margin-right: auto;
+    }
+    
+    .hidden {
+        display: none;
+    }
+    
+    /* Responsive adjustments */
+    @media (max-width: 1024px) {
+        .data-table, .templates-table {
+            font-size: 14px;
+        }
+        
+        .page-header h1 {
+            font-size: 24px;
+        }
+    }
+    
+    @media (max-width: 768px) {
+        .data-table th:nth-child(4),
+        .data-table td:nth-child(4) {
+            display: none;
+        }
+        
+        .tab-btn {
+            padding: 12px 16px;
+            font-size: 14px;
+        }
+    }
+</style>
+{% endblock %} 

@@ -22,6 +22,9 @@ urlpatterns = [
     path('courses/create/', views.create_course, name='create_course'),
     path('courses/<int:course_id>/edit/', views.edit_course, name='edit_course'),
     
+    # Forms dashboard for admins
+    path('forms-dashboard/', views.forms_dashboard, name='forms_dashboard'),
+    
     # Form template management URLs
     path('courses/<int:course_id>/templates/new/', views.template_create_edit, name='template_create'),
     path('courses/<int:course_id>/templates/<int:template_id>/edit/', views.template_create_edit, name='template_edit'),
