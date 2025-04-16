@@ -5,62 +5,170 @@
 <div class="container mt-4">
     <h1 class="mb-4">Performance Overview - {{ course.name }}</h1>
 
-    {% for team_data in performance_data %}
-    <div class="card mb-4">
-        <div class="card-header">
-            <h2 class="h5 mb-0">{{ team_data.team.name }}</h2>
-        </div>
-        <div class="card-body">
-            <div class="table-responsive">
-                <table class="table table-hover">
-                    <thead>
-                        <tr>
-                            <th>Member</th>
-                            <th>Average Score</th>
-                            <th>Form Results</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for member_data in team_data.members %}
-                        <tr>
-                            <td>{{ member_data.member.full_name }}</td>
-                            <td>
-                                {% if member_data.average_score > 0 %}
-                                <span
-                                    class="badge {% if member_data.average_score >= 4 %}bg-success{% elif member_data.average_score >= 3 %}bg-warning{% else %}bg-danger{% endif %}">
-                                    {{ member_data.average_score }}
-                                </span>
-                                {% else %}
-                                <span class="badge bg-secondary">No data</span>
-                                {% endif %}
-                            </td>
-                            <td>
-                                <div class="form-results">
+    {% if user.userprofile.admin or user.userprofile in course.instructors.all %}
+        {% for team_data in performance_data %}
+        <div class="card mb-4">
+            <div class="card-header">
+                <h2 class="h5 mb-0">{{ team_data.team.name }}</h2>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Member</th>
+                                <th>Average Score</th>
+                                <th>Form Results</th>
+                                <th>Average Score per Form</th>
+                                <th>Response Comments</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for member_data in team_data.members %}
+                            <tr>
+                                <td>{{ member_data.member.full_name }}</td>
+                                <td>
+                                    {% if member_data.average_score > 0 %}
+                                    <span class="badge {% if member_data.average_score >= 4 %}bg-success{% elif member_data.average_score >= 3 %}bg-warning{% else %}bg-danger{% endif %}">
+                                        {{ member_data.average_score }}
+                                    </span>
+                                    {% else %}
+                                    <span class="badge bg-secondary">No data</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <div class="form-results">
+                                        {% for form_data in member_data.forms %}
+                                        <div class="form-result-item mb-2">
+                                            <strong>{{ form_data.form.title }}:</strong>
+                                            <span
+                                                class="badge {% if form_data.score >= 4 %}bg-success{% elif form_data.score >= 3 %}bg-warning{% else %}bg-danger{% endif %}">
+                                                {{ form_data.score }}
+                                            </span>
+                                        </div>
+                                        {% empty %}
+                                        <span class="text-muted">No form results available</span>
+                                        {% endfor %}
+                                    </div>
+                                </td>
+                                <td>
                                     {% for form_data in member_data.forms %}
                                     <div class="form-result-item mb-2">
-                                        <strong>{{ form_data.form.title }}:</strong>
-                                        <span
-                                            class="badge {% if form_data.score >= 4 %}bg-success{% elif form_data.score >= 3 %}bg-warning{% else %}bg-danger{% endif %}">
-                                            {{ form_data.score }}
+                                        <strong>{{ form_data.form.title }} Average:</strong>
+                                        <span class="badge 
+                                            {% if form_data.average_score >= 4 %}
+                                                bg-success
+                                            {% elif form_data.average_score >= 3 %}
+                                                bg-warning text-dark
+                                            {% else %}
+                                                bg-danger
+                                            {% endif %}
+                                        ">
+                                            {{ form_data.average_score }}
                                         </span>
                                     </div>
                                     {% empty %}
                                     <span class="text-muted">No form results available</span>
                                     {% endfor %}
-                                </div>
-                            </td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
+                                </td>
+                                <td>
+                                    {% for form_data in member_data.forms %}
+                                    {% if form_data.open_responses %}
+                                    <div class="form-result-item mb-2">
+                                        <strong>{{ form_data.form.title }} Comments:</strong>
+                                        <ul class="list-unstyled">
+                                            {% for comment in form_data.open_responses %}
+                                            <li><i class="fas fa-comment-alt"></i> {{ comment }}</li>
+                                            {% empty %}
+                                            <li>No comments available</li>
+                                            {% endfor %}
+                                        </ul>
+                                    </div>
+                                    {% endif %}
+                                    {% endfor %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
-    </div>
-    {% empty %}
-    <div class="alert alert-info">
-        No teams found in this course.
-    </div>
-    {% endfor %}
+        {% empty %}
+        <div class="alert alert-info">
+            No teams found in this course.
+        </div>
+        {% endfor %}
+    {% else %}
+        {% for student_data in performance_data %}
+        <div class="card mb-4">
+            <div class="card-header">
+                <h2 class="h5 mb-0">Your Performance</h2>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Form Results</th>
+                                <th>Average Score</th>
+                                <th>Response Comments</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>
+                                    <div class="form-results">
+                                        {% for form_data in student_data.forms %}
+                                        <div class="form-result-item mb-2">
+                                            <strong>{{ form_data.form.title }}:</strong>
+                                            <span
+                                                class="badge {% if form_data.score >= 4 %}bg-success{% elif form_data.score >= 3 %}bg-warning{% else %}bg-danger{% endif %}">
+                                                {{ form_data.score }}
+                                            </span>
+                                        </div>
+                                        {% empty %}
+                                        <span class="text-muted">No form results available</span>
+                                        {% endfor %}
+                                    </div>
+                                </td>
+                                <td>
+                                    {% if student_data.average_score > 0 %}
+                                    <span class="badge {% if student_data.average_score >= 4 %}bg-success{% elif student_data.average_score >= 3 %}bg-warning{% else %}bg-danger{% endif %}">
+                                        {{ student_data.average_score }}
+                                    </span>
+                                    {% else %}
+                                    <span class="badge bg-secondary">No data</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% for form_data in student_data.forms %}
+                                    {% if form_data.open_responses %}
+                                    <div class="form-result-item mb-2">
+                                        <strong>{{ form_data.form.title }} Comments:</strong>
+                                        <ul class="list-unstyled">
+                                            {% for comment in form_data.open_responses %}
+                                            <li><i class="fas fa-comment-alt"></i> {{ comment }}</li>
+                                            {% empty %}
+                                            <li>No comments available</li>
+                                            {% endfor %}
+                                        </ul>
+                                    </div>
+                                    {% endif %}
+                                    {% endfor %}
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="alert alert-info">
+            No performance data available.
+        </div>
+        {% endfor %}
+    {% endif %}
 </div>
 
 <style>
@@ -69,6 +177,30 @@
         justify-content: space-between;
         align-items: center;
         padding: 0.25rem 0;
+    }
+
+    .form-result-item strong {
+        font-weight: bold;
+    }
+
+    .badge {
+        font-size: 14px;
+        padding: 5px 10px;
+    }
+
+    .list-unstyled {
+        padding-left: 0;
+    }
+    
+    .list-unstyled li {
+        padding-left: 20px;
+        position: relative;
+    }
+
+    .list-unstyled li i {
+        position: absolute;
+        left: 0;
+        top: 0;
     }
 </style>
 {% endblock %}

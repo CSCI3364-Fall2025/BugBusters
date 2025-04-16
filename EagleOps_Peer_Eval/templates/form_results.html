@@ -454,6 +454,29 @@
 <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.2/dist/js/bootstrap.bundle.min.js"></script>
 <script>
+    // Include this before any AJAX request
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                // Does this cookie string begin with the name we want?
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+    const csrftoken = getCookie('csrftoken');
+
+    // Set CSRF token for all jQuery requests
+    $.ajaxSetup({
+        headers: { "X-CSRFToken": csrftoken }
+    });
+
     function confirmPublish() {
         if (confirm('Are you sure you want to publish these results?\n\nThis will:\n• Stop accepting new responses\n• Disable feedback moderation\n• Cannot be undone')) {
             // Submit the form via AJAX

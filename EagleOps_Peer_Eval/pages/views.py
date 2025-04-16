@@ -1223,99 +1223,110 @@ def edit_response(request, response_id):
 @login_required
 @require_POST
 def publish_results(request, form_id):
-    """View for publishing form results"""
+    """Publish form results for students to view."""
+    print("Publishing results...", form_id)
     form = get_object_or_404(Form, id=form_id)
     course = form.course
     user = request.user.userprofile
-    
-    # Check if user is an instructor or admin
-    if not user.admin and not course.instructors.filter(id=user.id).exists():
+
+    if not (user.admin or course.instructors.filter(id=user.id).exists()):
+        error_msg = "You do not have permission to publish results."
         if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-            return JsonResponse({'error': 'You do not have permission to publish results.'}, status=403)
-        messages.error(request, "You do not have permission to publish results.")
+            return JsonResponse({'error': error_msg}, status=403)
+        messages.error(request, error_msg)
         return redirect('course_detail', course_id=course.id)
-    
-    # Check if form is already published
+
     if form.status == Form.PUBLISHED:
+        error_msg = "Results are already published."
         if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-            return JsonResponse({'error': 'Results are already published.'}, status=400)
-        messages.warning(request, "Results are already published.")
+            return JsonResponse({'error': error_msg}, status=400)
+        messages.warning(request, error_msg)
         return redirect('form_results', course_id=course.id, form_id=form.id)
-    
-    # Check if form is still active
+
     if form.status == Form.ACTIVE:
+        error_msg = "Cannot publish results while form is still active."
         if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-            return JsonResponse({'error': 'Cannot publish results while form is still active.'}, status=400)
-        messages.warning(request, "Cannot publish results while form is still active.")
+            return JsonResponse({'error': error_msg}, status=400)
+        messages.warning(request, error_msg)
         return redirect('form_results', course_id=course.id, form_id=form.id)
-    
+
     try:
-        # Update form status to published
         form.status = Form.PUBLISHED
-        form.save(force_status=True)  # Use force_status to prevent automatic status changes
-        
+        form.save(force_status=True)  # force_status to override automatic checks
+
         if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
             return JsonResponse({'success': True})
-        
+
         messages.success(request, "Results have been published successfully.")
         return redirect('form_results', course_id=course.id, form_id=form.id)
-        
+
     except Exception as e:
+        error_msg = f"Error publishing results: {str(e)}"
         if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-            return JsonResponse({'error': str(e)}, status=500)
-        messages.error(request, f"Error publishing results: {str(e)}")
+            return JsonResponse({'error': error_msg}, status=500)
+        messages.error(request, error_msg)
         return redirect('form_results', course_id=course.id, form_id=form.id)
 
 @login_required
+@require_POST
 def form_unpublish(request, course_id, form_id):
+    """Unpublish a form to hide results again."""
     form = get_object_or_404(Form, id=form_id)
-    
-    # Optional: Check if user has permission to unpublish
-    if request.user.userprofile != form.created_by:
-        messages.error(request, "You don't have permission to unpublish this form.")
-        return redirect('some_view')
+    user = request.user.userprofile
+    course = get_object_or_404(Course, id=course_id)
 
-    form.unpublish()
-    messages.success(request, f"'{form.title}' has been unpublished.")
+    if not (user.admin or course.instructors.filter(id=user.id).exists()):
+        messages.error(request, "You don't have permission to unpublish this form.")
+        return redirect('course_detail', course_id=course_id)
+
+    try:
+        form.status = Form.CLOSED
+        form.save(force_status=True)
+        messages.success(request, f"'{form.title}' has been unpublished.")
+    except Exception as e:
+        messages.error(request, f"Error unpublishing form: {str(e)}")
+
     return redirect('course_detail', course_id=course_id)
 
 @login_required
 def member_feedback(request, course_id, form_id, member_id):
-    """View for moderating feedback for a specific team member"""
+    """Moderate open-ended feedback for a team member on a specific form."""
     user = request.user.userprofile
     course = get_object_or_404(Course, id=course_id)
     form = get_object_or_404(Form, id=form_id, course=course)
     member = get_object_or_404(UserProfile, id=member_id)
-    
-    # Check if user is an instructor or admin
-    if not user.admin and not course.instructors.filter(id=user.id).exists():
+
+    if not (user.admin or course.instructors.filter(id=user.id).exists()):
         messages.error(request, "You do not have permission to moderate feedback.")
         return redirect('course_detail', course_id=course_id)
-    
-    # Get member feedback
+
     feedback_data = get_member_feedback(form, member)
-    
+
     if request.method == 'POST':
-        # Handle feedback moderation
+        # Save updated feedback responses
+        updated = False
         for response in feedback_data['text_responses']:
             for answer in response['answers']:
-                answer_id = f"answer_{answer.id}"
-                if answer_id in request.POST:
-                    new_text = request.POST[answer_id]
+                field_key = f"answer_{answer.id}"
+                if field_key in request.POST:
+                    new_text = request.POST.get(field_key, "").strip()
                     if new_text != answer.text_answer:
                         answer.text_answer = new_text
                         answer.save()
-        
-        messages.success(request, "Feedback has been updated successfully.")
+                        updated = True
+
+        if updated:
+            messages.success(request, "Feedback has been updated successfully.")
+        else:
+            messages.info(request, "No changes were made.")
         return redirect('member_feedback', course_id=course_id, form_id=form_id, member_id=member_id)
-    
+
     context = {
         'course': course,
         'form': form,
         'member': member,
         'member_feedback': feedback_data
     }
-    
     return render(request, 'member_feedback.html', context)
 
 @require_POST
@@ -1363,83 +1374,223 @@ def update_selected_course(request):
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=500)
 
+# @login_required
+# def performance_view(request, course_id):
+#     """
+#     View for admins to see performance metrics and assessment results for team members.
+#     """
+#     course = get_object_or_404(Course, id=course_id)
+#     user_profile = request.user.userprofile
+    
+#     # Check if user is admin or instructor
+#     if not (user_profile.admin or user_profile in course.instructors.all()):
+#         raise PermissionDenied("You don't have permission to view this page.")
+    
+#     # Get all teams in the course
+#     teams = Team.objects.filter(course=course)
+    
+#     # Get all forms for this course
+#     forms = Form.objects.filter(course=course, status=Form.PUBLISHED)
+    
+#     # Prepare performance data
+#     performance_data = []
+#     for team in teams:
+#         team_data = {
+#             'team': team,
+#             'members': [],
+#         }
+        
+#         for member in team.members.all():
+#             member_data = {
+#                 'member': member,
+#                 'forms': [],
+#                 'average_score': 0,
+#             }
+            
+#             total_score = 0
+#             form_count = 0
+            
+#             for form in forms:
+#                 if form in team.assigned_forms.all():
+#                     # Get all responses for this member in this form
+#                     responses = FormResponse.objects.filter(
+#                         form=form,
+#                         evaluatee=member,
+#                         submitted=True
+#                     )
+                    
+#                     if responses.exists():
+#                         form_score = 0
+#                         response_count = 0
+                        
+#                         for response in responses:
+#                             # Calculate average score for this response
+#                             likert_answers = Answer.objects.filter(
+#                                 response=response,
+#                                 question__question_type=Question.LIKERT_SCALE
+#                             )
+                            
+#                             if likert_answers.exists():
+#                                 avg_score = sum(a.likert_answer for a in likert_answers) / len(likert_answers)
+#                                 form_score += avg_score
+#                                 response_count += 1
+                        
+#                         if response_count > 0:
+#                             form_score = form_score / response_count
+#                             total_score += form_score
+#                             form_count += 1
+                            
+#                             member_data['forms'].append({
+#                                 'form': form,
+#                                 'score': round(form_score, 2),
+#                             })
+            
+#             if form_count > 0:
+#                 member_data['average_score'] = round(total_score / form_count, 2)
+            
+#             team_data['members'].append(member_data)
+        
+#         performance_data.append(team_data)
+    
+#     context = {
+#         'course': course,
+#         'performance_data': performance_data,
+#     }
+    
+#     return render(request, 'performance.html', context)
+
 @login_required
 def performance_view(request, course_id):
     """
-    View for admins to see performance metrics and assessment results for team members.
+    View to show performance metrics and assessment results.
+    Admins and instructors can see the performance of all members.
+    Students can see their own performance in the course.
     """
     course = get_object_or_404(Course, id=course_id)
     user_profile = request.user.userprofile
     
-    # Check if user is admin or instructor
-    if not (user_profile.admin or user_profile in course.instructors.all()):
-        raise PermissionDenied("You don't have permission to view this page.")
-    
-    # Get all teams in the course
-    teams = Team.objects.filter(course=course)
-    
-    # Get all forms for this course
-    forms = Form.objects.filter(course=course, status=Form.PUBLISHED)
-    
-    # Prepare performance data
+    # Initialize performance data structure
     performance_data = []
-    for team in teams:
-        team_data = {
-            'team': team,
-            'members': [],
-        }
+    
+    # If the user is an admin or instructor, they can view all team members' performance
+    if user_profile.admin or user_profile in course.instructors.all():
+        # Get all teams in the course
+        teams = Team.objects.filter(course=course)
         
-        for member in team.members.all():
-            member_data = {
-                'member': member,
-                'forms': [],
-                'average_score': 0,
+        # Get all forms for this course
+        forms = Form.objects.filter(course=course, status=Form.PUBLISHED)
+        
+        # Prepare performance data for each team and its members
+        for team in teams:
+            team_data = {
+                'team': team,
+                'members': [],
             }
             
-            total_score = 0
-            form_count = 0
+            for member in team.members.all():
+                member_data = {
+                    'member': member,
+                    'forms': [],
+                    'average_score': 0,
+                }
+                
+                total_score = 0
+                form_count = 0
+                
+                for form in forms:
+                    if form in team.assigned_forms.all():
+                        # Get all responses for this member in this form
+                        responses = FormResponse.objects.filter(
+                            form=form,
+                            evaluatee=member,
+                            submitted=True
+                        )
+                        
+                        if responses.exists():
+                            form_score = 0
+                            response_count = 0
+                            
+                            for response in responses:
+                                # Calculate average score for this response
+                                likert_answers = Answer.objects.filter(
+                                    response=response,
+                                    question__question_type=Question.LIKERT_SCALE
+                                )
+                                
+                                if likert_answers.exists():
+                                    avg_score = sum(a.likert_answer for a in likert_answers) / len(likert_answers)
+                                    form_score += avg_score
+                                    response_count += 1
+                            
+                            if response_count > 0:
+                                form_score = form_score / response_count
+                                total_score += form_score
+                                form_count += 1
+                                
+                                member_data['forms'].append({
+                                    'form': form,
+                                    'score': round(form_score, 2),
+                                })
+                
+                if form_count > 0:
+                    member_data['average_score'] = round(total_score / form_count, 2)
+                
+                team_data['members'].append(member_data)
             
-            for form in forms:
-                if form in team.assigned_forms.all():
-                    # Get all responses for this member in this form
-                    responses = FormResponse.objects.filter(
-                        form=form,
-                        evaluatee=member,
-                        submitted=True
+            performance_data.append(team_data)
+    
+    # If the user is a student, show only their own performance
+    else:
+        student_data = {
+            'member': user_profile,
+            'forms': [],
+            'average_score': 0,
+        }
+
+        # Get the forms for the course
+        forms = Form.objects.filter(course=course, status=Form.PUBLISHED)
+
+        total_score = 0
+        form_count = 0
+
+        for form in forms:
+            # Get the student's responses for each form
+            responses = FormResponse.objects.filter(
+                form=form,
+                evaluatee=request.user.userprofile,
+                submitted=True
+            )
+            
+            if responses.exists():
+                form_score = 0
+                response_count = 0
+                
+                for response in responses:
+                    # Calculate average score for this response
+                    likert_answers = Answer.objects.filter(
+                        response=response,
+                        question__question_type=Question.LIKERT_SCALE
                     )
                     
-                    if responses.exists():
-                        form_score = 0
-                        response_count = 0
-                        
-                        for response in responses:
-                            # Calculate average score for this response
-                            likert_answers = Answer.objects.filter(
-                                response=response,
-                                question__question_type=Question.LIKERT_SCALE
-                            )
-                            
-                            if likert_answers.exists():
-                                avg_score = sum(a.likert_answer for a in likert_answers) / len(likert_answers)
-                                form_score += avg_score
-                                response_count += 1
-                        
-                        if response_count > 0:
-                            form_score = form_score / response_count
-                            total_score += form_score
-                            form_count += 1
-                            
-                            member_data['forms'].append({
-                                'form': form,
-                                'score': round(form_score, 2),
-                            })
-            
-            if form_count > 0:
-                member_data['average_score'] = round(total_score / form_count, 2)
-            
-            team_data['members'].append(member_data)
+                    if likert_answers.exists():
+                        avg_score = sum(a.likert_answer for a in likert_answers) / len(likert_answers)
+                        form_score += avg_score
+                        response_count += 1
+                
+                if response_count > 0:
+                    form_score = form_score / response_count
+                    total_score += form_score
+                    form_count += 1
+
+                    student_data['forms'].append({
+                        'form': form,
+                        'score': round(form_score, 2),
+                    })
         
-        performance_data.append(team_data)
+        if form_count > 0:
+            student_data['average_score'] = round(total_score / form_count, 2)
+        
+        performance_data.append(student_data)
     
     context = {
         'course': course,
