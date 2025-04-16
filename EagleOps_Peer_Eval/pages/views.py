@@ -648,11 +648,16 @@ def form_open(request, course_id, form_id):
     if request.method == 'POST':
         form = get_object_or_404(Form, id=form_id, course_id=course_id)
         
-        # If form is in draft status, change to scheduled
+        # If form is in draft status, check publication date to determine status
         if form.status == 'draft':
-            form.status = 'scheduled'
+            now = timezone.now()
+            if now >= form.publication_date:
+                form.status = 'active'
+                messages.success(request, f"Form '{form.title}' is now active.")
+            else:
+                form.status = 'scheduled'
+                messages.success(request, f"Form '{form.title}' has been scheduled to open.")
             form.save(force_status=True)  # Ensure the status is updated with force_status
-            messages.success(request, f"Form '{form.title}' has been scheduled to open.")
         
         # If form is closed, change to active
         elif form.status == 'closed':
@@ -1224,11 +1229,11 @@ def edit_response(request, response_id):
 @require_POST
 def publish_results(request, form_id):
     """Publish form results for students to view."""
-    print("Publishing results...", form_id)
     form = get_object_or_404(Form, id=form_id)
     course = form.course
     user = request.user.userprofile
 
+    # Check permissions
     if not (user.admin or course.instructors.filter(id=user.id).exists()):
         error_msg = "You do not have permission to publish results."
         if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
@@ -1236,6 +1241,7 @@ def publish_results(request, form_id):
         messages.error(request, error_msg)
         return redirect('course_detail', course_id=course.id)
 
+    # Check if form is already published
     if form.status == Form.PUBLISHED:
         error_msg = "Results are already published."
         if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
@@ -1243,21 +1249,24 @@ def publish_results(request, form_id):
         messages.warning(request, error_msg)
         return redirect('form_results', course_id=course.id, form_id=form.id)
 
-    if form.status == Form.ACTIVE:
-        error_msg = "Cannot publish results while form is still active."
+    # Check if form is closed
+    if form.status != Form.CLOSED:
+        error_msg = "Cannot publish results while form is not closed."
         if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
             return JsonResponse({'error': error_msg}, status=400)
-        messages.warning(request, error_msg)
+        messages.error(request, error_msg)
         return redirect('form_results', course_id=course.id, form_id=form.id)
 
     try:
+        # Update form status to published
         form.status = Form.PUBLISHED
-        form.save(force_status=True)  # force_status to override automatic checks
-
+        form.save(force_status=True)  # force_status to prevent automatic status updates
+        
+        success_msg = "Results have been published successfully."
         if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-            return JsonResponse({'success': True})
-
-        messages.success(request, "Results have been published successfully.")
+            return JsonResponse({'success': True, 'message': success_msg})
+        
+        messages.success(request, success_msg)
         return redirect('form_results', course_id=course.id, form_id=form.id)
 
     except Exception as e:
@@ -1424,6 +1433,7 @@ def performance_view(request, course_id):
                         if responses.exists():
                             form_score = 0
                             response_count = 0
+                            open_responses = []
                             
                             for response in responses:
                                 # Calculate average score for this response
@@ -1436,15 +1446,47 @@ def performance_view(request, course_id):
                                     avg_score = sum(a.likert_answer for a in likert_answers) / len(likert_answers)
                                     form_score += avg_score
                                     response_count += 1
+                                
+                                # Get open-ended responses
+                                text_answers = Answer.objects.filter(
+                                    response=response,
+                                    question__question_type=Question.OPEN_ENDED
+                                )
+                                for answer in text_answers:
+                                    if answer.text_answer:
+                                        open_responses.append(answer.text_answer)
                             
                             if response_count > 0:
                                 form_score = form_score / response_count
                                 total_score += form_score
                                 form_count += 1
                                 
+                                # Calculate team average score
+                                team_responses = FormResponse.objects.filter(
+                                    form=form,
+                                    evaluatee__in=team.members.all(),
+                                    submitted=True
+                                )
+                                team_score = 0
+                                team_response_count = 0
+                                
+                                for team_response in team_responses:
+                                    team_likert_answers = Answer.objects.filter(
+                                        response=team_response,
+                                        question__question_type=Question.LIKERT_SCALE
+                                    )
+                                    if team_likert_answers.exists():
+                                        team_avg = sum(a.likert_answer for a in team_likert_answers) / len(team_likert_answers)
+                                        team_score += team_avg
+                                        team_response_count += 1
+                                
+                                team_avg_score = team_score / team_response_count if team_response_count > 0 else 0
+                                
                                 member_data['forms'].append({
                                     'form': form,
                                     'score': round(form_score, 2),
+                                    'team_score': round(team_avg_score, 2),
+                                    'open_responses': open_responses[:3],  # Limit to 3 responses for preview
                                 })
                 
                 if form_count > 0:
@@ -1479,6 +1521,7 @@ def performance_view(request, course_id):
             if responses.exists():
                 form_score = 0
                 response_count = 0
+                open_responses = []
                 
                 for response in responses:
                     # Calculate average score for this response
@@ -1491,15 +1534,51 @@ def performance_view(request, course_id):
                         avg_score = sum(a.likert_answer for a in likert_answers) / len(likert_answers)
                         form_score += avg_score
                         response_count += 1
+                    
+                    # Get open-ended responses
+                    text_answers = Answer.objects.filter(
+                        response=response,
+                        question__question_type=Question.OPEN_ENDED
+                    )
+                    for answer in text_answers:
+                        if answer.text_answer:
+                            open_responses.append(answer.text_answer)
                 
                 if response_count > 0:
                     form_score = form_score / response_count
                     total_score += form_score
                     form_count += 1
+                    
+                    # Calculate team average score
+                    team = form.teams.filter(members=user_profile).first()
+                    if team:
+                        team_responses = FormResponse.objects.filter(
+                            form=form,
+                            evaluatee__in=team.members.all(),
+                            submitted=True
+                        )
+                        team_score = 0
+                        team_response_count = 0
+                        
+                        for team_response in team_responses:
+                            team_likert_answers = Answer.objects.filter(
+                                response=team_response,
+                                question__question_type=Question.LIKERT_SCALE
+                            )
+                            if team_likert_answers.exists():
+                                team_avg = sum(a.likert_answer for a in team_likert_answers) / len(team_likert_answers)
+                                team_score += team_avg
+                                team_response_count += 1
+                        
+                        team_avg_score = team_score / team_response_count if team_response_count > 0 else 0
+                    else:
+                        team_avg_score = 0
 
                     student_data['forms'].append({
                         'form': form,
                         'score': round(form_score, 2),
+                        'team_score': round(team_avg_score, 2),
+                        'open_responses': open_responses[:3],  # Limit to 3 responses for preview
                     })
         
         if form_count > 0:

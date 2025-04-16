@@ -41,8 +41,7 @@
                                         {% for form_data in member_data.forms %}
                                         <div class="form-result-item mb-2">
                                             <strong>{{ form_data.form.title }}:</strong>
-                                            <span
-                                                class="badge {% if form_data.score >= 4 %}bg-success{% elif form_data.score >= 3 %}bg-warning{% else %}bg-danger{% endif %}">
+                                            <span class="badge {% if form_data.score >= 4 %}bg-success{% elif form_data.score >= 3 %}bg-warning{% else %}bg-danger{% endif %}">
                                                 {{ form_data.score }}
                                             </span>
                                         </div>
@@ -55,16 +54,8 @@
                                     {% for form_data in member_data.forms %}
                                     <div class="form-result-item mb-2">
                                         <strong>{{ form_data.form.title }} Average:</strong>
-                                        <span class="badge 
-                                            {% if form_data.average_score >= 4 %}
-                                                bg-success
-                                            {% elif form_data.average_score >= 3 %}
-                                                bg-warning text-dark
-                                            {% else %}
-                                                bg-danger
-                                            {% endif %}
-                                        ">
-                                            {{ form_data.average_score }}
+                                        <span class="badge {% if form_data.team_score >= 4 %}bg-success{% elif form_data.team_score >= 3 %}bg-warning{% else %}bg-danger{% endif %}">
+                                            {{ form_data.team_score }}
                                         </span>
                                     </div>
                                     {% empty %}
@@ -78,7 +69,7 @@
                                         <strong>{{ form_data.form.title }} Comments:</strong>
                                         <ul class="list-unstyled">
                                             {% for comment in form_data.open_responses %}
-                                            <li><i class="fas fa-comment-alt"></i> {{ comment }}</li>
+                                            <li><i class="fas fa-comment-alt"></i> {{ comment|truncatewords:8 }}</li>
                                             {% empty %}
                                             <li>No comments available</li>
                                             {% endfor %}
@@ -110,54 +101,62 @@
                     <table class="table table-hover">
                         <thead>
                             <tr>
-                                <th>Form Results</th>
-                                <th>Average Score</th>
-                                <th>Response Comments</th>
+                                <th>Form</th>
+                                <th>Your Score</th>
+                                <th>Team Average</th>
+                                <th>Comments</th>
+                                <th>Actions</th>
                             </tr>
                         </thead>
                         <tbody>
+                            {% for form_data in student_data.forms %}
                             <tr>
                                 <td>
-                                    <div class="form-results">
-                                        {% for form_data in student_data.forms %}
-                                        <div class="form-result-item mb-2">
-                                            <strong>{{ form_data.form.title }}:</strong>
-                                            <span
-                                                class="badge {% if form_data.score >= 4 %}bg-success{% elif form_data.score >= 3 %}bg-warning{% else %}bg-danger{% endif %}">
-                                                {{ form_data.score }}
-                                            </span>
-                                        </div>
-                                        {% empty %}
-                                        <span class="text-muted">No form results available</span>
-                                        {% endfor %}
+                                    <strong>{{ form_data.form.title }}</strong>
+                                    <div class="text-muted small">
+                                        Published: {{ form_data.form.closing_date|date:"M d, Y" }}
                                     </div>
                                 </td>
                                 <td>
-                                    {% if student_data.average_score > 0 %}
-                                    <span class="badge {% if student_data.average_score >= 4 %}bg-success{% elif student_data.average_score >= 3 %}bg-warning{% else %}bg-danger{% endif %}">
-                                        {{ student_data.average_score }}
+                                    <span class="badge {% if form_data.score >= 4 %}bg-success{% elif form_data.score >= 3 %}bg-warning{% else %}bg-danger{% endif %}">
+                                        {{ form_data.score }}
                                     </span>
+                                </td>
+                                <td>
+                                    <span class="badge {% if form_data.team_score >= 4 %}bg-success{% elif form_data.team_score >= 3 %}bg-warning{% else %}bg-danger{% endif %}">
+                                        {{ form_data.team_score }}
+                                    </span>
+                                </td>
+                                <td>
+                                    {% if form_data.open_responses %}
+                                    <ul class="list-unstyled mb-0">
+                                        {% for comment in form_data.open_responses %}
+                                        <li class="mb-1">
+                                            <i class="fas fa-comment-alt text-muted"></i>
+                                            <span class="small">{{ comment|truncatewords:8 }}</span>
+                                        </li>
+                                        {% endfor %}
+                                    </ul>
                                     {% else %}
-                                    <span class="badge bg-secondary">No data</span>
+                                    <span class="text-muted small">No comments</span>
                                     {% endif %}
                                 </td>
                                 <td>
-                                    {% for form_data in student_data.forms %}
-                                    {% if form_data.open_responses %}
-                                    <div class="form-result-item mb-2">
-                                        <strong>{{ form_data.form.title }} Comments:</strong>
-                                        <ul class="list-unstyled">
-                                            {% for comment in form_data.open_responses %}
-                                            <li><i class="fas fa-comment-alt"></i> {{ comment }}</li>
-                                            {% empty %}
-                                            <li>No comments available</li>
-                                            {% endfor %}
-                                        </ul>
-                                    </div>
-                                    {% endif %}
-                                    {% endfor %}
+                                    <a href="{% url 'form_results' course.id form_data.form.id %}?member={{ student_data.member.id }}" 
+                                       class="btn btn-sm btn-outline-primary">
+                                        View Details
+                                    </a>
                                 </td>
                             </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="5" class="text-center">
+                                    <div class="alert alert-info mb-0">
+                                        No published form results available.
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
                         </tbody>
                     </table>
                 </div>
@@ -172,35 +171,19 @@
 </div>
 
 <style>
-    .form-result-item {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        padding: 0.25rem 0;
-    }
-
-    .form-result-item strong {
-        font-weight: bold;
-    }
-
     .badge {
-        font-size: 14px;
-        padding: 5px 10px;
+        font-size: 0.9em;
+        padding: 0.5em 0.75em;
     }
-
-    .list-unstyled {
-        padding-left: 0;
+    .table td {
+        vertical-align: middle;
     }
-    
+    .form-result-item {
+        padding: 0.5rem;
+        border-radius: 0.25rem;
+    }
     .list-unstyled li {
-        padding-left: 20px;
-        position: relative;
-    }
-
-    .list-unstyled li i {
-        position: absolute;
-        left: 0;
-        top: 0;
+        margin-bottom: 0.25rem;
     }
 </style>
 {% endblock %}
