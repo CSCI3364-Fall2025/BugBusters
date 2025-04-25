@@ -199,3 +199,11 @@ ACCOUNT_AUTHENTICATED_LOGIN_REDIRECTS = True
 SOCIALACCOUNT_LOGIN_ON_GET = True
 ACCOUNT_LOGOUT_ON_GET = True
 SOCIALACCOUNT_AUTO_SIGNUP = True
+
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'  # Use Gmail's SMTP server
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = 'eagleopspeerevaluations@gmail.com'
+EMAIL_HOST_PASSWORD = 'afqk gzha yvbb ocoe'
+DEFAULT_FROM_EMAIL = 'eagleopspeerevaluations@gmail.com'

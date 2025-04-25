@@ -15,6 +15,7 @@ from django.db.utils import IntegrityError
 from django.contrib import messages
 from .forms import TeamForm
 from datetime import timedelta
+from django.core.mail import send_mail
 
 def home_view(request):
     if request.method == "POST":
@@ -1737,3 +1738,34 @@ def forms_dashboard(request):
     }
     
     return render(request, 'forms_dashboard.html', context)
+
+def invite_students(request, course_id):
+    if request.method == 'POST':
+        if not request.user.userprofile.admin:
+            messages.error(request, "You do not have permission to invite students.")
+            return redirect('course_detail', course_id=course_id)
+
+        email = request.POST.get('email')
+        course = get_object_or_404(Course, id=course_id)
+
+        subject = f"You're invited to join {course.name}"
+        message = f"""Hi there,
+
+You've been invited to join the course "{course.name}" on EagleOps.
+
+Use the following join code to access the course:
+    
+    {course.course_join_code}
+
+Visit the EagleOps site and enter the code to enroll.
+
+Best,
+The EagleOps Team"""
+
+        try:
+            send_mail(subject, message, settings.DEFAULT_FROM_EMAIL, [email])
+            messages.success(request, f"Invite sent to {email}")
+        except Exception as e:
+            messages.error(request, f"Error sending email: {e}")
+
+        return redirect('course_detail', course_id=course_id)

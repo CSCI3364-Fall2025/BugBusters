@@ -62,4 +62,7 @@ urlpatterns = [
     # Roster page
     path('courses/<int:course_id>/roster/', views.roster, name='roster'),
     path('roster/', views.roster, name='roster_current'),
+
+    # Invite
+    path('courses/<int:course_id>/invite/', views.invite_students, name='invite_students'),
 ] 

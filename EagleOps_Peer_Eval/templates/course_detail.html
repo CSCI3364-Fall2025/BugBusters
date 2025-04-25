@@ -29,6 +29,31 @@
             <div class="course-code">{{ course.code }}</div>
             {% if is_admin or is_instructor %}
             <div class="join-code-container">
+                <button class="btn btn-secondary mt-2" data-bs-toggle="modal" data-bs-target="#inviteStudentModal">
+                    <i class="fas fa-envelope"></i> Invite Student
+                </button>
+                
+                <!-- Invite Student Modal -->
+                <div class="modal fade" id="inviteStudentModal" tabindex="-1" aria-labelledby="inviteStudentModalLabel" aria-hidden="true">
+                  <div class="modal-dialog">
+                    <div class="modal-content">
+                      <form method="POST" action="{% url 'invite_students' course.id %}">
+                        {% csrf_token %}
+                        <div class="modal-header">
+                          <h5 class="modal-title" id="inviteStudentModalLabel">Invite a Student</h5>
+                          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                          <label for="studentEmail" class="form-label">Student Email</label>
+                          <input type="email" class="form-control" id="studentEmail" name="email" placeholder="student@example.com" required>
+                        </div>
+                        <div class="modal-footer">
+                          <button type="submit" class="btn btn-primary">Send Invite</button>
+                        </div>
+                      </form>
+                    </div>
+                  </div>
+                </div>
                 <span class="join-code-label">Join Code:</span>
                 <span class="join-code">{{ course.course_join_code }}</span>
                 <button class="btn-icon copy-code" onclick="copyJoinCode()" title="Copy Join Code">
