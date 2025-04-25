@@ -206,4 +206,4 @@ EMAIL_PORT = 587
 EMAIL_USE_TLS = True
 EMAIL_HOST_USER = 'eagleopspeerevaluations@gmail.com'
 EMAIL_HOST_PASSWORD = 'afqk gzha yvbb ocoe'
-DEFAULT_FROM_EMAIL = 'eagleopspeerevaluations@gmail.com'
+DEFAULT_FROM_EMAIL = 'EagleOps Peer Evaluations <eagleopspeerevaluations@gmail.com>'

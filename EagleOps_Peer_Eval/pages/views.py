@@ -1751,16 +1751,16 @@ def invite_students(request, course_id):
         subject = f"You're invited to join {course.name}"
         message = f"""Hi there,
 
-You've been invited to join the course "{course.name}" on EagleOps.
+            You've been invited to join the course "{course.name}" on EagleOps.
 
-Use the following join code to access the course:
-    
-    {course.course_join_code}
+            Use the following join code to access the course:
+                
+                {course.course_join_code}
 
-Visit the EagleOps site and enter the code to enroll.
+            Visit the EagleOps site and enter the code to enroll.
 
-Best,
-The EagleOps Team"""
+            Best,
+            The EagleOps Team"""
 
         try:
             send_mail(subject, message, settings.DEFAULT_FROM_EMAIL, [email])
