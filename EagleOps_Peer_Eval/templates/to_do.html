@@ -1,5 +1,6 @@
 {% extends 'base.html' %}
 {% load static %}
+{% load tz %}
 {% load socialaccount %}
 
 {% block title %}To Do - EagleOps{% endblock %}
@@ -53,7 +54,7 @@
                               <span>Active</span>
                             </div>
                             <div class="form-date">
-                              Created on {{ form.publication_date|date:"M d, Y" }}
+                              Created on {{ form.publication_date|localtime|date:"M d, Y" }}
                             </div>
                           </div>
                           <a href="{% url 'form_evaluations' course_id=form.course_id form_id=form.id %}" class="action-button btn-primary">
@@ -102,7 +103,7 @@
                           <div class="text-heading">{{ form.title }}</div>
                           <div class="due-date">
                             <i class="fas fa-calendar"></i>
-                            <span>Opens {{ form.publication_date|date:"M d, Y" }}</span>
+                            <span>Opens {{ form.publication_date|localtime|date:"M d, Y, g:i A" }}</span>
                           </div>
                         </div>
                         <div class="form-card-body">
@@ -112,7 +113,7 @@
                               <span>Scheduled</span>
                             </div>
                             <div class="form-date">
-                              Due {{ form.closing_date|date:"M d, Y" }}
+                              Due {{ form.closing_date|localtime|date:"M d, Y, g:i A" }}
                             </div>
                           </div>
                           <button class="action-button btn-secondary" disabled>
@@ -161,7 +162,7 @@
                           <div class="text-heading">{{ form.title }}</div>
                           <div class="due-date">
                             <i class="fas fa-lock"></i>
-                            <span>Closed {{ form.closing_date|date:"M d, Y" }}</span>
+                            <span>Closed {{ form.closing_date|localtime|date:"M d, Y, g:i A" }}</span>
                           </div>
                         </div>
                         <div class="form-card-body">
@@ -171,7 +172,7 @@
                               <span>Closed</span>
                             </div>
                             <div class="form-date">
-                              Opened {{ form.publication_date|date:"M d, Y" }}
+                              Opened {{ form.publication_date|localtime|date:"M d, Y, g:i A" }}
                             </div>
                           </div>
                           <button class="action-button btn-secondary" disabled>

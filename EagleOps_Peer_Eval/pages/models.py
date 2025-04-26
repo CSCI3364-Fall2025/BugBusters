@@ -186,43 +186,34 @@ class Form(models.Model):
         """
         Validate form before saving.
         """
-        from django.utils import timezone
-
-        super().clean()
         now = timezone.now()
+        super().clean()
 
-        # Only validate if the form has an ID (meaning it already exists)
-        if self.pk is not None:
-            # Ensure all assigned teams belong to the course
-            for team in self.teams.all():
-                if team.course.id != self.course.id:
-                    raise ValidationError(
-                        f"Team '{team.name}' does not belong to course '{self.course.name}'. Teams must belong to the same course as the form."
-                    )
+        if self.pk:
+            existing = Form.objects.get(pk=self.pk)
 
-            # Custom validation: for self-assessment, check teams
-            if self.self_assessment:
-                for team in self.teams.all():
-                    if team.members.count() < 2:
-                        raise ValidationError(
-                            f"Team '{team.name}' does not have enough members for self-assessment."
-                        )
+            # Prevent changing publication_date if already published/closed
+            if existing.publication_date < now and self.publication_date != existing.publication_date:
+                if existing.status in [Form.ACTIVE, Form.CLOSED]:
+                    raise ValidationError("Cannot change publication date after the form has been published or closed.")
 
-            # Prevent changing publication_date if it's already passed and the form is active or closed
-            try:
-                existing = Form.objects.get(pk=self.pk)
-                if existing.publication_date < now and self.publication_date != existing.publication_date:
-                    # Ensure that publication date cannot be changed if form is already published
-                    if existing.status in [Form.ACTIVE, Form.CLOSED]:
-                        raise ValidationError("You cannot change the publication date after it has passed.")
-            except Form.DoesNotExist:
-                pass  # No existing record found, likely during initial creation
-
-        # Ensure publish date is before closing date
+        # Check pub/close dates
         if self.publication_date and self.closing_date:
             if self.publication_date >= self.closing_date:
                 raise ValidationError("Publication date must be before closing date.")
-        
+
+        # Validate teams for correct course & self-assessment
+        if self.pk:  # Only if editing existing
+            for team in self.teams.all():
+                if team.course.id != self.course.id:
+                    raise ValidationError(
+                        f"Team '{team.name}' does not belong to course '{self.course.name}'."
+                    )
+                if self.self_assessment and team.members.count() < 2:
+                    raise ValidationError(
+                        f"Team '{team.name}' does not have enough members for self-assessment."
+                    )
+
     @property
     def live_status(self):
         now = timezone.now()
@@ -237,9 +228,11 @@ class Form(models.Model):
             return self.CLOSED
 
     def save(self, *args, **kwargs):
+        force_status = kwargs.pop('force_status', False)
+
         self.full_clean()
 
-        if self.status != self.DRAFT:
+        if force_status or self.status != self.DRAFT:
             self.status = self.live_status
 
         super().save(*args, **kwargs)
@@ -248,57 +241,42 @@ class Form(models.Model):
         self.status = self.DRAFT
         self.save()
 
-    def clean(self):
-        now = timezone.now()
-
-        super().clean()
-
-        if self.pk:
-            existing = Form.objects.get(pk=self.pk)
-
-            if existing.publication_date < now and self.publication_date != existing.publication_date:
-                if existing.status in [Form.ACTIVE, Form.CLOSED]:
-                    raise ValidationError("Cannot change publication date after the form has been published or closed.")
-
-        if self.publication_date and self.closing_date:
-            if self.publication_date >= self.closing_date:
-                raise ValidationError("Publication date must be before closing date.")
-
     @property
     def completion_rate(self):
         """
-        Returns the completion rate as a string (e.g., '15/20 completed')
-        Calculates based on team members and whether self-assessment is enabled.
+        Returns the completion rate as 'X/Y completed'.
         """
         total_expected = 0
         for team in self.teams.all():
             member_count = team.members.count()
             if self.self_assessment:
-                # Each member evaluates themselves and all team members
                 total_expected += member_count * member_count
             else:
-                # Each member evaluates all team members except themselves
                 total_expected += member_count * (member_count - 1)
         
         completed = self.responses.filter(submitted=True).count()
         return f"{completed}/{total_expected} completed"
-    
+
     def time_left(self):
         """
-        Returns the time left until the closing date in a human-readable format.
+        Returns the time left until the closing date in a human-readable format, adjusted for local timezone.
         """
-        now = timezone.now()
-        time_left = self.closing_date - now
-        
-        if time_left <= timedelta(0):  # If the time left is 0 or negative (already closed)
+        now = timezone.localtime(timezone.now())  # Convert 'now' to local time
+        closing = timezone.localtime(self.closing_date)  # Convert 'closing_date' to local time
+
+        time_left = closing - now
+
+        if time_left <= timedelta(0):
             return "Closed"
         
+        # Calculate days, hours, and minutes
         days_left = time_left.days
         hours_left = time_left.seconds // 3600
         minutes_left = (time_left.seconds // 60) % 60
-        
-        # Format the remaining time as "X days, Y hours, Z minutes"
-        return f"{days_left} days, {hours_left} hours, and {minutes_left} minutes."
+
+        # Build the time string manually
+        time_string = f"{days_left} days, {hours_left} hours, and {minutes_left} minutes"
+        return time_string
 
 class FormResponse(models.Model):
     """

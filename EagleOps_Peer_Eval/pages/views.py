@@ -14,8 +14,12 @@ from django.contrib.auth import logout
 from django.db.utils import IntegrityError
 from django.contrib import messages
 from .forms import TeamForm
+from datetime import datetime
 from datetime import timedelta
 from django.core.mail import send_mail
+
+def local_now():
+    return timezone.localtime(timezone.now())
 
 def home_view(request):
     if request.method == "POST":
@@ -51,82 +55,96 @@ from django.utils import timezone
 @login_required
 def todo_view(request):
     """Student To-Do Page: Select course, join courses, and view forms organized by status."""
-    user_profile = request.user.userprofile
+    user = request.user.userprofile
     join_error_message = None
     join_success_message = None
-    
-    # Handle join course form submission
+
+    # Handle joining a course
     if request.method == 'POST' and 'join_code' in request.POST:
         join_code = request.POST.get('join_code', '').strip().upper()
-        if not join_code:
-            join_error_message = 'Please enter a course join code'
-        else:
+        if join_code:
             try:
                 course = Course.objects.get(course_join_code=join_code)
-                if course.students.filter(id=user_profile.id).exists():
-                    join_error_message = f'You are already enrolled in {course.name}'
+                if course.students.filter(id=user.id).exists():
+                    join_error_message = f"You are already enrolled in {course.name}."
                 else:
-                    course.students.add(user_profile)
-                    join_success_message = f'Successfully joined {course.name}'
+                    course.students.add(user)
+                    join_success_message = f"Successfully joined {course.name}."
             except Course.DoesNotExist:
-                join_error_message = 'Invalid course code. Please check and try again.'
+                join_error_message = "Invalid course code. Please check and try again."
+        else:
+            join_error_message = "Please enter a course join code."
 
-    # Get all relevant courses
-    instructor_courses = Course.objects.filter(instructors=user_profile)
-    team_courses = Course.objects.filter(teams__members=user_profile)
-    enrolled_courses = Course.objects.filter(students=user_profile)
-    course_list = (instructor_courses | team_courses | enrolled_courses).distinct().order_by('name')
+    # Get user's courses
+    courses = Course.objects.filter(
+        instructors=user
+    ) | Course.objects.filter(
+        teams__members=user
+    ) | Course.objects.filter(
+        students=user
+    )
+    courses = courses.distinct().order_by('name')
 
-    # Select course from session or default
+    # Pick selected course
     selected_course_id = request.session.get('selected_course_id')
-    selected_course = None
-    if selected_course_id:
-        selected_course = course_list.filter(id=selected_course_id).first()
-    if not selected_course:
-        selected_course = course_list.first()
-        if selected_course:
-            request.session['selected_course_id'] = selected_course.id
+    selected_course = courses.filter(id=selected_course_id).first() if selected_course_id else None
+    if not selected_course and courses.exists():
+        selected_course = courses.first()
+        request.session['selected_course_id'] = selected_course.id
 
-    now = timezone.now()
     course_data = []
+    now = timezone.localtime()  # Ensure current time is in local timezone
 
     if selected_course:
-        user_teams = selected_course.teams.filter(members=user_profile)
+        user_teams = selected_course.teams.filter(members=user)
 
         for team in user_teams:
-            forms = Form.objects.filter(course=selected_course, teams=team).exclude(status='draft').order_by('-created_at')
-            active_forms = []
-            scheduled_forms = []
-            closed_forms = []
+            forms = Form.objects.filter(
+                course=selected_course,
+                teams=team
+            ).exclude(status='draft').order_by('-created_at')
+
+            active_forms, scheduled_forms, closed_forms = [], [], []
 
             for form in forms:
-                if now < form.publication_date:
-                    live_status = 'scheduled'
-                elif form.publication_date <= now < form.closing_date:
-                    live_status = 'active'
-                else:
-                    live_status = 'closed'
+                pub_date = timezone.localtime(form.publication_date)  # Ensure pub_date is in local timezone
+                close_date = timezone.localtime(form.closing_date)  # Ensure close_date is in local timezone
 
-                is_urgent = (
-                    live_status == 'active' and
-                    (form.closing_date - now) <= timedelta(hours=24)
-                )
+                if now < pub_date:
+                    status = 'scheduled'
+                    time_info = (pub_date - now)
+                elif pub_date <= now < close_date:
+                    status = 'active'
+                    time_info = (close_date - now)
+                else:
+                    status = 'closed'
+                    time_info = None
+
+                # Calculate time_left in days, hours, and minutes for active/scheduled forms
+                if time_info:
+                    days_left = time_info.days
+                    hours_left = time_info.seconds // 3600
+                    minutes_left = (time_info.seconds // 60) % 60
+                    time_left_str = f"{days_left} days, {hours_left} hours, and {minutes_left} minutes"
+                else:
+                    time_left_str = ""
+
                 form_data = {
                     'id': form.id,
                     'title': form.title,
-                    'publication_date': form.publication_date,
-                    'closing_date': form.closing_date,
-                    'live_status': live_status,
-                    'is_urgent': is_urgent,
+                    'publication_date': pub_date,
+                    'closing_date': close_date,
+                    'live_status': status,
+                    'is_urgent': (status == 'active' and time_info and time_info <= timedelta(hours=24)),
                     'course_id': selected_course.id,
-                    'time_left': str(form.closing_date - now).split('.')[0] if live_status == 'active' else '',
+                    'time_left': time_left_str,  # Use the newly formatted time_left_str
                 }
 
-                if live_status == 'active':
+                if status == 'active':
                     active_forms.append(form_data)
-                elif live_status == 'scheduled':
+                elif status == 'scheduled':
                     scheduled_forms.append(form_data)
-                elif live_status == 'closed':
+                elif status == 'closed':
                     closed_forms.append(form_data)
 
             course_data.append({
@@ -138,18 +156,14 @@ def todo_view(request):
                 'closed_forms': closed_forms,
             })
 
-    has_active_forms = any(item['active_forms'] for item in course_data)
-    has_scheduled_forms = any(item['scheduled_forms'] for item in course_data)
-    has_closed_forms = any(item['closed_forms'] for item in course_data)
-
     context = {
         'course_data': course_data,
         'join_error_message': join_error_message,
         'join_success_message': join_success_message,
         'selected_course': selected_course,
-        'has_active_forms': has_active_forms,
-        'has_scheduled_forms': has_scheduled_forms,
-        'has_closed_forms': has_closed_forms,
+        'has_active_forms': any(item['active_forms'] for item in course_data),
+        'has_scheduled_forms': any(item['scheduled_forms'] for item in course_data),
+        'has_closed_forms': any(item['closed_forms'] for item in course_data),
     }
 
     return render(request, "to_do.html", context)
@@ -496,15 +510,11 @@ def template_delete(request, course_id, template_id):
     
     return redirect('course_detail', course_id=course_id)
 
-from django.utils import timezone
-from datetime import datetime
-
 def form_create_edit(request, course_id, form_id=None):
     """View for creating or editing a form"""
     user = request.user.userprofile
     course = get_object_or_404(Course, id=course_id)
     
-    # Only admins can create/edit forms
     if not user.admin:
         raise PermissionDenied
     
@@ -517,38 +527,42 @@ def form_create_edit(request, course_id, form_id=None):
     
     if request.method == 'POST':
         try:
-            # Handle save action
             data = json.loads(request.body)
             print(f"Received POST data: {data}")
             
             title = data.get('title', '')
             template_id = data.get('template_id')
-            publication_date = data.get('publication_date')
-            closing_date = data.get('closing_date')
+            publication_date_str = data.get('publication_date')
+            closing_date_str = data.get('closing_date')
             team_ids = data.get('team_ids', [])
             self_assessment = data.get('self_assessment', False)
             
-            # Convert publication_date and closing_date to timezone-aware datetime
-            publication_date = timezone.make_aware(datetime.strptime(publication_date, '%Y-%m-%dT%H:%M'))
-            closing_date = timezone.make_aware(datetime.strptime(closing_date, '%Y-%m-%dT%H:%M'))
+            # Convert dates to timezone-aware datetime
+            publication_date = timezone.make_aware(datetime.strptime(publication_date_str, '%Y-%m-%dT%H:%M'))
+            closing_date = timezone.make_aware(datetime.strptime(closing_date_str, '%Y-%m-%dT%H:%M'))
             
-            # Validate required fields
+            now = timezone.now()
+            
+            # Validation checks
             if not title:
                 return JsonResponse({'status': 'error', 'message': 'Form title is required'}, status=400)
-            
             if not template_id:
                 return JsonResponse({'status': 'error', 'message': 'Template selection is required'}, status=400)
-            
             if not publication_date:
                 return JsonResponse({'status': 'error', 'message': 'Publication date is required'}, status=400)
-                
             if not closing_date:
                 return JsonResponse({'status': 'error', 'message': 'Closing date is required'}, status=400)
-            
             if not team_ids:
                 return JsonResponse({'status': 'error', 'message': 'At least one team must be selected'}, status=400)
             
-            # Make sure template exists
+            # Require publication at least 24 hours in the future
+            if closing_date - publication_date < timedelta(hours=24):
+                return JsonResponse({
+                    'status': 'error',
+                    'message': 'The closing date must be at least 24 hours after the publication date.'
+                }, status=400)
+            
+            # Load template
             try:
                 template = FormTemplate.objects.get(id=template_id, course=course)
             except FormTemplate.DoesNotExist:
@@ -557,10 +571,8 @@ def form_create_edit(request, course_id, form_id=None):
                     'message': f'Template with ID {template_id} does not exist for this course'
                 }, status=404)
             
-            # Convert team_ids to integers if they're strings
+            # Validate teams
             team_ids = [int(team_id) for team_id in team_ids]
-            
-            # Verify teams exist
             teams_to_assign = Team.objects.filter(id__in=team_ids)
             if len(teams_to_assign) != len(team_ids):
                 missing = set(team_ids) - set(team.id for team in teams_to_assign)
@@ -569,8 +581,8 @@ def form_create_edit(request, course_id, form_id=None):
                     'message': f'Some teams do not exist: {missing}'
                 }, status=400)
             
+            # Create or update form
             if form:
-                # Update existing form
                 print(f"Updating existing form: {form.id}")
                 form.title = title
                 form.template = template
@@ -578,13 +590,8 @@ def form_create_edit(request, course_id, form_id=None):
                 form.closing_date = closing_date
                 form.self_assessment = self_assessment
                 form.save()
-                
-                # Update teams
                 form.teams.set(teams_to_assign)
-                
-                return JsonResponse({'status': 'success', 'form_id': form.id})
             else:
-                # Create new form
                 print(f"Creating new form with template: {template.id}")
                 form = Form.objects.create(
                     title=title,
@@ -595,20 +602,16 @@ def form_create_edit(request, course_id, form_id=None):
                     closing_date=closing_date,
                     self_assessment=self_assessment
                 )
-                
-                # Now we can set the teams
                 form.teams.add(*teams_to_assign)
-                
-                return JsonResponse({'status': 'success', 'form_id': form.id})
+            
+            return JsonResponse({'status': 'success', 'form_id': form.id})
+        
         except Exception as e:
-            # Handle unexpected errors
             print(f"Error in form_create_edit: {str(e)}")
             import traceback
-            traceback.print_exc()  # Print full traceback for debugging
-            error_message = f"An error occurred: {str(e)}"
-            return JsonResponse({'status': 'error', 'message': error_message}, status=500)
-    
-    # Display the create/edit form
+            traceback.print_exc()
+            return JsonResponse({'status': 'error', 'message': f"An error occurred: {str(e)}"}, status=500)
+
     context = {
         'course': course,
         'form': form,
@@ -617,7 +620,6 @@ def form_create_edit(request, course_id, form_id=None):
         'selected_teams': [t.id for t in form.teams.all()] if form else [],
         'is_edit': form is not None
     }
-    
     return render(request, 'form_edit.html', context)
 
 @login_required
