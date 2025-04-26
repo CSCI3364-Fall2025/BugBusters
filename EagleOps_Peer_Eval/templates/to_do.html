@@ -1,172 +1,223 @@
 {% extends 'base.html' %}
-{% load socialaccount %}
 {% load static %}
+{% load socialaccount %}
 
 {% block title %}To Do - EagleOps{% endblock %}
 
 {% block content %}
-  <div class="copy">
-    <div class="page-title">
-      <div class="text-wrapper-11"><h1>EagleOps Peer Evaluation</h1></div>
-      <p class="text-wrapper-12">
-        Welcome, {{ user.userprofile.first_name }}!
-        Click the buttons below to begin completing feedback forms for your teammates.
-      </p>
-    </div>
+<div class="copy">
+  <div class="page-title">
+    <div class="text-wrapper-11"><h1>EagleOps Peer Evaluation</h1></div>
+    <p class="text-wrapper-12">
+      Welcome, {{ user.userprofile.first_name }}!
+      Click the buttons below to complete feedback forms for your teammates.
+    </p>
   </div>
+</div>
 
-  <div class="todo-container">
-    <!-- Forms Sections -->
-    <div class="forms-sections">
-      <!-- Active Forms Section -->
-      <div class="section active-forms">
-        <div class="section-header">
-          <h2>Active Forms</h2>
-          <button class="collapse-toggle" data-target="active-forms-content">
-            <i class="fas fa-chevron-down"></i>
-          </button>
-        </div>
-        <div class="section-content" id="active-forms-content">
-          {% if has_active_forms %}
-            {% for item in course_data %}
-              {% if item.forms %}
-                <div class="team-section">
-                  <div class="team-header">
-                    <h3>{{ item.team.name }}</h3>
-                    <span class="team-course">{{ item.course_name }}</span>
-                  </div>
-                  <div class="team-forms">
-                    {% for form in item.forms %}
-                      <div class="form-card">
-                        <div class="form-card-inner">
-                          <div class="form-card-header">
-                            <div class="text-heading">{{ form.title }}</div>
-                            <div class="due-date {% if form.is_urgent %}urgent{% endif %}">
-                              <i class="fas fa-clock"></i>
-                              <span>{{ form.time_left }}</span>
+<div class="todo-container">
+  <div class="forms-sections">
+
+    <!-- Active Forms -->
+    <div class="section active-forms">
+      <div class="section-header">
+        <h2>Active Forms</h2>
+        <button class="collapse-toggle" data-target="active-forms-content">
+          <i class="fas fa-chevron-down"></i>
+        </button>
+      </div>
+      <div class="section-content" id="active-forms-content">
+        {% if has_active_forms %}
+          {% for item in course_data %}
+            {% if item.active_forms %}
+              <div class="team-section">
+                <div class="team-header">
+                  <h3>{{ item.team.name }}</h3>
+                  <span class="team-course">{{ item.course_name }}</span>
+                </div>
+                <div class="team-forms">
+                  {% for form in item.active_forms %}
+                    <div class="form-card">
+                      <div class="form-card-inner">
+                        <div class="form-card-header">
+                          <div class="text-heading">{{ form.title }}</div>
+                          <div class="due-date {% if form.is_urgent %}urgent{% endif %}">
+                            <i class="fas fa-clock"></i>
+                            <span>{{ form.time_left }}</span>
+                          </div>
+                        </div>
+                        <div class="form-card-body">
+                          <div class="form-info">
+                            <div class="form-status">
+                              <span class="status-indicator active"></span>
+                              <span>Active</span>
+                            </div>
+                            <div class="form-date">
+                              Created on {{ form.publication_date|date:"M d, Y" }}
                             </div>
                           </div>
-                          <div class="form-card-body">
-                            <div class="form-info">
-                              <div class="form-status">
-                                <span class="status-indicator {% if form.status == 'active' %}active{% elif form.status == 'scheduled' %}scheduled{% endif %}"></span>
-                                <span>{% if form.status == 'active' %}Active{% elif form.status == 'scheduled' %}Scheduled{% endif %}</span>
-                              </div>
-                              <div class="form-date">
-                                Created on {{ form.publication_date|date:"M d, Y" }}
-                              </div>
-                            </div>
-                            <!-- Only show the "Begin" button for active forms -->
-                            {% if form.status == 'active' %}
-                              <a href="{% url 'form_evaluations' course_id=form.course.id form_id=form.id %}" class="action-button btn-primary">
-                                <span>Begin</span>
-                              </a>
-                            {% else %}
-                              <button class="action-button btn-secondary" disabled>
-                                <span>Not Open</span>
-                              </button>
-                            {% endif %}
-                          </div>
+                          <a href="{% url 'form_evaluations' course_id=form.course_id form_id=form.id %}" class="action-button btn-primary">
+                            <span>Begin</span>
+                          </a>
                         </div>
                       </div>
-                    {% endfor %}
-                  </div>
+                    </div>
+                  {% endfor %}
                 </div>
-              {% endif %}
-            {% endfor %}
-          {% else %}
-            <div class="empty-state">
-              <i class="fas fa-check-circle"></i>
-              <h3>No Active Forms</h3>
-              <p>You're all caught up! There are no active forms that need your attention right now.</p>
-            </div>
-          {% endif %}
-        </div>
-      </div>
-
-      <!-- Scheduled Forms Section -->
-      <div class="section scheduled-forms">
-        <div class="section-header">
-          <h2>Scheduled Forms</h2>
-          <button class="collapse-toggle" data-target="scheduled-forms-content">
-            <i class="fas fa-chevron-right"></i>
-          </button>
-        </div>
-        <div class="section-content" id="scheduled-forms-content" style="display: none;">
-          {% if has_scheduled_forms %}
-            {% for item in course_data %}
-              {% if item.forms %}
-                <div class="team-section">
-                  <div class="team-header">
-                    <h3>{{ item.team.name }}</h3>
-                    <span class="team-course">{{ item.course_name }}</span>
-                  </div>
-                  <div class="team-forms">
-                    {% for form in item.forms %}
-                      {% if form.status == 'scheduled' %}
-                        <div class="form-card">
-                          <div class="form-card-inner">
-                            <div class="form-card-header">
-                              <div class="text-heading">{{ form.title }}</div>
-                              <div class="due-date">
-                                <i class="fas fa-calendar"></i>
-                                <span>Opens {{ form.publication_date|date:"M d, Y" }}</span>
-                              </div>
-                            </div>
-                            <div class="form-card-body">
-                              <div class="form-info">
-                                <div class="form-status">
-                                  <span class="status-indicator scheduled"></span>
-                                  <span>Scheduled</span>
-                                </div>
-                                <div class="form-date">
-                                  Due {{ form.closing_date|date:"M d, Y" }}
-                                </div>
-                              </div>
-                              <button class="action-button btn-secondary" disabled>
-                                <span>Not Open</span>
-                              </button>
-                            </div>
-                          </div>
-                        </div>
-                      {% endif %}
-                    {% endfor %}
-                  </div>
-                </div>
-              {% endif %}
-            {% endfor %}
-          {% else %}
-            <div class="empty-state">
-              <i class="fas fa-calendar-alt"></i>
-              <h3>No Scheduled Forms</h3>
-              <p>There are no forms scheduled for the future. Check back later for new evaluations.</p>
-            </div>
-          {% endif %}
-        </div>
+              </div>
+            {% endif %}
+          {% endfor %}
+        {% else %}
+          <div class="empty-state">
+            <i class="fas fa-check-circle"></i>
+            <h3>No Active Forms</h3>
+            <p>You're all caught up!</p>
+          </div>
+        {% endif %}
       </div>
     </div>
-  </div>
 
-  <script>
-    // Collapsible sections
-    document.querySelectorAll('.collapse-toggle').forEach(toggle => {
-      toggle.addEventListener('click', function() {
-        const targetId = this.getAttribute('data-target');
-        const content = document.getElementById(targetId);
-        const icon = this.querySelector('i');
-        
-        if (content.style.display === 'none') {
-          content.style.display = 'block';
-          icon.classList.remove('fa-chevron-right');
-          icon.classList.add('fa-chevron-down');
-        } else {
-          content.style.display = 'none';
-          icon.classList.remove('fa-chevron-down');
-          icon.classList.add('fa-chevron-right');
-        }
-      });
+    <!-- Scheduled Forms -->
+    <div class="section scheduled-forms">
+      <div class="section-header">
+        <h2>Scheduled Forms</h2>
+        <button class="collapse-toggle" data-target="scheduled-forms-content">
+          <i class="fas fa-chevron-right"></i>
+        </button>
+      </div>
+      <div class="section-content" id="scheduled-forms-content" style="display:none;">
+        {% if has_scheduled_forms %}
+          {% for item in course_data %}
+            {% if item.scheduled_forms %}
+              <div class="team-section">
+                <div class="team-header">
+                  <h3>{{ item.team.name }}</h3>
+                  <span class="team-course">{{ item.course_name }}</span>
+                </div>
+                <div class="team-forms">
+                  {% for form in item.scheduled_forms %}
+                    <div class="form-card">
+                      <div class="form-card-inner">
+                        <div class="form-card-header">
+                          <div class="text-heading">{{ form.title }}</div>
+                          <div class="due-date">
+                            <i class="fas fa-calendar"></i>
+                            <span>Opens {{ form.publication_date|date:"M d, Y" }}</span>
+                          </div>
+                        </div>
+                        <div class="form-card-body">
+                          <div class="form-info">
+                            <div class="form-status">
+                              <span class="status-indicator scheduled"></span>
+                              <span>Scheduled</span>
+                            </div>
+                            <div class="form-date">
+                              Due {{ form.closing_date|date:"M d, Y" }}
+                            </div>
+                          </div>
+                          <button class="action-button btn-secondary" disabled>
+                            <span>Not Open</span>
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  {% endfor %}
+                </div>
+              </div>
+            {% endif %}
+          {% endfor %}
+        {% else %}
+          <div class="empty-state">
+            <i class="fas fa-calendar-alt"></i>
+            <h3>No Scheduled Forms</h3>
+            <p>No upcoming evaluations yet.</p>
+          </div>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- Closed Forms -->
+    <div class="section closed-forms">
+      <div class="section-header">
+        <h2>Closed Forms</h2>
+        <button class="collapse-toggle" data-target="closed-forms-content">
+          <i class="fas fa-chevron-right"></i>
+        </button>
+      </div>
+      <div class="section-content" id="closed-forms-content" style="display:none;">
+        {% if has_closed_forms %}
+          {% for item in course_data %}
+            {% if item.closed_forms %}
+              <div class="team-section">
+                <div class="team-header">
+                  <h3>{{ item.team.name }}</h3>
+                  <span class="team-course">{{ item.course_name }}</span>
+                </div>
+                <div class="team-forms">
+                  {% for form in item.closed_forms %}
+                    <div class="form-card">
+                      <div class="form-card-inner">
+                        <div class="form-card-header">
+                          <div class="text-heading">{{ form.title }}</div>
+                          <div class="due-date">
+                            <i class="fas fa-lock"></i>
+                            <span>Closed {{ form.closing_date|date:"M d, Y" }}</span>
+                          </div>
+                        </div>
+                        <div class="form-card-body">
+                          <div class="form-info">
+                            <div class="form-status">
+                              <span class="status-indicator closed"></span>
+                              <span>Closed</span>
+                            </div>
+                            <div class="form-date">
+                              Opened {{ form.publication_date|date:"M d, Y" }}
+                            </div>
+                          </div>
+                          <button class="action-button btn-secondary" disabled>
+                            <span>Closed</span>
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  {% endfor %}
+                </div>
+              </div>
+            {% endif %}
+          {% endfor %}
+        {% else %}
+          <div class="empty-state">
+            <i class="fas fa-lock"></i>
+            <h3>No Closed Forms</h3>
+            <p>There are no closed forms right now.</p>
+          </div>
+        {% endif %}
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+  // Collapsible sections
+  document.querySelectorAll('.collapse-toggle').forEach(toggle => {
+    toggle.addEventListener('click', function() {
+      const targetId = this.getAttribute('data-target');
+      const content = document.getElementById(targetId);
+      const icon = this.querySelector('i');
+      
+      if (content.style.display === 'none') {
+        content.style.display = 'block';
+        icon.classList.remove('fa-chevron-right');
+        icon.classList.add('fa-chevron-down');
+      } else {
+        content.style.display = 'none';
+        icon.classList.remove('fa-chevron-down');
+        icon.classList.add('fa-chevron-right');
+      }
     });
-  </script>
+  });
+</script>
 {% endblock %}
 
 {% block extra_css %}

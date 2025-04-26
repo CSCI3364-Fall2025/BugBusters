@@ -43,129 +43,104 @@ def signout(request):
     logout(request)
     return redirect('home')
 
+from datetime import timedelta
+from django.contrib.auth.decorators import login_required
+from django.shortcuts import render
+from django.utils import timezone
+
 @login_required
 def todo_view(request):
-    """View for student to select a course then see their forms for that course"""
+    """Student To-Do Page: Select course, join courses, and view forms organized by status."""
     user_profile = request.user.userprofile
     join_error_message = None
     join_success_message = None
     
-    # Handle join course requests directly from the to_do page
+    # Handle join course form submission
     if request.method == 'POST' and 'join_code' in request.POST:
         join_code = request.POST.get('join_code', '').strip().upper()
-        
         if not join_code:
             join_error_message = 'Please enter a course join code'
         else:
             try:
                 course = Course.objects.get(course_join_code=join_code)
-                
-                # Check if already enrolled
                 if course.students.filter(id=user_profile.id).exists():
                     join_error_message = f'You are already enrolled in {course.name}'
                 else:
-                    # Add student to course
                     course.students.add(user_profile)
                     join_success_message = f'Successfully joined {course.name}'
             except Course.DoesNotExist:
                 join_error_message = 'Invalid course code. Please check and try again.'
 
-    # Get courses where user is an instructor
+    # Get all relevant courses
     instructor_courses = Course.objects.filter(instructors=user_profile)
-
-    # Get courses where user is in a team
     team_courses = Course.objects.filter(teams__members=user_profile)
-    
-    # Get courses where user is directly enrolled
     enrolled_courses = Course.objects.filter(students=user_profile)
-
-    # Combine the querysets and remove duplicates
     course_list = (instructor_courses | team_courses | enrolled_courses).distinct().order_by('name')
 
-    # Get the selected course from session
+    # Select course from session or default
     selected_course_id = request.session.get('selected_course_id')
     selected_course = None
-    
     if selected_course_id:
-        try:
-            selected_course = course_list.get(id=selected_course_id)
-        except Course.DoesNotExist:
-            pass
-    
-    # If no course is selected or the selected course is not in the user's courses,
-    # select the most recent course
-    if not selected_course or selected_course not in course_list:
-        selected_course = course_list.first() if course_list else None
+        selected_course = course_list.filter(id=selected_course_id).first()
+    if not selected_course:
+        selected_course = course_list.first()
         if selected_course:
             request.session['selected_course_id'] = selected_course.id
 
-    # Prepare data for forms section
-    course_data = []
     now = timezone.now()
-    has_active_forms = False
-    has_scheduled_forms = False
+    course_data = []
 
-    # If a course is selected, only show forms for that course
     if selected_course:
         user_teams = selected_course.teams.filter(members=user_profile)
-        
-        # Create a list of team data with their forms
-        team_data = []
+
         for team in user_teams:
-            forms = Form.objects.filter(course=selected_course, teams=team).order_by('-created_at')
-            
-            # Add is_urgent property to each form
-            for form in forms:
-                form.refresh_from_db()  # Always pull fresh data
-                if form.status == Form.DRAFT:
-                    continue  # Skip drafts entirely
+            forms = Form.objects.filter(course=selected_course, teams=team).exclude(status='draft').order_by('-created_at')
+            active_forms = []
+            scheduled_forms = []
+            closed_forms = []
 
-                calculated_status = form.status  # Default to the current status
+            for form in forms:
                 if now < form.publication_date:
-                    calculated_status = Form.SCHEDULED
-                elif now >= form.publication_date and now < form.closing_date:
-                    calculated_status = Form.ACTIVE
-                elif now >= form.closing_date:
-                    calculated_status = Form.CLOSED
+                    live_status = 'scheduled'
+                elif form.publication_date <= now < form.closing_date:
+                    live_status = 'active'
+                else:
+                    live_status = 'closed'
 
-                form.calculated_status = calculated_status
-
-                form.is_urgent = (
-                    form.status == Form.ACTIVE and 
-                    form.closing_date - now <= timedelta(hours=24)
+                is_urgent = (
+                    live_status == 'active' and
+                    (form.closing_date - now) <= timedelta(hours=24)
                 )
-            
-            # Calculate team urgency score (lower is more urgent)
-            urgency_score = float('inf')
-            for form in forms:
-                if form.status == 'active':
-                    time_left = form.closing_date - now
-                    if time_left.total_seconds() > 0:
-                        urgency_score = min(urgency_score, time_left.total_seconds())
-            
-            team_data.append({
-                'team': team,
-                'forms': forms,
-                'urgency_score': urgency_score
-            })
-        
-        # Sort teams by urgency (most urgent first)
-        team_data.sort(key=lambda x: x['urgency_score'])
-        
-        # Prepare final course data
-        for team_info in team_data:
+                form_data = {
+                    'id': form.id,
+                    'title': form.title,
+                    'publication_date': form.publication_date,
+                    'closing_date': form.closing_date,
+                    'live_status': live_status,
+                    'is_urgent': is_urgent,
+                    'course_id': selected_course.id,
+                    'time_left': str(form.closing_date - now).split('.')[0] if live_status == 'active' else '',
+                }
+
+                if live_status == 'active':
+                    active_forms.append(form_data)
+                elif live_status == 'scheduled':
+                    scheduled_forms.append(form_data)
+                elif live_status == 'closed':
+                    closed_forms.append(form_data)
+
             course_data.append({
+                'team': team,
                 'course_name': selected_course.name,
                 'course_code': selected_course.code,
-                'team': team_info['team'],
-                'forms': team_info['forms'],
+                'active_forms': active_forms,
+                'scheduled_forms': scheduled_forms,
+                'closed_forms': closed_forms,
             })
-        
-    has_active_forms = any(
-        form.status == 'active'
-        for item in course_data
-        for form in item['forms']
-    )
+
+    has_active_forms = any(item['active_forms'] for item in course_data)
+    has_scheduled_forms = any(item['scheduled_forms'] for item in course_data)
+    has_closed_forms = any(item['closed_forms'] for item in course_data)
 
     context = {
         'course_data': course_data,
@@ -174,6 +149,7 @@ def todo_view(request):
         'selected_course': selected_course,
         'has_active_forms': has_active_forms,
         'has_scheduled_forms': has_scheduled_forms,
+        'has_closed_forms': has_closed_forms,
     }
 
     return render(request, "to_do.html", context)

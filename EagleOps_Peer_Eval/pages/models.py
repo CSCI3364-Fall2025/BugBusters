@@ -158,7 +158,7 @@ class Form(models.Model):
     ACTIVE = 'active'
     CLOSED = 'closed'
     PUBLISHED = 'published'
-    
+
     STATUS_CHOICES = [
         (DRAFT, 'Draft'),
         (SCHEDULED, 'Scheduled'),
@@ -223,26 +223,46 @@ class Form(models.Model):
             if self.publication_date >= self.closing_date:
                 raise ValidationError("Publication date must be before closing date.")
         
-    def save(self, *args, **kwargs):
-        """
-        Override save method to automatically update status based on dates.
-        Draft status is only changed if the form is not in draft mode.
-        """
-        
-        self.full_clean()  # Validate the model before saving
+    @property
+    def live_status(self):
+        now = timezone.now()
 
-        # Check for 'force_status' argument to skip automatic status update
-        force_status = kwargs.pop('force_status', False)
-        if not force_status and self.status != self.DRAFT:
-            now = timezone.now()
-            if now < self.publication_date:
-                self.status = self.SCHEDULED
-            elif now >= self.publication_date and now < self.closing_date:
-                self.status = self.ACTIVE
-            elif now >= self.closing_date:
-                self.status = self.CLOSED
+        if self.status == self.DRAFT:
+            return self.DRAFT
+        if now < self.publication_date:
+            return self.SCHEDULED
+        elif self.publication_date <= now < self.closing_date:
+            return self.ACTIVE
+        else:
+            return self.CLOSED
+
+    def save(self, *args, **kwargs):
+        self.full_clean()
+
+        if self.status != self.DRAFT:
+            self.status = self.live_status
 
         super().save(*args, **kwargs)
+
+    def unpublish(self):
+        self.status = self.DRAFT
+        self.save()
+
+    def clean(self):
+        now = timezone.now()
+
+        super().clean()
+
+        if self.pk:
+            existing = Form.objects.get(pk=self.pk)
+
+            if existing.publication_date < now and self.publication_date != existing.publication_date:
+                if existing.status in [Form.ACTIVE, Form.CLOSED]:
+                    raise ValidationError("Cannot change publication date after the form has been published or closed.")
+
+        if self.publication_date and self.closing_date:
+            if self.publication_date >= self.closing_date:
+                raise ValidationError("Publication date must be before closing date.")
 
     @property
     def completion_rate(self):
@@ -279,13 +299,6 @@ class Form(models.Model):
         
         # Format the remaining time as "X days, Y hours, Z minutes"
         return f"{days_left} days, {hours_left} hours, and {minutes_left} minutes."
-    
-    def unpublish(self):
-        """
-        Reverts form to draft state and makes it unavailable to users.
-        """
-        self.status = self.DRAFT
-        self.save(force_status=True)
 
 class FormResponse(models.Model):
     """
