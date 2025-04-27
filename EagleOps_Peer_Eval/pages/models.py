@@ -259,10 +259,10 @@ class Form(models.Model):
 
     def time_left(self):
         """
-        Returns the time left until the closing date in a human-readable format, adjusted for local timezone.
+        Returns the time left until the closing date in a human-readable format, adjusted for UTC.
         """
-        now = timezone.localtime(timezone.now())  # Convert 'now' to local time
-        closing = timezone.localtime(self.closing_date)  # Convert 'closing_date' to local time
+        now = timezone.now()  # Use the UTC time directly
+        closing = self.closing_date  # The closing date is assumed to be in UTC
 
         time_left = closing - now
 

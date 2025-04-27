@@ -207,3 +207,6 @@ EMAIL_USE_TLS = True
 EMAIL_HOST_USER = 'eagleopspeerevaluations@gmail.com'
 EMAIL_HOST_PASSWORD = 'afqk gzha yvbb ocoe'
 DEFAULT_FROM_EMAIL = 'EagleOps Peer Evaluations <eagleopspeerevaluations@gmail.com>'
+
+TIME_ZONE = 'America/New_York'
+USE_TZ = True

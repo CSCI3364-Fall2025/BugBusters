@@ -555,13 +555,6 @@ def form_create_edit(request, course_id, form_id=None):
             if not team_ids:
                 return JsonResponse({'status': 'error', 'message': 'At least one team must be selected'}, status=400)
             
-            # Require publication at least 24 hours in the future
-            if closing_date - publication_date < timedelta(hours=24):
-                return JsonResponse({
-                    'status': 'error',
-                    'message': 'The closing date must be at least 24 hours after the publication date.'
-                }, status=400)
-            
             # Load template
             try:
                 template = FormTemplate.objects.get(id=template_id, course=course)
