@@ -33,9 +33,11 @@
             <button class="tab-btn active" data-tab="active-tab">Active</button>
             <button class="tab-btn" data-tab="pending-tab">Pending Review</button>
             <button class="tab-btn" data-tab="published-tab">Published</button>
+            <button class="tab-btn" data-tab="drafts-tab">Drafts</button>
+            <button class="tab-btn" data-tab="scheduled-tab">Scheduled</button>
         </div>
 
-        <!-- Active Tab Content (Active + Scheduled) -->
+        <!-- Active Tab Content -->
         <div id="active-tab" class="tab-content active">
             <table class="data-table">
                 <thead>
@@ -50,88 +52,37 @@
                     </tr>
                 </thead>
                 <tbody>
-                    {% if active_forms or scheduled_forms %}
-                        <!-- Active Forms -->
-                        {% for form in active_forms %}
-                        <tr>
-                            <td>
-                                <a href="{% url 'form_edit' form.course.id form.id %}">
-                                    {{ form.title }}
-                                </a>
-                            </td>
-                            <td>{{ form.template.title }}</td>
-                            <td>
-                                <span class="status-badge status-{{ form.status }}">
-                                    {{ form.get_status_display }}
-                                </span>
-                            </td>
-                            <td>{{ form.publication_date|date:"M d, Y" }}</td>
-                            <td>{{ form.closing_date|date:"M d, Y" }}</td>
-                            <td>{{ form.completion_rate }}</td>
-                            <td class="actions">
-                                <a href="{% url 'form_edit' form.course.id form.id %}" class="btn-icon" title="Edit">
-                                    <i class="fas fa-edit" style="margin-right: 5px;"></i>
-                                </a>
-                                <a href="{% url 'form_results' form.course.id form.id %}" class="btn-icon" title="Results">
-                                    <i class="fas fa-chart-bar" style="margin-right: 5px;"></i>
-                                </a>
-                                <form method="post" action="{% url 'form_close' course_id=form.course.id form_id=form.id %}" style="display: inline;">
-                                    {% csrf_token %}
-                                    <button type="submit" class="btn btn-warning btn-sm" title="Close Form" onclick="return confirm('Are you sure you want to close this form?');" style="min-width: 120px;">
-                                        <i class="fas fa-door-closed" style="margin-right: 5px;"></i> Close Form
-                                    </button>
-                                </form>
-                                <a href="#" class="btn-icon delete-form" data-id="{{ form.id }}" title="Delete">
-                                    <i class="fas fa-trash"></i>
-                                </a>
-                            </td>
-                        </tr>
-                        {% endfor %}
-                        
-                        <!-- Scheduled Forms -->
-                        {% for form in scheduled_forms %}
-                        <tr>
-                            <td>
-                                <a href="{% url 'form_edit' form.course.id form.id %}">
-                                    {{ form.title }}
-                                </a>
-                            </td>
-                            <td>{{ form.template.title }}</td>
-                            <td>
-                                <span class="status-badge status-{{ form.status }}">
-                                    {{ form.get_status_display }}
-                                </span>
-                            </td>
-                            <td>{{ form.publication_date|date:"M d, Y" }}</td>
-                            <td>{{ form.closing_date|date:"M d, Y" }}</td>
-                            <td>{{ form.completion_rate }}</td>
-                            <td class="actions">
-                                <a href="{% url 'form_edit' form.course.id form.id %}" class="btn-icon" title="Edit">
-                                    <i class="fas fa-edit" style="margin-right: 5px;"></i>
-                                </a>
-                                <a href="{% url 'form_results' form.course.id form.id %}" class="btn-icon" title="Results">
-                                    <i class="fas fa-chart-bar" style="margin-right: 5px;"></i>
-                                </a>
-                                <form method="post" action="{% url 'form_open' course_id=form.course.id form_id=form.id %}" style="display: inline;">
-                                    {% csrf_token %}
-                                    <button type="submit" class="btn btn-primary btn-sm" title="Open Form" style="min-width: 120px;">
-                                        <i class="fas fa-door-open" style="margin-right: 5px;"></i> Open Form
-                                    </button>
-                                </form>
-                                <a href="#" class="btn-icon delete-form" data-id="{{ form.id }}" title="Delete">
-                                    <i class="fas fa-trash"></i>
-                                </a>
-                            </td>
-                        </tr>
-                        {% endfor %}
-                    {% endif %}
+                    {% for form in active_forms %}
+                    <tr>
+                        <td>
+                            <a href="{% url 'form_edit' form.course.id form.id %}">
+                                {{ form.title }}
+                            </a>
+                        </td>
+                        <td>{{ form.template.title }}</td>
+                        <td>
+                            <span class="status-badge status-{{ form.status }}">
+                                {{ form.get_status_display }}
+                            </span>
+                        </td>
+                        <td>{{ form.publication_date|date:"M d, Y" }}</td>
+                        <td>{{ form.closing_date|date:"M d, Y" }}</td>
+                        <td>{{ form.completion_rate }}</td>
+                        <td class="actions">
+                            <a href="{% url 'form_edit' form.course.id form.id %}" class="btn-icon" title="Edit">
+                                <i class="fas fa-edit" style="margin-right: 5px;"></i>
+                            </a>
+                            <form method="post" action="{% url 'form_close' course_id=form.course.id form_id=form.id %}" style="display: inline;">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-warning btn-sm" title="Close Form" onclick="return confirm('Are you sure you want to close this form?');" style="min-width: 120px;">
+                                    <i class="fas fa-door-closed" style="margin-right: 5px;"></i> Close Form
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% endfor %}
                 </tbody>
             </table>
-            {% if not active_forms and not scheduled_forms %}
-            <div class="no-content">
-                <p>No forms created yet. Create a form to start collecting peer assessments.</p>
-            </div>
-            {% endif %}
         </div>
 
         <!-- Pending Review Tab Content -->
@@ -258,6 +209,122 @@
             {% if not published_forms %}
             <div class="no-content">
                 <p>No published forms.</p>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Drafts Tab Content -->
+        <div id="drafts-tab" class="tab-content">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Form Name</th>
+                        <th>Based On</th>
+                        <th>Status</th>
+                        <th>Publication Date</th>
+                        <th>Closing Date</th>
+                        <th>Completion</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% if draft_forms %}
+                        {% for form in draft_forms %}
+                        <tr>
+                            <td>
+                                <a href="{% url 'form_edit' form.course.id form.id %}">
+                                    {{ form.title }}
+                                </a>
+                            </td>
+                            <td>{{ form.template.title }}</td>
+                            <td>
+                                <span class="status-badge status-{{ form.status }}">
+                                    {{ form.get_status_display }}
+                                </span>
+                            </td>
+                            <td>{{ form.publication_date|date:"M d, Y" }}</td>
+                            <td>{{ form.closing_date|date:"M d, Y" }}</td>
+                            <td>{{ form.completion_rate }}</td>
+                            <td class="actions">
+                                <a href="{% url 'form_edit' form.course.id form.id %}" class="btn-icon" title="Edit">
+                                    <i class="fas fa-edit" style="margin-right: 5px;"></i>
+                                </a>
+                                <form method="post" action="{% url 'form_open' form.course.id form.id %}" style="display: inline;">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-success btn-sm" title="Publish Form" style="min-width: 120px;">
+                                        <i class="fas fa-paper-plane" style="margin-right: 5px;"></i> Publish
+                                    </button>
+                                </form>
+                                <a href="#" class="btn-icon delete-form" data-id="{{ form.id }}" title="Delete">
+                                    <i class="fas fa-trash"></i>
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    {% endif %}
+                </tbody>
+            </table>
+            {% if not draft_forms %}
+            <div class="no-content">
+                <p>No draft forms.</p>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Scheduled Tab Content -->
+        <div id="scheduled-tab" class="tab-content">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Form Name</th>
+                        <th>Based On</th>
+                        <th>Status</th>
+                        <th>Publication Date</th>
+                        <th>Closing Date</th>
+                        <th>Completion</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% if scheduled_forms %}
+                        {% for form in scheduled_forms %}
+                        <tr>
+                            <td>
+                                <a href="{% url 'form_edit' form.course.id form.id %}">
+                                    {{ form.title }}
+                                </a>
+                            </td>
+                            <td>{{ form.template.title }}</td>
+                            <td>
+                                <span class="status-badge status-{{ form.status }}">
+                                    {{ form.get_status_display }}
+                                </span>
+                            </td>
+                            <td>{{ form.publication_date|date:"M d, Y" }}</td>
+                            <td>{{ form.closing_date|date:"M d, Y" }}</td>
+                            <td>{{ form.completion_rate }}</td>
+                            <td class="actions">
+                                <a href="{% url 'form_edit' form.course.id form.id %}" class="btn-icon" title="Edit">
+                                    <i class="fas fa-edit" style="margin-right: 5px;"></i>
+                                </a>
+                                <form method="post" action="{% url 'form_open' form.course.id form.id %}" style="display: inline;">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-success btn-sm" title="Publish Form" style="min-width: 120px;">
+                                        <i class="fas fa-paper-plane" style="margin-right: 5px;"></i> Publish
+                                    </button>
+                                </form>
+                                <a href="#" class="btn-icon delete-form" data-id="{{ form.id }}" title="Delete">
+                                    <i class="fas fa-trash"></i>
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    {% endif %}
+                </tbody>
+            </table>
+            {% if not scheduled_forms %}
+            <div class="no-content">
+                <p>No scheduled forms.</p>
             </div>
             {% endif %}
         </div>

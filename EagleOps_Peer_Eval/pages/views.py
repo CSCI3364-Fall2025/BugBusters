@@ -1637,7 +1637,13 @@ def roster(request, course_id=None):
         messages.error(request, f"An error occurred while loading the roster: {error_message}")
         return redirect('courses')
 
-@login_required
+from django.shortcuts import render, redirect
+from django.contrib import messages
+from django.contrib.auth.decorators import login_required
+from django.utils import timezone
+from datetime import timedelta
+from .models import Form, Course, FormTemplate
+
 def forms_dashboard(request):
     """
     Admin dashboard view showing all form templates and forms across all courses,
@@ -1692,8 +1698,14 @@ def forms_dashboard(request):
         # Get courses for the dropdown
         courses = Course.objects.all().order_by('name')
     
-    # Mark urgent forms (due within 24 hours)
+    # Automatically move scheduled forms to active if their publication date has passed
     now = timezone.now()
+    for form in scheduled_forms:
+        if form.publication_date <= now:
+            form.status = active_status  # Move to active status
+            form.save()
+    
+    # Mark urgent forms (due within 24 hours)
     for form in active_forms:
         form.is_urgent = form.closing_date - now <= timedelta(hours=24)
     
@@ -1702,7 +1714,7 @@ def forms_dashboard(request):
         'courses': courses,
         'templates': templates,
         'active_forms': active_forms,
-        'scheduled_forms': scheduled_forms,
+        'scheduled_forms': scheduled_forms,  # Add scheduled forms to context
         'closed_pending_forms': closed_pending_forms,
         'published_forms': published_forms,
         'available_courses': courses,  # For the navbar course selector
