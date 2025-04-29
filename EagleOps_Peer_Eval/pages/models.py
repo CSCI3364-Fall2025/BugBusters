@@ -49,16 +49,23 @@ class Course(models.Model):
     Represents an academic course with teams, instructors and associated forms.
     Teams are now a child entity of courses rather than a many-to-many relationship.
     """
+    SEMESTER_CHOICES = [
+        ('Fall', 'Fall'),
+        ('Spring', 'Spring'),
+    ]
+    
     name = models.CharField(max_length=100)
     code = models.CharField(max_length=20, unique=True)
     course_join_code = models.CharField(max_length=10, unique=True, blank=True, null=True)
     description = models.TextField(blank=True, null=True)
+    semester = models.CharField(max_length=6, choices=SEMESTER_CHOICES, default='Spring')
+    year = models.IntegerField(default=2024)
     instructors = models.ManyToManyField(UserProfile, related_name='instructor_courses')
     students = models.ManyToManyField(UserProfile, related_name='enrolled_courses', blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return f"{self.code}: {self.name}"
+        return f"{self.code}: {self.name} ({self.semester} {self.year})"
         
     def save(self, *args, **kwargs):
         # Generate a unique join code if one doesn't exist

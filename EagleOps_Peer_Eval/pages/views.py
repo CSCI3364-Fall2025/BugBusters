@@ -739,6 +739,8 @@ def create_course(request):
         name = request.POST.get('name')
         code = request.POST.get('code')
         description = request.POST.get('description', '')
+        semester = request.POST.get('semester', 'Spring')
+        year = request.POST.get('year', 2024)
         
         # Create new course
         if name and code:
@@ -746,7 +748,9 @@ def create_course(request):
                 course = Course.objects.create(
                     name=name,
                     code=code,
-                    description=description
+                    description=description,
+                    semester=semester,
+                    year=year
                 )
                 
                 # Add current user as instructor
@@ -759,46 +763,55 @@ def create_course(request):
     
     return render(request, 'course_edit.html', {
         'is_admin': user_profile.admin,
-        'error_message': error_message
+        'error_message': error_message,
+        'semester_choices': Course.SEMESTER_CHOICES,
+        'current_year': timezone.now().year
     })
 
 @login_required
 def edit_course(request, course_id):
     """
-    View for editing an existing course. Only admins or instructors can edit.
+    View for editing an existing course. Only admins can edit courses.
     """
-    try:
-        course = Course.objects.get(id=course_id)
-    except Course.DoesNotExist:
-        return redirect('courses')
-    
     user_profile = request.user.userprofile
+    course = get_object_or_404(Course, id=course_id)
     
-    # Check if user has permission to edit
-    if not user_profile.admin and not course.instructors.filter(id=user_profile.id).exists():
+    # Only admins can edit courses
+    if not user_profile.admin:
         return redirect('courses')
+    
+    error_message = None
     
     if request.method == 'POST':
         # Extract form data
         name = request.POST.get('name')
         code = request.POST.get('code')
         description = request.POST.get('description', '')
+        semester = request.POST.get('semester', 'Spring')
+        year = request.POST.get('year', 2024)
         
         # Update course
         if name and code:
-            course.name = name
-            course.code = code
-            course.description = description
-            course.save()
-            
-            return redirect('course_detail', course_id=course.id)
+            try:
+                course.name = name
+                course.code = code
+                course.description = description
+                course.semester = semester
+                course.year = year
+                course.save()
+                
+                return redirect('course_detail', course_id=course.id)
+            except IntegrityError:
+                # Handle the case where course code already exists
+                error_message = f"Course code '{code}' already exists. Please choose a different code."
     
-    context = {
+    return render(request, 'course_edit.html', {
         'course': course,
         'is_admin': user_profile.admin,
-    }
-    
-    return render(request, 'course_edit.html', context)
+        'error_message': error_message,
+        'semester_choices': Course.SEMESTER_CHOICES,
+        'current_year': timezone.now().year
+    })
 
 @login_required
 def delete_course(request, course_id):
