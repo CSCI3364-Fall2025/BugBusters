@@ -1,54 +1,143 @@
+/* ====== Font Imports ====== */
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=Space+Grotesk:wght@300;400;500;600;700&display=swap');
+
+/* ====== Color Scheme & Typography ====== */
+:root {
+  /* Primary Colors */
+  --primary: #3B82F6;
+  --primary-light: #60A5FA;
+  --primary-dark: #2563EB;
+  
+  /* Secondary Colors */
+  --secondary: #10B981;
+  --secondary-light: #34D399;
+  --secondary-dark: #059669;
+  
+  /* Neutral Colors */
+  --neutral-100: #F3F4F6;
+  --neutral-200: #E5E7EB;
+  --neutral-300: #D1D5DB;
+  --neutral-400: #9CA3AF;
+  --neutral-500: #6B7280;
+  --neutral-600: #4B5563;
+  --neutral-700: #374151;
+  --neutral-800: #1F2937;
+  --neutral-900: #111827;
+  
+  /* Neumorphic Colors */
+  --neu-bg: var(--neutral-800);
+  --neu-shadow-light: var(--neutral-700);
+  --neu-shadow-dark: var(--neutral-900);
+  --neu-radius: 18px;
+  --neu-transition: all 0.3s ease;
+  --neu-hover-transform: translateY(-2px);
+  --neu-active-transform: translateY(1px);
+  
+  /* Typography */
+  --font-primary: 'Plus Jakarta Sans', sans-serif;
+  --font-secondary: 'Outfit', sans-serif;
+  --font-display: 'Space Grotesk', sans-serif;
+  
+  /* Gradients */
+  --gradient-primary: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
+  --gradient-secondary: linear-gradient(135deg, var(--secondary) 0%, var(--secondary-light) 100%);
+  --gradient-neutral: linear-gradient(135deg, var(--neutral-800) 0%, var(--neutral-900) 100%);
+  --gradient-dark: linear-gradient(135deg, var(--neutral-900) 0%, #000000 100%);
+  
+  /* Font Sizes */
+  --text-xs: 0.75rem;
+  --text-sm: 0.875rem;
+  --text-base: 1rem;
+  --text-lg: 1.125rem;
+  --text-xl: 1.25rem;
+  --text-2xl: 1.5rem;
+  --text-3xl: 1.875rem;
+  --text-4xl: 2.25rem;
+  
+  /* Spacing */
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-6: 1.5rem;
+  --space-8: 2rem;
+  --space-12: 3rem;
+  --space-16: 4rem;
+}
+
 /* ====== Global Styles ====== */
 html, body {
-    height: 100%; 
+    height: 100%;
+    width: 100%;
+    margin: 0;
+    padding: 0;
+    overflow-x: hidden;
     display: flex; 
     flex-direction: column; 
-    margin: 0; 
-    padding: 0;
-    font-family: 'Work Sans', sans-serif;
+    font-family: var(--font-primary);
+    background: var(--gradient-neutral);
+    transition: var(--neu-transition);
+    color: var(--neutral-100);
 }
 
-.content { 
-    flex-grow: 1; 
-    text-align: center; 
-    padding: 50px 20px; 
+/* ====== Typography ====== */
+h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-display);
+    color: var(--neutral-900);
+    margin-bottom: var(--space-4);
 }
 
-.page-container { 
-    max-width: 1200px; 
-    margin: auto; 
-    padding: 20px; 
+h1 { font-size: var(--text-4xl); }
+h2 { font-size: var(--text-3xl); }
+h3 { font-size: var(--text-2xl); }
+h4 { font-size: var(--text-xl); }
+h5 { font-size: var(--text-lg); }
+h6 { font-size: var(--text-base); }
+
+p {
+    font-family: var(--font-secondary);
+    line-height: 1.6;
+    margin-bottom: var(--space-4);
 }
 
-.section {
-    background: white; 
-    border-radius: 8px; 
-    padding: 24px; 
-    margin-bottom: 30px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+/* ====== Enhanced Brand ====== */
+.brand {
+    font-family: var(--font-display);
+    font-size: var(--text-xl);
+    font-weight: 600;
+    color: var(--neutral-100);
+    text-decoration: none;
+    transition: var(--neu-transition);
+    padding: var(--space-2) var(--space-4);
+    border-radius: var(--neu-radius);
+    margin-right: var(--space-4);
+    position: relative;
+    overflow: hidden;
 }
 
-/* ====== Navbar ====== */
+.brand:hover {
+    color: var(--primary-light);
+    transform: var(--neu-hover-transform);
+    box-shadow: 4px 4px 8px var(--neu-shadow-dark),
+                -4px -4px 8px var(--neu-shadow-light);
+}
+
+/* ====== Enhanced Navigation ====== */
 .navbar {
-    background: #222; 
-    color: white; 
+    background: var(--gradient-neutral);
+    color: var(--neutral-100);
     display: flex; 
     justify-content: space-between; 
     align-items: center; 
-    padding: 0 20px; 
+    padding: 0 var(--space-4);
     height: 60px; 
     width: 100%;  
     min-height: 60px; 
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    box-shadow: 4px 4px 8px var(--neu-shadow-dark),
+                -4px -4px 8px var(--neu-shadow-light);
     flex-wrap: nowrap; 
-}
-
-.navbar .brand { 
-    font-family: 'Orbitron', sans-serif; 
-    font-size: 18px; 
-    font-weight: bold; 
-    text-decoration: none; 
-    color: white; 
+    position: relative;
+    z-index: 1000;
 }
 
 .nav-links {
@@ -56,24 +145,42 @@ html, body {
     list-style: none; 
     padding: 0; 
     margin: 0; 
-    gap: 15px; 
+    gap: var(--space-2);
     align-items: center; 
 }
 
 .nav-links a { 
-    padding: 20px 15px; 
-    color: white; 
+    font-family: var(--font-secondary);
+    font-weight: 500;
+    padding: var(--space-3) var(--space-4);
+    color: var(--neutral-100);
     text-decoration: none; 
-    transition: 0.3s; 
+    transition: var(--neu-transition);
+    border-radius: var(--neu-radius);
+    margin: 0;
+    position: relative;
+    overflow: hidden;
 }
 
-.nav-links a:hover, .nav-links a.active { 
-    background: #333; 
+.nav-links a:hover {
+    color: var(--primary-light);
+    transform: var(--neu-hover-transform);
+    box-shadow: 4px 4px 8px var(--neu-shadow-dark),
+                -4px -4px 8px var(--neu-shadow-light);
 }
 
+.nav-links a.active {
+    color: var(--primary-light);
+    background: var(--neu-bg);
+    box-shadow: inset 4px 4px 8px var(--neu-shadow-dark),
+                inset -4px -4px 8px var(--neu-shadow-light);
+    font-weight: 600;
+}
+
+/* ====== Enhanced Dropdown ====== */
 .dropdown { 
     position: relative; 
-    min-width: 120px; 
+    min-width: 100px;
 }
 
 .dropdown-content {
@@ -81,24 +188,748 @@ html, body {
     position: absolute;
     right: 0;
     top: 100%; 
-    background: #f9f9f9;
+    background: var(--gradient-neutral);
     min-width: 160px;
-    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+    border-radius: var(--neu-radius);
+    box-shadow: 8px 8px 16px var(--neu-shadow-dark),
+                -8px -8px 16px var(--neu-shadow-light);
     z-index: 1000; 
+    padding: var(--space-2) 0;
+    margin-top: var(--space-2);
+    opacity: 0;
+    transform: translateY(-10px);
+    transition: all 0.3s ease;
+    color: var(--neutral-100);
 }
 
 .dropdown:hover .dropdown-content { 
     display: block; 
+    opacity: 1;
+    transform: translateY(0);
 }
 
 .dropdown-content a { 
-    color: black; 
-    padding: 12px 16px; 
+    color: var(--neutral-100);
+    padding: var(--space-3) var(--space-4);
     display: block; 
+    margin: 0;
+    border-radius: 0;
+    text-align: left;
 }
 
 .dropdown-content a:hover { 
-    background: #ddd; 
+    color: var(--primary-light);
+    background: var(--gradient-neutral);
+    box-shadow: inset 4px 4px 8px var(--neu-shadow-dark),
+                inset -4px -4px 8px var(--neu-shadow-light);
+}
+
+/* ====== Enhanced Course Selector ====== */
+.course-selector {
+    margin: 0 var(--space-2);
+    position: relative;
+}
+
+.course-selector select {
+    font-family: var(--font-secondary);
+    background: var(--gradient-neutral);
+    padding: var(--space-2) var(--space-4);
+    border: none;
+    border-radius: var(--neu-radius);
+    box-shadow: inset 4px 4px 8px var(--neu-shadow-dark),
+                inset -4px -4px 8px var(--neu-shadow-light);
+    color: var(--neutral-100);
+    cursor: pointer;
+    min-width: 180px;
+    transition: var(--neu-transition);
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    padding-right: var(--space-8);
+}
+
+.course-selector::after {
+    content: '▼';
+    font-size: var(--text-sm);
+    color: var(--neutral-600);
+    position: absolute;
+    right: var(--space-4);
+    top: 50%;
+    transform: translateY(-50%);
+    pointer-events: none;
+    transition: var(--neu-transition);
+}
+
+.course-selector:hover::after {
+    color: var(--primary);
+}
+
+.course-selector select:focus {
+    outline: none;
+    box-shadow: inset 6px 6px 12px var(--neu-shadow-dark),
+                inset -6px -6px 12px var(--neu-shadow-light);
+    color: var(--primary-light);
+}
+
+.course-selector select option {
+    background: var(--gradient-neutral);
+    color: var(--neutral-100);
+    padding: var(--space-2) var(--space-4);
+}
+
+/* ====== Enhanced Messages ====== */
+.message {
+    font-family: var(--font-secondary);
+    background: var(--gradient-neutral);
+    padding: var(--space-4);
+    margin-bottom: var(--space-4);
+    border-radius: var(--neu-radius);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 4px 4px 8px var(--neu-shadow-dark),
+                -4px -4px 8px var(--neu-shadow-light);
+    color: var(--neutral-100);
+}
+
+.message.success {
+    border-left: 4px solid var(--primary);
+}
+
+.message.warning {
+    border-left: 4px solid var(--secondary);
+}
+
+.message.error {
+    border-left: 4px solid var(--secondary);
+}
+
+/* ====== Enhanced Footer ====== */
+footer {
+    background: var(--gradient-neutral);
+    color: var(--neutral-100);
+    text-align: center;
+    padding: var(--space-2) 0;
+    font-family: var(--font-secondary);
+    font-size: var(--text-sm);
+    box-shadow: 4px 4px 8px var(--neu-shadow-dark),
+                -4px -4px 8px var(--neu-shadow-light);
+    margin-top: auto;
+}
+
+.footer-content {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 var(--space-4);
+}
+
+.footer-bottom {
+    margin-top: var(--space-2);
+    padding-top: var(--space-2);
+    border-top: 1px solid var(--neutral-700);
+    font-size: var(--text-xs);
+    color: var(--neutral-300);
+}
+
+/* Ensure content area takes up remaining space */
+.content {
+    flex: 1;
+    min-height: calc(100vh - 60px - 40px); /* Subtract navbar and footer height */
+    padding-bottom: var(--space-4);
+}
+
+/* ====== Enhanced Images ====== */
+.neu-img {
+    border-radius: var(--neu-radius);
+    box-shadow: 8px 8px 16px var(--neu-shadow-dark),
+                -8px -8px 16px var(--neu-shadow-light);
+    transition: var(--neu-transition);
+}
+
+.neu-img:hover {
+    transform: var(--neu-hover-transform);
+    box-shadow: 12px 12px 24px var(--neu-shadow-dark),
+                -12px -12px 24px var(--neu-shadow-light);
+}
+
+/* ====== Enhanced Icons ====== */
+.neu-icon {
+    color: var(--primary);
+    transition: var(--neu-transition);
+}
+
+.neu-icon:hover {
+    color: var(--primary-dark);
+    transform: var(--neu-hover-transform);
+}
+
+/* ====== Enhanced Links ====== */
+a {
+    color: var(--primary);
+    text-decoration: none;
+    transition: var(--neu-transition);
+}
+
+a:hover {
+    color: var(--primary-dark);
+    text-decoration: underline;
+}
+
+/* ====== Enhanced Form Elements ====== */
+.form-group {
+    margin-bottom: var(--space-6);
+    color: var(--neutral-100);
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: var(--space-4);
+    font-weight: 500;
+    color: var(--neutral-100);
+}
+
+.form-group .help-text {
+    margin-top: var(--space-2);
+    color: var(--neutral-300);
+    font-size: var(--text-sm);
+}
+
+.neu-input, .form-control {
+    font-family: var(--font-secondary);
+    background: var(--gradient-neutral);
+    border: none;
+    border-radius: var(--neu-radius);
+    padding: var(--space-4);
+    box-shadow: inset 4px 4px 8px var(--neu-shadow-dark),
+                inset -4px -4px 8px var(--neu-shadow-light);
+    transition: var(--neu-transition);
+    width: 100%;
+    color: var(--neutral-100);
+    margin-top: var(--space-2);
+}
+
+.neu-input:focus, .form-control:focus {
+    outline: none;
+    box-shadow: inset 6px 6px 12px var(--neu-shadow-dark),
+                inset -6px -6px 12px var(--neu-shadow-light);
+    color: var(--primary-light);
+}
+
+.neu-form {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-6);
+}
+
+.form-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: var(--space-4);
+    margin-top: var(--space-6);
+}
+
+/* Form Sections */
+.form-section {
+    background: var(--gradient-neutral);
+    border-radius: var(--neu-radius);
+    padding: var(--space-6);
+    margin-bottom: var(--space-6);
+    box-shadow: 8px 8px 16px var(--neu-shadow-dark),
+                -8px -8px 16px var(--neu-shadow-light);
+}
+
+.form-section-header {
+    margin-bottom: var(--space-4);
+}
+
+.form-section-title {
+    color: var(--neutral-100);
+    font-size: var(--text-xl);
+    font-weight: 600;
+    margin-bottom: var(--space-2);
+}
+
+.form-section-description {
+    color: var(--neutral-300);
+    font-size: var(--text-sm);
+}
+
+/* ====== Enhanced Buttons ====== */
+.neu-btn {
+    font-family: var(--font-secondary);
+    font-weight: 600;
+    background: var(--gradient-primary);
+    border-radius: 50px;
+    box-shadow: 4px 4px 8px var(--neu-shadow-dark),
+                -4px -4px 8px var(--neu-shadow-light);
+    border: none;
+    color: var(--neutral-100);
+    padding: var(--space-4) var(--space-8);
+    transition: var(--neu-transition);
+    position: relative;
+    overflow: hidden;
+}
+
+.neu-btn:hover {
+    transform: var(--neu-hover-transform);
+    box-shadow: 6px 6px 12px var(--neu-shadow-dark),
+                -6px -6px 12px var(--neu-shadow-light);
+    background: var(--primary-dark);
+}
+
+.neu-btn:active {
+    transform: var(--neu-active-transform);
+    box-shadow: inset 2px 2px 4px var(--neu-shadow-dark),
+                inset -2px -2px 4px var(--neu-shadow-light);
+}
+
+/* ====== Enhanced Cards ====== */
+.neu-card, .card, .course-card, .team-card, .form-card, .question-card, .evaluation-card, .student-card, .member-card {
+    font-family: var(--font-secondary);
+    background: var(--gradient-neutral);
+    border-radius: var(--neu-radius);
+    padding: var(--space-8);
+    box-shadow: 8px 8px 16px var(--neu-shadow-dark),
+                -8px -8px 16px var(--neu-shadow-light);
+    transition: var(--neu-transition);
+    margin: var(--space-8) 0;
+    color: var(--neutral-100);
+    border: none;
+}
+
+/* Card Content Styles */
+.neu-card *, .card *, .course-card *, .team-card *, .form-card *, .question-card *, .evaluation-card *, .student-card *, .member-card * {
+    color: var(--neutral-100);
+}
+
+/* Card Headers */
+.card-header, .form-card-header, .team-card-header {
+    background: var(--gradient-neutral);
+    border-bottom: 1px solid var(--neutral-300);
+    padding: var(--space-4);
+    border-radius: var(--neu-radius) var(--neu-radius) 0 0;
+    color: var(--neutral-100);
+}
+
+.card-header *, .form-card-header *, .team-card-header * {
+    color: var(--neutral-100);
+}
+
+/* Card Content */
+.card-body, .form-card-body, .team-card-body {
+    padding: var(--space-4);
+    background: var(--gradient-neutral);
+    color: var(--neutral-100);
+}
+
+.card-body *, .form-card-body *, .team-card-body * {
+    color: var(--neutral-100);
+}
+
+/* Card Footers */
+.card-footer, .form-card-footer {
+    background: var(--gradient-neutral);
+    border-top: 1px solid var(--neutral-300);
+    padding: var(--space-4);
+    border-radius: 0 0 var(--neu-radius) var(--neu-radius);
+    color: var(--neutral-100);
+}
+
+.card-footer *, .form-card-footer * {
+    color: var(--neutral-100);
+}
+
+/* Course Card Specific */
+.course-card .course-title,
+.course-card .course-code,
+.course-card .course-description,
+.course-card .course-meta {
+    color: var(--neutral-100);
+}
+
+/* Team Card Specific */
+.team-card .team-name,
+.team-card .team-description,
+.team-card .team-meta {
+    color: var(--neutral-100);
+}
+
+/* Form Card Specific */
+.form-card .form-title,
+.form-card .form-description,
+.form-card .form-meta {
+    color: var(--neutral-100);
+}
+
+/* Question Card Specific */
+.question-card .question-text,
+.question-card .question-meta {
+    color: var(--neutral-100);
+}
+
+/* Evaluation Card Specific */
+.evaluation-card .evaluation-title,
+.evaluation-card .evaluation-meta {
+    color: var(--neutral-100);
+}
+
+/* Student Card Specific */
+.student-card .student-name,
+.student-card .student-meta {
+    color: var(--neutral-100);
+}
+
+/* Member Card Specific */
+.member-card .member-name,
+.member-card .member-meta {
+    color: var(--neutral-100);
+}
+
+/* Card Hover States */
+.neu-card:hover *, .card:hover *, .course-card:hover *, .team-card:hover *, .form-card:hover *, .question-card:hover *, .evaluation-card:hover *, .student-card:hover *, .member-card:hover * {
+    color: var(--neutral-100);
+}
+
+/* Section Containers */
+.section {
+    background: var(--gradient-dark);
+    border-radius: var(--neu-radius);
+    padding: var(--space-8);
+    margin-bottom: var(--space-8);
+    box-shadow: 8px 8px 16px var(--neu-shadow-dark),
+                -8px -8px 16px var(--neu-shadow-light);
+    color: var(--neutral-100);
+}
+
+.section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--space-4);
+    color: var(--neutral-100);
+}
+
+.section-header h2 {
+    color: var(--neutral-100);
+    font-size: var(--text-2xl);
+    font-weight: 600;
+    margin: 0;
+}
+
+.section-content {
+    color: var(--neutral-100);
+}
+
+/* Info Items and Stats */
+.info-item, .stat-card {
+    background: var(--gradient-neutral);
+    border-radius: var(--neu-radius);
+    padding: var(--space-4);
+    box-shadow: 4px 4px 8px var(--neu-shadow-dark),
+                -4px -4px 8px var(--neu-shadow-light);
+    color: var(--neutral-100);
+}
+
+/* Team Boxes */
+.team-box {
+    background: var(--gradient-neutral);
+    border-radius: var(--neu-radius);
+    padding: var(--space-4);
+    box-shadow: 4px 4px 8px var(--neu-shadow-dark),
+                -4px -4px 8px var(--neu-shadow-light);
+    transition: var(--neu-transition);
+    border: none;
+}
+
+.team-box:hover {
+    transform: var(--neu-hover-transform);
+    box-shadow: 6px 6px 12px var(--neu-shadow-dark),
+                -6px -6px 12px var(--neu-shadow-light);
+}
+
+/* ====== Enhanced Tables ====== */
+.neu-table {
+    font-family: var(--font-secondary);
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0 var(--space-4);
+    margin: var(--space-8) 0;
+    color: var(--neutral-100);
+}
+
+.neu-table th {
+    font-family: var(--font-display);
+    font-weight: 600;
+    background: var(--gradient-neutral);
+    padding: var(--space-4);
+    text-align: left;
+    border-radius: var(--neu-radius);
+    box-shadow: 4px 4px 8px var(--neu-shadow-dark),
+                -4px -4px 8px var(--neu-shadow-light);
+    color: var(--primary-light);
+}
+
+.neu-table td {
+    font-family: var(--font-secondary);
+    background: var(--gradient-neutral);
+    padding: var(--space-4);
+    border-radius: var(--neu-radius);
+    box-shadow: inset 2px 2px 4px var(--neu-shadow-dark),
+                inset -2px -2px 4px var(--neu-shadow-light);
+    transition: var(--neu-transition);
+    color: var(--neutral-100);
+}
+
+.neu-table tr:hover td {
+    transform: var(--neu-hover-transform);
+    box-shadow: inset 4px 4px 8px var(--neu-shadow-dark),
+                inset -4px -4px 8px var(--neu-shadow-light);
+}
+
+/* ====== Enhanced Badges ====== */
+.neu-badge {
+    font-family: var(--font-secondary);
+    font-weight: 500;
+    background: var(--gradient-primary);
+    padding: var(--space-2) var(--space-4);
+    border-radius: 50px;
+    box-shadow: 4px 4px 8px var(--neu-shadow-dark),
+                -4px -4px 8px var(--neu-shadow-light);
+    transition: var(--neu-transition);
+    color: var(--neutral-100);
+}
+
+.neu-badge:hover {
+    transform: var(--neu-hover-transform);
+    box-shadow: 6px 6px 12px var(--neu-shadow-dark),
+                -6px -6px 12px var(--neu-shadow-light);
+}
+
+/* ====== Enhanced Dropdowns ====== */
+.neu-dropdown {
+    font-family: var(--font-secondary);
+    background: var(--gradient-neutral);
+    border-radius: var(--neu-radius);
+    box-shadow: 8px 8px 16px var(--neu-shadow-dark),
+                -8px -8px 16px var(--neu-shadow-light);
+    transition: var(--neu-transition);
+    color: var(--neutral-100);
+}
+
+.neu-dropdown:hover {
+    transform: var(--neu-hover-transform);
+    box-shadow: 12px 12px 24px var(--neu-shadow-dark),
+                -12px -12px 24px var(--neu-shadow-light);
+}
+
+/* ====== Enhanced Scrollbar ====== */
+::-webkit-scrollbar {
+    width: 10px;
+}
+
+::-webkit-scrollbar-track {
+    background: var(--neu-bg);
+    border-radius: var(--neu-radius);
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--neu-bg);
+    border-radius: var(--neu-radius);
+    box-shadow: inset 2px 2px 4px var(--neu-shadow-dark),
+                inset -2px -2px 4px var(--neu-shadow-light);
+}
+
+::-webkit-scrollbar-thumb:hover {
+    box-shadow: inset 4px 4px 8px var(--neu-shadow-dark),
+                inset -4px -4px 8px var(--neu-shadow-light);
+}
+
+/* ====== Enhanced Loading States ====== */
+.neu-loading {
+    position: relative;
+    overflow: hidden;
+}
+
+.neu-loading::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 50%;
+    height: 100%;
+    background: linear-gradient(
+        90deg,
+        transparent,
+        rgba(108, 99, 255, 0.2),
+        transparent
+    );
+    animation: loading 1.5s infinite;
+}
+
+@keyframes loading {
+    0% { left: -100%; }
+    100% { left: 200%; }
+}
+
+/* ====== Enhanced Focus States ====== */
+.neu-focus {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(108, 99, 255, 0.2),
+                8px 8px 16px var(--neu-shadow-dark),
+                -8px -8px 16px var(--neu-shadow-light);
+}
+
+/* ====== Enhanced Hover Effects ====== */
+.neu-hover {
+    transition: var(--neu-transition);
+}
+
+.neu-hover:hover {
+    transform: var(--neu-hover-transform);
+    animation: float 3s ease-in-out infinite;
+}
+
+/* ====== Enhanced Active States ====== */
+.neu-active {
+    transition: var(--neu-transition);
+}
+
+.neu-active:active {
+    transform: var(--neu-active-transform);
+    box-shadow: inset 4px 4px 8px var(--neu-shadow-dark),
+                inset -4px -4px 8px var(--neu-shadow-light);
+}
+
+/* ====== Global Styles ====== */
+html, body {
+    height: 100%;
+    width: 100%;
+    margin: 0;
+    padding: 0;
+    overflow-x: hidden;
+    display: flex; 
+    flex-direction: column; 
+    font-family: var(--font-primary);
+    background: var(--gradient-neutral);
+    transition: var(--neu-transition);
+    color: var(--neutral-100);
+}
+
+.content {
+    width: 100%;
+    max-width: 100%;
+    margin: 0 auto;
+    padding: var(--space-4);
+    box-sizing: border-box;
+    overflow-x: hidden;
+}
+
+.page-container {
+    max-width: 100%;
+    width: 100%;
+    margin: 0 auto;
+    padding: var(--space-4);
+    box-sizing: border-box;
+    overflow-x: hidden;
+}
+
+.section {
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+    overflow-x: hidden;
+}
+
+/* Fix for grid layouts */
+.grid-container {
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+    overflow-x: hidden;
+}
+
+/* Fix for flex layouts */
+.flex-container {
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+    overflow-x: hidden;
+}
+
+/* Fix for tables */
+table {
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+    overflow-x: auto;
+    display: block;
+}
+
+/* Fix for cards */
+.card, .neu-card, .course-card, .team-card, .form-card {
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+    overflow-x: hidden;
+}
+
+/* ====== Animations ====== */
+@keyframes float {
+    0% { transform: translateY(0px); }
+    50% { transform: translateY(-5px); }
+    100% { transform: translateY(0px); }
+}
+
+@keyframes pulse {
+    0% { box-shadow: 8px 8px 16px var(--neu-shadow-dark),
+                    -8px -8px 16px var(--neu-shadow-light); }
+    50% { box-shadow: 12px 12px 24px var(--neu-shadow-dark),
+                    -12px -12px 24px var(--neu-shadow-light); }
+    100% { box-shadow: 8px 8px 16px var(--neu-shadow-dark),
+                    -8px -8px 16px var(--neu-shadow-light); }
+}
+
+@keyframes glow {
+    0% { box-shadow: 8px 8px 16px var(--neu-shadow-dark),
+                    -8px -8px 16px var(--neu-shadow-light); }
+    50% { box-shadow: 8px 8px 16px var(--neu-shadow-dark),
+                    -8px -8px 16px var(--neu-shadow-light),
+                    0 0 20px rgba(255, 255, 255, 0.5); }
+    100% { box-shadow: 8px 8px 16px var(--neu-shadow-dark),
+                    -8px -8px 16px var(--neu-shadow-light); }
+}
+
+/* ====== Enhanced Neumorphic Elements ====== */
+.neu {
+    background: var(--neu-bg);
+    border-radius: var(--neu-radius);
+    box-shadow: 8px 8px 16px var(--neu-shadow-dark),
+                -8px -8px 16px var(--neu-shadow-light);
+    transition: var(--neu-transition);
+}
+
+.neu:hover {
+    transform: var(--neu-hover-transform);
+    animation: pulse 2s infinite;
+}
+
+.neu:active {
+    transform: var(--neu-active-transform);
+    box-shadow: inset 4px 4px 8px var(--neu-shadow-dark),
+                inset -4px -4px 8px var(--neu-shadow-light);
+}
+
+.neu-inset {
+    background: var(--neu-bg);
+    border-radius: var(--neu-radius);
+    box-shadow: inset 4px 4px 8px var(--neu-shadow-dark),
+                inset -4px -4px 8px var(--neu-shadow-light);
+    transition: var(--neu-transition);
+}
+
+.neu-inset:hover {
+    box-shadow: inset 6px 6px 12px var(--neu-shadow-dark),
+                inset -6px -6px 12px var(--neu-shadow-light);
 }
 
 /* ====== Buttons ====== */
@@ -209,50 +1040,59 @@ html, body {
 }
 
 .team-box { 
-    background: #f9f9f9; 
-    border: 1px solid #ddd; 
-    border-radius: 8px; 
-    padding: 20px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); 
-    transition: 0.3s; 
-    margin-bottom: 20px; 
+    background: var(--gradient-neutral);
+    border: none;
+    border-radius: var(--neu-radius);
+    padding: var(--space-6);
+    box-shadow: 8px 8px 16px var(--neu-shadow-dark),
+                -8px -8px 16px var(--neu-shadow-light);
+    transition: var(--neu-transition);
+    margin-bottom: var(--space-4);
+    color: var(--neutral-100);
 }
 
 .team-box:hover { 
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2); 
+    transform: var(--neu-hover-transform);
+    box-shadow: 12px 12px 24px var(--neu-shadow-dark),
+                -12px -12px 24px var(--neu-shadow-light);
 }
 
 .team-name { 
-    font-size: 20px; 
+    font-size: var(--text-xl);
     font-weight: bold; 
-    margin-bottom: 10px; 
+    color: var(--neutral-100);
+    margin-bottom: var(--space-4);
 }
 
 .team-members h3 { 
-    font-size: 18px; 
-    margin-bottom: 10px; 
+    font-size: var(--text-lg);
+    color: var(--neutral-300);
+    margin-bottom: var(--space-4);
 }
 
 .member-list { 
     list-style: none; 
     padding-left: 0; 
+    color: var(--neutral-100);
 }
 
 .member-list li { 
-    padding: 5px 0; 
-    font-size: 16px; 
+    padding: var(--space-2) 0;
+    font-size: var(--text-base);
+    color: var(--neutral-100);
 }
 
 .role { 
     font-weight: bold; 
+    color: var(--primary-light);
 }
 
 .role.admin { 
-    color: red; 
+    color: var(--primary-light);
 }
 
 .role.member { 
-    color: black; 
+    color: var(--neutral-300);
 }
 
 /* ====== Team Selection - Custom Checkbox ====== */
@@ -340,8 +1180,8 @@ html, body {
 
 /* ====== Footer ====== */
 footer {
-    background: linear-gradient(to right, #222, #111); 
-    color: white;
+    background: var(--gradient-neutral);
+    color: var(--neutral-100);
     text-align: center; 
     padding: 8px 0; 
     font-size: 12px; 
@@ -356,34 +1196,37 @@ footer {
 
 /* ====== Forms ====== */
 .form-group { 
-    margin-bottom: 20px; 
+    margin-bottom: var(--space-6);
+    color: var(--neutral-100);
 }
 
 .form-control {
-    width: 100%; 
-    padding: 10px; 
-    border: 1px solid #ddd; 
-    border-radius: 4px;
-    font-size: 16px;
+    background: var(--gradient-neutral);
+    color: var(--neutral-100);
+    border: none;
+    border-radius: var(--neu-radius);
+    padding: var(--space-4);
+    box-shadow: inset 4px 4px 8px var(--neu-shadow-dark),
+                inset -4px -4px 8px var(--neu-shadow-light);
 }
 
 label { 
-    display: block; 
-    margin-bottom: 8px; 
+    color: var(--neutral-100);
     font-weight: 500; 
+    margin-bottom: var(--space-2);
 }
 
 .required { 
-    color: #dc3545; 
+    color: var(--primary-light);
 }
 
 .error-message {
-    background: #f8d7da; 
-    color: #721c24; 
-    padding: 12px; 
-    border-radius: 4px;
-    margin-bottom: 20px; 
-    border: 1px solid #f5c6cb;
+    background: var(--gradient-neutral);
+    color: var(--secondary-light);
+    padding: var(--space-4);
+    border-radius: var(--neu-radius);
+    margin-bottom: var(--space-4);
+    border-left: 4px solid var(--secondary);
 }
 
 /* ====== Tables ====== */
@@ -410,30 +1253,30 @@ label {
 /* ====== Status Badges ====== */
 .status-badge { 
     display: inline-block; 
-    padding: 4px 8px; 
-    border-radius: 4px; 
-    font-size: 12px; 
+    padding: var(--space-2) var(--space-4);
+    border-radius: var(--neu-radius);
+    font-size: var(--text-sm);
     font-weight: 500; 
+    background: var(--gradient-neutral);
+    color: var(--neutral-100);
+    box-shadow: 4px 4px 8px var(--neu-shadow-dark),
+                -4px -4px 8px var(--neu-shadow-light);
 }
 
 .status-draft { 
-    background: #e9ecef; 
-    color: #495057; 
+    border-left: 4px solid var(--neutral-500);
 }
 
 .status-scheduled { 
-    background: #cfe2ff; 
-    color: #0a58ca; 
+    border-left: 4px solid var(--primary);
 }
 
 .status-active { 
-    background: #d1e7dd; 
-    color: #198754; 
+    border-left: 4px solid var(--secondary);
 }
 
 .status-closed { 
-    background: #fff3cd; 
-    color: #664d03; 
+    border-left: 4px solid var(--neutral-600);
 }
 
 /* ====== Dropdown Enhancements ====== */
@@ -462,54 +1305,56 @@ label {
 
 /* ====== Form Cards Enhancements ====== */
 .form-card {
-    background: #f9f9f9;
-    border: 1px solid #ddd;
-    border-radius: 8px;
-    padding: 20px;
+    background: var(--gradient-neutral);
+    border: none;
+    border-radius: var(--neu-radius);
+    padding: var(--space-8);
     width: 100%;
     text-align: center;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    transition: box-shadow 0.3s ease;
-    margin-bottom: 20px;
+    box-shadow: 8px 8px 16px var(--neu-shadow-dark),
+                -8px -8px 16px var(--neu-shadow-light);
+    transition: var(--neu-transition);
+    margin-bottom: var(--space-8);
+    color: var(--neutral-100);
 }
 
 .form-card:hover {
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+    transform: var(--neu-hover-transform);
+    box-shadow: 12px 12px 24px var(--neu-shadow-dark),
+                -12px -12px 24px var(--neu-shadow-light);
 }
 
 .form-card-header .text-heading {
-    font-size: 18px;
+    font-size: var(--text-2xl);
     font-weight: bold;
-    color: #333;
+    color: var(--neutral-100);
 }
 
 .form-card-header .body-text {
-    font-size: 14px;
-    color: #555;
+    font-size: var(--text-base);
+    color: var(--neutral-300);
 }
 
 .form-card-header .text-wrapper-13 {
     font-weight: bold;
-    color: #ff0000;
+    color: var(--primary-light);
 }
 
 .form-card-footer {
-    font-size: 12px;
-    color: #777;
-    margin-top: 10px;
+    font-size: var(--text-sm);
+    color: var(--neutral-400);
+    margin-top: var(--space-4);
 }
-
 
 /* ====== Responsive ====== */
 @media (max-width: 768px) {
     .section-header { flex-direction: column; align-items: flex-start; }
     .data-table { font-size: 14px; }
-    .navbar { padding: 0 10px; }
+    .navbar { padding: 0 var(--space-4); }
     .nav-links a { padding: 20px 10px; }
 }
 
-
-/* Styling for the user tiles */
+/* ====== Styling for the user tiles ====== */
 .team-selection-container {
     margin-top: 20px;
 }
@@ -573,7 +1418,7 @@ label {
     border: solid white;
     border-width: 0 3px 3px 0;
     transform: rotate(45deg);
-}g
+}
 
 /* Hover effect for checkbox */
 .team-checkbox:hover .checkbox-custom {
@@ -596,4 +1441,800 @@ label {
 .user-email {
     font-size: 12px;
     color: #666;
+}
+
+/* ====== Enhanced Tables ====== */
+.neu-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0 10px;
+    margin: 20px 0;
+}
+
+.neu-table th {
+    background: var(--neu-bg);
+    padding: 15px;
+    text-align: left;
+    border-radius: var(--neu-radius);
+    box-shadow: 4px 4px 8px var(--neu-shadow-dark),
+                -4px -4px 8px var(--neu-shadow-light);
+}
+
+.neu-table td {
+    background: var(--neu-bg);
+    padding: 15px;
+    border-radius: var(--neu-radius);
+    box-shadow: inset 2px 2px 4px var(--neu-shadow-dark),
+                inset -2px -2px 4px var(--neu-shadow-light);
+    transition: var(--neu-transition);
+}
+
+.neu-table tr:hover td {
+    transform: var(--neu-hover-transform);
+    box-shadow: inset 4px 4px 8px var(--neu-shadow-dark),
+                inset -4px -4px 8px var(--neu-shadow-light);
+}
+
+/* ====== Enhanced Status Badges ====== */
+.neu-badge {
+    display: inline-block;
+    padding: 8px 16px;
+    border-radius: 50px;
+    background: var(--neu-bg);
+    box-shadow: 4px 4px 8px var(--neu-shadow-dark),
+                -4px -4px 8px var(--neu-shadow-light);
+    transition: var(--neu-transition);
+}
+
+.neu-badge:hover {
+    transform: var(--neu-hover-transform);
+    animation: pulse 2s infinite;
+}
+
+/* ====== Enhanced Dropdowns ====== */
+.neu-dropdown {
+    background: var(--neu-bg);
+    border-radius: var(--neu-radius);
+    box-shadow: 8px 8px 16px var(--neu-shadow-dark),
+                -8px -8px 16px var(--neu-shadow-light);
+    transition: var(--neu-transition);
+}
+
+.neu-dropdown:hover {
+    transform: var(--neu-hover-transform);
+    animation: glow 2s infinite;
+}
+
+/* ====== Enhanced Scrollbar ====== */
+::-webkit-scrollbar {
+    width: 10px;
+}
+
+::-webkit-scrollbar-track {
+    background: var(--neu-bg);
+    border-radius: var(--neu-radius);
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--neu-bg);
+    border-radius: var(--neu-radius);
+    box-shadow: inset 2px 2px 4px var(--neu-shadow-dark),
+                inset -2px -2px 4px var(--neu-shadow-light);
+}
+
+::-webkit-scrollbar-thumb:hover {
+    box-shadow: inset 4px 4px 8px var(--neu-shadow-dark),
+                inset -4px -4px 8px var(--neu-shadow-light);
+}
+
+/* ====== Enhanced Loading States ====== */
+.neu-loading {
+    position: relative;
+    overflow: hidden;
+}
+
+.neu-loading::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 50%;
+    height: 100%;
+    background: linear-gradient(
+        90deg,
+        transparent,
+        rgba(255, 255, 255, 0.2),
+        transparent
+    );
+    animation: loading 1.5s infinite;
+}
+
+@keyframes loading {
+    0% { left: -100%; }
+    100% { left: 200%; }
+}
+
+/* ====== Enhanced Focus States ====== */
+.neu-focus {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.5),
+                8px 8px 16px var(--neu-shadow-dark),
+                -8px -8px 16px var(--neu-shadow-light);
+}
+
+/* ====== Enhanced Hover Effects ====== */
+.neu-hover {
+    transition: var(--neu-transition);
+}
+
+.neu-hover:hover {
+    transform: var(--neu-hover-transform);
+    animation: float 3s ease-in-out infinite;
+}
+
+/* ====== Enhanced Active States ====== */
+.neu-active {
+    transition: var(--neu-transition);
+}
+
+.neu-active:active {
+    transform: var(--neu-active-transform);
+    box-shadow: inset 4px 4px 8px var(--neu-shadow-dark),
+                inset -4px -4px 8px var(--neu-shadow-light);
+}
+
+/* ====== Responsive Navigation ====== */
+@media (max-width: 768px) {
+    .navbar {
+        padding: 0 var(--space-4);
+    }
+
+    .nav-links {
+        gap: var(--space-2);
+    }
+
+    .nav-links a {
+        padding: var(--space-3) var(--space-4);
+    }
+
+    .course-selector select {
+        min-width: 150px;
+    }
+
+    .brand {
+        font-size: var(--text-lg);
+    }
+}
+
+@media (max-width: 576px) {
+    .navbar {
+        flex-direction: column;
+        height: auto;
+        padding: var(--space-4);
+    }
+
+    .nav-links {
+        flex-direction: column;
+        width: 100%;
+        margin-top: var(--space-4);
+    }
+
+    .nav-links a {
+        width: 100%;
+        text-align: center;
+    }
+
+    .course-selector {
+        width: 100%;
+        margin: var(--space-4) 0;
+    }
+
+    .course-selector select {
+        width: 100%;
+    }
+
+    .dropdown {
+        width: 100%;
+    }
+
+    .dropdown-content {
+        width: 100%;
+        position: static;
+        box-shadow: none;
+        margin-top: var(--space-2);
+    }
+}
+
+/* ====== Course Code and Join Code Styles ====== */
+.course-code, .join-code {
+    display: inline-block;
+    background: var(--gradient-neutral);
+    color: var(--primary-light);
+    padding: var(--space-2) var(--space-4);
+    border-radius: var(--neu-radius);
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: var(--text-base);
+    box-shadow: 4px 4px 8px var(--neu-shadow-dark),
+                -4px -4px 8px var(--neu-shadow-light);
+    border: 1px solid var(--neutral-700);
+    margin: var(--space-2) 0;
+}
+
+.course-code:hover, .join-code:hover {
+    transform: var(--neu-hover-transform);
+    box-shadow: 6px 6px 12px var(--neu-shadow-dark),
+                -6px -6px 12px var(--neu-shadow-light);
+}
+
+.course-code-label, .join-code-label {
+    color: var(--neutral-300);
+    font-size: var(--text-sm);
+    margin-bottom: var(--space-1);
+}
+
+.course-info {
+    background: var(--gradient-neutral);
+    border-radius: var(--neu-radius);
+    padding: var(--space-4);
+    margin: var(--space-4) 0;
+    box-shadow: 4px 4px 8px var(--neu-shadow-dark),
+                -4px -4px 8px var(--neu-shadow-light);
+}
+
+.course-info-item {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    margin-bottom: var(--space-2);
+    color: var(--neutral-100);
+}
+
+.course-info-item i {
+    color: var(--primary-light);
+}
+
+/* ====== Course Title Styles ====== */
+.course-title, .course-name {
+    color: var(--neutral-100);
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: var(--text-xl);
+    margin-bottom: var(--space-2);
+}
+
+.course-subtitle {
+    color: var(--neutral-300);
+    font-size: var(--text-base);
+    margin-bottom: var(--space-4);
+}
+
+/* ====== Global Text Colors ====== */
+body, p, h1, h2, h3, h4, h5, h6, span, div, label, input, textarea, select, button, a, li, td, th {
+    color: var(--neutral-100);
+}
+
+/* Headings */
+h1, h2, h3, h4, h5, h6 {
+    color: var(--neutral-100);
+    font-weight: 600;
+}
+
+/* Links */
+a {
+    color: var(--primary-light);
+}
+
+a:hover {
+    color: var(--primary);
+}
+
+/* Form Elements */
+label, input, textarea, select {
+    color: var(--neutral-100);
+}
+
+input::placeholder, textarea::placeholder {
+    color: var(--neutral-300);
+}
+
+/* Table Text */
+td, th {
+    color: var(--neutral-100);
+}
+
+/* List Items */
+li {
+    color: var(--neutral-100);
+}
+
+/* Status and Badges */
+.status-badge, .badge {
+    color: var(--neutral-100);
+}
+
+/* Course Info */
+.course-info, .course-details, .course-meta {
+    color: var(--neutral-100);
+}
+
+/* Form Labels and Help Text */
+.help-text, .form-text {
+    color: var(--neutral-300);
+}
+
+/* Empty States */
+.empty-state {
+    color: var(--neutral-100);
+}
+
+/* Modal Content */
+.modal-content {
+    color: var(--neutral-100);
+}
+
+/* Alert Messages */
+.alert {
+    color: var(--neutral-100);
+}
+
+/* Team Info */
+.team-info, .team-meta {
+    color: var(--neutral-100);
+}
+
+/* Question Text */
+.question-text, .answer-text {
+    color: var(--neutral-100);
+}
+
+/* Feedback Text */
+.feedback-text, .comment-text {
+    color: var(--neutral-100);
+}
+
+/* Date and Time */
+.date-text, .time-text {
+    color: var(--neutral-300);
+}
+
+/* Secondary Text */
+.secondary-text, .muted-text {
+    color: var(--neutral-300);
+}
+
+/* Required Field Indicator */
+.required {
+    color: var(--primary-light);
+}
+
+/* Error Messages */
+.error-text {
+    color: var(--secondary-light);
+}
+
+/* Success Messages */
+.success-text {
+    color: var(--primary-light);
+}
+
+/* Warning Messages */
+.warning-text {
+    color: var(--secondary-light);
+}
+
+/* ====== Course Dropdown Styles ====== */
+.course-selector select {
+    font-family: var(--font-secondary);
+    background: var(--gradient-neutral);
+    padding: var(--space-2) var(--space-4);
+    border: none;
+    border-radius: var(--neu-radius);
+    box-shadow: inset 4px 4px 8px var(--neu-shadow-dark),
+                inset -4px -4px 8px var(--neu-shadow-light);
+    color: var(--neutral-100);
+    cursor: pointer;
+    min-width: 180px;
+    transition: var(--neu-transition);
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    padding-right: var(--space-8);
+}
+
+.course-selector select option {
+    background: var(--gradient-neutral);
+    color: var(--neutral-100);
+    padding: var(--space-2) var(--space-4);
+}
+
+.course-selector select:focus {
+    outline: none;
+    box-shadow: inset 6px 6px 12px var(--neu-shadow-dark),
+                inset -6px -6px 12px var(--neu-shadow-light);
+    color: var(--primary-light);
+}
+
+/* Course List Styles */
+.course-list {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 15px;
+}
+
+.course-card {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: var(--gradient-neutral);
+    border-radius: var(--neu-radius);
+    padding: var(--space-4);
+    transition: var(--neu-transition);
+    color: var(--neutral-100);
+}
+
+.course-card:hover {
+    transform: var(--neu-hover-transform);
+    box-shadow: 6px 6px 12px var(--neu-shadow-dark),
+                -6px -6px 12px var(--neu-shadow-light);
+}
+
+.course-title {
+    margin: 0 0 5px 0;
+    font-size: var(--text-lg);
+    color: var(--neutral-100);
+    font-weight: 600;
+}
+
+.course-code {
+    color: var(--primary-light);
+    font-size: var(--text-sm);
+}
+
+.course-details {
+    display: flex;
+    flex-direction: column;
+    color: var(--neutral-100);
+}
+
+.course-meta {
+    color: var(--neutral-300);
+    font-size: var(--text-sm);
+}
+
+/* ====== Roster Page Styles ====== */
+.back-link {
+    display: block;
+    margin-bottom: 10px;
+    color: var(--neutral-100);
+    text-decoration: none;
+}
+
+.back-link:hover {
+    color: var(--primary-light);
+    text-decoration: underline;
+}
+
+.roster-header {
+    color: var(--neutral-100);
+    margin-bottom: var(--space-4);
+}
+
+.roster-header h1 {
+    color: var(--neutral-100);
+    font-size: var(--text-2xl);
+    margin-bottom: var(--space-2);
+}
+
+.roster-header h2 {
+    color: var(--neutral-100);
+    font-size: var(--text-xl);
+    margin-bottom: var(--space-4);
+}
+
+.course-info {
+    background: var(--gradient-neutral);
+    border-radius: var(--neu-radius);
+    padding: var(--space-4);
+    margin-bottom: var(--space-4);
+    color: var(--neutral-100);
+}
+
+.course-info-item {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    margin-bottom: var(--space-2);
+    color: var(--neutral-100);
+}
+
+.course-info-label {
+    color: var(--neutral-300);
+    font-size: var(--text-sm);
+}
+
+.course-info-value {
+    color: var(--neutral-100);
+    font-weight: 500;
+}
+
+.student-list {
+    background: var(--gradient-neutral);
+    border-radius: var(--neu-radius);
+    padding: var(--space-4);
+    color: var(--neutral-100);
+}
+
+.student-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: var(--space-2) 0;
+    border-bottom: 1px solid var(--neutral-700);
+    color: var(--neutral-100);
+}
+
+.student-item:last-child {
+    border-bottom: none;
+}
+
+.student-name {
+    color: var(--neutral-100);
+    font-weight: 500;
+}
+
+.student-email {
+    color: var(--neutral-300);
+    font-size: var(--text-sm);
+}
+
+.student-role {
+    color: var(--primary-light);
+    font-size: var(--text-sm);
+}
+
+.student-actions {
+    display: flex;
+    gap: var(--space-2);
+}
+
+.student-actions button {
+    color: var(--neutral-100);
+    background: var(--gradient-neutral);
+    border: none;
+    border-radius: var(--neu-radius);
+    padding: var(--space-2) var(--space-4);
+    cursor: pointer;
+    transition: var(--neu-transition);
+}
+
+.student-actions button:hover {
+    color: var(--primary-light);
+    transform: var(--neu-hover-transform);
+    box-shadow: 4px 4px 8px var(--neu-shadow-dark),
+                -4px -4px 8px var(--neu-shadow-light);
+}
+
+.empty-roster {
+    text-align: center;
+    padding: var(--space-8);
+    color: var(--neutral-300);
+}
+
+.empty-roster h3 {
+    color: var(--neutral-100);
+    margin-bottom: var(--space-2);
+}
+
+.empty-roster p {
+    color: var(--neutral-300);
+}
+
+/* ====== Content Sections ====== */
+.content-section {
+    background: var(--gradient-dark);
+    border-radius: var(--neu-radius);
+    padding: var(--space-8);
+    margin-bottom: var(--space-8);
+    box-shadow: 8px 8px 16px var(--neu-shadow-dark),
+                -8px -8px 16px var(--neu-shadow-light);
+    color: var(--neutral-100);
+}
+
+.section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--space-6);
+    padding-bottom: var(--space-4);
+    border-bottom: 1px solid var(--neutral-700);
+}
+
+.section-title {
+    color: var(--neutral-100);
+    font-size: var(--text-2xl);
+    font-weight: 600;
+    margin: 0;
+}
+
+.section-actions {
+    display: flex;
+    gap: var(--space-4);
+}
+
+/* Form Templates */
+.template-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: var(--space-6);
+    margin-top: var(--space-4);
+}
+
+.template-card {
+    background: var(--gradient-neutral);
+    border-radius: var(--neu-radius);
+    padding: var(--space-6);
+    box-shadow: 4px 4px 8px var(--neu-shadow-dark),
+                -4px -4px 8px var(--neu-shadow-light);
+    transition: var(--neu-transition);
+}
+
+.template-card:hover {
+    transform: var(--neu-hover-transform);
+    box-shadow: 6px 6px 12px var(--neu-shadow-dark),
+                -6px -6px 12px var(--neu-shadow-light);
+}
+
+.template-header {
+    margin-bottom: var(--space-4);
+}
+
+.template-title {
+    color: var(--neutral-100);
+    font-size: var(--text-xl);
+    font-weight: 600;
+    margin-bottom: var(--space-2);
+}
+
+.template-meta {
+    color: var(--neutral-300);
+    font-size: var(--text-sm);
+}
+
+/* Peer Assessment Forms */
+.assessment-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: var(--space-6);
+    margin-top: var(--space-4);
+}
+
+.assessment-card {
+    background: var(--gradient-neutral);
+    border-radius: var(--neu-radius);
+    padding: var(--space-6);
+    box-shadow: 4px 4px 8px var(--neu-shadow-dark),
+                -4px -4px 8px var(--neu-shadow-light);
+    transition: var(--neu-transition);
+}
+
+.assessment-card:hover {
+    transform: var(--neu-hover-transform);
+    box-shadow: 6px 6px 12px var(--neu-shadow-dark),
+                -6px -6px 12px var(--neu-shadow-light);
+}
+
+.assessment-header {
+    margin-bottom: var(--space-4);
+}
+
+.assessment-title {
+    color: var(--neutral-100);
+    font-size: var(--text-xl);
+    font-weight: 600;
+    margin-bottom: var(--space-2);
+}
+
+.assessment-meta {
+    color: var(--neutral-300);
+    font-size: var(--text-sm);
+}
+
+/* Team Management */
+.team-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: var(--space-6);
+    margin-top: var(--space-4);
+}
+
+.team-card {
+    background: var(--gradient-neutral);
+    border-radius: var(--neu-radius);
+    padding: var(--space-6);
+    box-shadow: 4px 4px 8px var(--neu-shadow-dark),
+                -4px -4px 8px var(--neu-shadow-light);
+    transition: var(--neu-transition);
+}
+
+.team-card:hover {
+    transform: var(--neu-hover-transform);
+    box-shadow: 6px 6px 12px var(--neu-shadow-dark),
+                -6px -6px 12px var(--neu-shadow-light);
+}
+
+.team-header {
+    margin-bottom: var(--space-4);
+}
+
+.team-title {
+    color: var(--neutral-100);
+    font-size: var(--text-xl);
+    font-weight: 600;
+    margin-bottom: var(--space-2);
+}
+
+.team-meta {
+    color: var(--neutral-300);
+    font-size: var(--text-sm);
+}
+
+/* Common Card Elements */
+.card-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: var(--space-2);
+    margin-top: var(--space-4);
+    padding-top: var(--space-4);
+    border-top: 1px solid var(--neutral-700);
+}
+
+.card-status {
+    display: inline-flex;
+    align-items: center;
+    padding: var(--space-2) var(--space-4);
+    border-radius: var(--neu-radius);
+    font-size: var(--text-sm);
+    font-weight: 500;
+    margin-bottom: var(--space-4);
+}
+
+.status-active {
+    background: var(--gradient-primary);
+    color: var(--neutral-100);
+}
+
+.status-draft {
+    background: var(--gradient-neutral);
+    color: var(--neutral-300);
+}
+
+.status-closed {
+    background: var(--gradient-dark);
+    color: var(--neutral-300);
+}
+
+/* Empty States */
+.empty-state {
+    text-align: center;
+    padding: var(--space-8);
+    color: var(--neutral-300);
+}
+
+.empty-state i {
+    font-size: var(--text-4xl);
+    color: var(--neutral-400);
+    margin-bottom: var(--space-4);
+}
+
+.empty-state h3 {
+    color: var(--neutral-100);
+    font-size: var(--text-xl);
+    margin-bottom: var(--space-2);
+}
+
+.empty-state p {
+    color: var(--neutral-300);
+    max-width: 400px;
+    margin: 0 auto;
 }

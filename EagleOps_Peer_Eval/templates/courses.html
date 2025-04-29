@@ -70,16 +70,20 @@
     }
     
     .action-button {
-        background-color: #007bff;
+        width: 28px;
+        height: 28px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 6px;
+        background: rgba(255, 255, 255, 0.1);
         color: white;
-        padding: 10px 20px;
         text-decoration: none;
-        border-radius: 4px;
-        transition: background-color 0.2s;
+        transition: all 0.2s ease;
     }
     
     .action-button:hover {
-        background-color: #0056b3;
+        background-color: #1b2b3c;
     }
     
     .course-grid {
@@ -110,29 +114,17 @@
     
     .course-card h2 {
         margin-top: 0;
-        color: #333;
+        color: #ffffff;
+        text-align: center;
     }
     
-    .course-code {
-        background-color: #f0f0f0;
-        padding: 5px 10px;
-        border-radius: 4px;
-        display: inline-block;
-        margin: 10px 0;
-        font-size: 0.9em;
-    }
     
-    .course-details {
-        margin-top: 15px;
-        display: flex;
-        gap: 15px;
-    }
-    
+
     .detail-item {
         display: flex;
         align-items: center;
         gap: 5px;
-        color: #666;
+        color: #ffffff;
     }
     
     .course-teams {
@@ -145,7 +137,7 @@
         font-size: 16px;
         margin-top: 0;
         margin-bottom: 10px;
-        color: #555;
+        color: #ffffff;
     }
     
     .teams-list {
@@ -172,6 +164,18 @@
         text-align: center;
         padding: 40px;
         color: #666;
+    }
+    .btn-primary {
+        background: #141414;  
+        border: none;
+        border-radius: 10px;
+        padding: 10px 20px;
+        box-shadow: 5px 5px 10px var(--shadow-dark),
+        -5px -5px 10px var(--shadow-light);
+        transition: all 0.2s ease;
+        color: var(--text-color);
+        font-weight: 500;
+        margin-left: -5px;
     }
 </style>
 {% endblock %}

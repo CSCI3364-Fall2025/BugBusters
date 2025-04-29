@@ -1,10 +1,49 @@
 {% extends 'base.html' %}
+
 {% block content %}
-  <h2>Confirm Deletion</h2>
-  <p>Are you sure you want to delete the course: {{ course.name }}?</p>
-  <form method="post">
-    {% csrf_token %}
-    <button type="submit" class="btn btn-danger">Yes, Delete</button>
-    <a href="{% url 'course_detail' course_id=course.id %}" class="btn btn-secondary">Cancel</a>
-  </form>
+<div class="page-container">
+  <div class="page-header">
+    <h1>Confirm Deletion</h1>
+  </div>
+
+  <div class="neumorphic-card">
+    <p style="color: rgba(255,255,255,0.8);">
+      Are you sure you want to delete the course 
+      <strong style="color: #fff;">{{ course.name }}</strong>?
+    </p>
+
+    <form method="post" class="confirm-buttons">
+      {% csrf_token %}
+      <button type="submit" 
+              class="neumorphic-btn danger">
+        Yes, Delete
+      </button>
+      <a href="{% url 'course_detail' course_id=course.id %}" 
+         class="neumorphic-btn">
+        Cancel
+      </a>
+    </form>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+  .neumorphic-btn {
+    /* increase touch area */
+    padding: 12px 25px !important;
+    /* nice rounded corners */
+    border-radius: 10px !important;
+    /* slightly larger text */
+    font-size: 1.1em;
+    min-width: 120px;      /* ensure a decent minimum width */
+    text-align: center;    /* center label if wider */
+  }
+
+  /* danger variant inherits above, only background changes */
+  .neumorphic-btn.danger {
+    background: #c0392b;
+    color: #fff;
+  }
+</style>
 {% endblock %}

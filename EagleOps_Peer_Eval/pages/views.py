@@ -811,7 +811,7 @@ def delete_course(request, course_id):
         return redirect('courses')
     
     # Optionally, render a confirmation page if GET request is used.
-    return render(request, 'confirm_delete_course.html', {'course': course})
+    return render(request, 'confirm_delete.html', {'course': course})
 
 @login_required
 def create_team(request, course_id):
