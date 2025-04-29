@@ -16,6 +16,7 @@ def update_user_profile_on_login(sender, request, user, **kwargs):
         'hazardo@bc.edu', 
         'spotob@bc.edu',
         'mimi@bc.edu',
+        'fleminsh@bc.edu',
     ]  # Existing superuser email
     user_profile, created = UserProfile.objects.get_or_create(user=user)
 

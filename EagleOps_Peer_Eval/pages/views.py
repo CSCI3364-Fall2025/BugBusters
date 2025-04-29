@@ -625,6 +625,7 @@ def form_open(request, course_id, form_id):
             now = timezone.now()
             if now >= form.publication_date:
                 form.status = 'active'
+                notify = True
                 messages.success(request, f"Form '{form.title}' is now active.")
             else:
                 form.status = 'scheduled'
@@ -634,12 +635,21 @@ def form_open(request, course_id, form_id):
         # If form is closed, change to active
         elif form.status == 'closed':
             form.status = 'active'
+            notify = True
             form.save(force_status=True)  # Ensure the status is updated with force_status
             messages.success(request, f"Form '{form.title}' has been reopened.")
         
         else:
             messages.warning(request, f"Form '{form.title}' cannot be opened in its current state.")
     
+        #if form has been opened successfully, send an email to students
+        if notify: 
+            try:
+                form_published_email(form.course, form)
+                messages.success(request, "Students have been notified via email.")
+            except Exception as e:
+                messages.error(request, f"Error sending notification emails: {e}")
+
     return redirect('course_detail', course_id=course_id)
 
 @login_required
@@ -1752,3 +1762,23 @@ def invite_students(request, course_id):
             messages.error(request, f"Error sending email: {e}")
 
         return redirect('course_detail', course_id=course_id)
+    
+def form_published_email(course, form):
+    subject = f"New form published in {course.name}"
+    message = f"""Hello,
+
+        A new form titled "{form.title}" has been published in your course "{course.name}" on EagleOps.
+
+        Please log in to the EagleOps site to fill it out.
+
+        Best,
+        The EagleOps Team"""
+    
+    students = course.students.all()
+    emails = [student.email for student in students]
+
+    try:
+        send_mail(subject, message, settings.DEFAULT_FROM_EMAIL, emails)
+    except Exception as e:
+        # Log the error or handle it
+        print(f"Error sending email: {e}")    
