@@ -162,6 +162,7 @@
         max-width: 1200px;
         margin: 0 auto;
         padding: 20px;
+        font-family: var(--font-primary), sans-serif;
     }
     
     .page-header {
@@ -194,7 +195,7 @@
     }
     
     .info-item {
-        background-color: #f8f9fa;
+        background-color: #111827;
         padding: 15px;
         border-radius: 8px;
     }
@@ -203,11 +204,11 @@
         display: block;
         font-weight: 500;
         margin-bottom: 5px;
-        color: #6c757d;
+        color: #ffffff;
     }
     
     .info-value {
-        font-size: 16px;
+        font-size: 18px;
     }
     
     .team-header {
@@ -218,7 +219,7 @@
     }
     
     .team-score {
-        font-size: 18px;
+        font-size: 20px;
         font-weight: 500;
         padding: 8px 16px;
         border-radius: 4px;
@@ -231,18 +232,16 @@
     .dropdown-toggle {
         width: 100%;
         padding: 12px 20px;
-        background-color: #f8f9fa;
+        background-color: #111827;
         border: 1px solid #dee2e6;
         border-radius: 8px;
         text-align: left;
-        font-size: 16px;
-        font-weight: 500;
-        color: #343a40;
         cursor: pointer;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        transition: background-color 0.2s;
+        font-weight: 600;
+        transition: background-color 0.3s ease;
+        color: #ffffff;
+        font-family: var(--font-secondary), sans-serif;
+        font-size: 16px; /* Increased from default */
     }
     
     .dropdown-toggle:hover {
@@ -260,7 +259,7 @@
     .team-members {
         margin-top: 15px;
         padding: 15px;
-        background-color: #f8f9fa;
+        background-color: #111827;
         border-radius: 8px;
     }
     
@@ -273,7 +272,7 @@
     }
     
     .member-card {
-        background: #fff;
+        background: #111827;
         border: 1px solid #e9ecef;
         border-radius: 8px;
         padding: 20px;
@@ -285,6 +284,9 @@
         justify-content: space-between;
         align-items: center;
         margin-bottom: 15px;
+    }
+    .member-header h3 {
+        font-size: 18px;
     }
     
     .member-stats {
@@ -303,7 +305,7 @@
     }
     
     .preview-feedback {
-        background: #f8f9fa;
+        background: #111827;
         border: 1px solid #e9ecef;
         border-radius: 4px;
         padding: 15px;
@@ -337,7 +339,7 @@
     
     .score-medium {
         background-color: #fff3cd;
-        color: #856404;
+        color: #fccf47;
     }
     
     .score-low {
@@ -373,6 +375,7 @@
     .question-text {
         flex: 1;
         margin-right: 20px;
+        color: #ffff;
     }
     
     .score-display {
@@ -385,6 +388,7 @@
     
     .text-feedback {
         margin-top: 30px;
+        color: #ffff;
     }
     
     .feedback-item {

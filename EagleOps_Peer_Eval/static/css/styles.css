@@ -224,6 +224,117 @@ p {
                 inset -4px -4px 8px var(--neu-shadow-light);
 }
 
+/* ====== Form Information Section ====== */
+.info-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: var(--space-4);
+    background-color: var(--gradient-neutral);
+    padding: var(--space-4);
+    border-radius: var(--neu-radius);
+    box-shadow: 4px 4px 8px var(--neu-shadow-dark),
+                -4px -4px 8px var(--neu-shadow-light);
+}
+
+.info-item {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+}
+
+.info-item label {
+    color: var(--neutral-300);
+    font-size: var(--text-sm);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.info-item .info-value {
+    color: var(--neutral-100);
+    font-weight: 500;
+    background-color: rgba(255, 255, 255, 0.05);
+    padding: var(--space-2);
+    border-radius: 4px;
+}
+
+.card-header {
+    background-color: rgba(30, 58, 138, 0.7); /* Solid semi-transparent navy blue */
+    padding: var(--space-4);
+    border-bottom: 1px solid rgba(59, 130, 246, 0.2);
+    color: var(--neutral-100); /* Ensure text is white */
+}
+
+.card {
+    background-color: #1e3a8a; /* Solid navy blue */
+    border-radius: var(--neu-radius);
+    box-shadow: 4px 4px 8px var(--neu-shadow-dark),
+                -4px -4px 8px var(--neu-shadow-light),
+                0 0 20px rgba(30, 58, 138, 0.5); /* Added glow effect */
+    margin-bottom: var(--space-4);
+    overflow: hidden;
+    color: var(--neutral-100); /* Ensure text is white */
+}
+
+/* ====== Team Members Dropdown ====== */
+.team-members-dropdown {
+    background-color: #111827;  
+    border: 1px solid rgba(59, 130, 246, 0.3);  
+    border-radius: 8px;
+    box-shadow: 
+        0 0 10px rgba(59, 130, 246, 0.2),  
+        0 4px 6px rgba(0, 0, 0, 0.1);  
+    padding: 12px;
+    max-width: 1200px;  /* Increased width */
+    width: 100%;  /* Allow full width up to max-width */
+    transition: all 0.3s ease;
+}
+
+.team-members-dropdown:hover {
+    box-shadow: 
+        0 0 15px rgba(59, 130, 246, 0.4),  
+        0 6px 8px rgba(0, 0, 0, 0.2);
+    border-color: rgba(59, 130, 246, 0.5);
+}
+
+.team-members-dropdown .member-item {
+    color: var(--neutral-100);  /* Changed to pure white */
+    padding: 8px 12px;
+    border-bottom: 1px solid var(--neutral-700);
+    background-color: var(--neutral-800);  /* Dark background for items */
+    transition: background-color 0.2s ease;
+}
+
+.team-members-dropdown .member-item:last-child {
+    border-bottom: none;
+}
+
+.team-members-dropdown .member-item:hover {
+    background-color: rgba(59, 130, 246, 0.1);  
+    color: var(--neutral-100);
+}
+
+/* ====== View Team Members Button ====== */
+.view-team-members-btn {
+    background-color: var(--gradient-neutral);
+    color: var(--neutral-100);
+    border: none;
+    border-radius: var(--neu-radius);
+    padding: var(--space-2) var(--space-4);
+    box-shadow: 4px 4px 8px var(--neu-shadow-dark),
+                -4px -4px 8px var(--neu-shadow-light);
+    transition: var(--neu-transition);
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+}
+
+.view-team-members-btn:hover {
+    transform: var(--neu-hover-transform);
+    box-shadow: 6px 6px 12px var(--neu-shadow-dark),
+                -6px -6px 12px var(--neu-shadow-light);
+    color: var(--primary-light);
+}
+
 /* ====== Enhanced Course Selector ====== */
 .course-selector {
     margin: 0 var(--space-2);
@@ -240,7 +351,7 @@ p {
                 inset -4px -4px 8px var(--neu-shadow-light);
     color: var(--neutral-100);
     cursor: pointer;
-    min-width: 180px;
+    min-width: 250px;
     transition: var(--neu-transition);
     appearance: none;
     -webkit-appearance: none;
