@@ -645,7 +645,7 @@ def form_open(request, course_id, form_id):
         #if form has been opened successfully, send an email to students
         if notify: 
             try:
-                form_published_email(form.course, form)
+                form_open_email(form.course, form)
                 messages.success(request, "Students have been notified via email.")
             except Exception as e:
                 messages.error(request, f"Error sending notification emails: {e}")
@@ -1262,6 +1262,11 @@ def publish_results(request, form_id):
             return JsonResponse({'success': True, 'message': success_msg})
         
         messages.success(request, success_msg)
+        try:
+            form_published_email(form.course, form)
+            messages.success(request, "Students have been notified via email that their results are published.")
+        except Exception as e:
+            messages.error(request, f"Error sending notification emails: {e}")
         return redirect('form_results', course_id=course.id, form_id=form.id)
 
     except Exception as e:
@@ -1776,13 +1781,34 @@ def invite_students(request, course_id):
 
         return redirect('course_detail', course_id=course_id)
     
+def form_open_email(course, form):
+    subject = f"New form published in {course.name}"
+    message = f"""Hello,
+
+        A new form titled "{form.title}" has been opened in your course "{course.name}" on EagleOps.
+
+        Please log in to the EagleOps site to fill it out.
+
+        Best,
+        The EagleOps Team"""
+    
+    students = course.students.all()
+    emails = [student.user.email for student in students]
+
+    try:
+        send_mail(subject, message, settings.DEFAULT_FROM_EMAIL, emails)
+    except Exception as e:
+        # Log the error or handle it
+        print(f"Error sending email: {e}")
+        raise e  # Re-raise the exception to be caught by the calling function   
+
 def form_published_email(course, form):
     subject = f"New form published in {course.name}"
     message = f"""Hello,
 
-        A new form titled "{form.title}" has been published in your course "{course.name}" on EagleOps.
+        The results from "{form.title}" have been published in your course "{course.name}" on EagleOps.
 
-        Please log in to the EagleOps site to fill it out.
+        Please log in to the EagleOps site to view your results and feedback from your teammates.
 
         Best,
         The EagleOps Team"""
