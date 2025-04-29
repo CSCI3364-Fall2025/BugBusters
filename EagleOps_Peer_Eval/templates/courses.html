@@ -94,17 +94,22 @@
     }
     
     .course-card {
-        background-color: white;
-        border-radius: 8px;
-        padding: 20px;
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-        transition: transform 0.2s, box-shadow 0.2s;
-    }
-    
-    .course-card:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
-    }
+    background-color: #1a1a1a;               /* Darker card background */
+    border: 1px solid rgba(255, 255, 255, 0.2); /* Subtle white border */
+    border-radius: 8px;
+    padding: 20px;
+    box-shadow:
+      0 2px 4px rgba(0, 0, 0, 0.5),         /* Inner dark shadow */
+      0 0 10px rgba(255, 255, 255, 0.25);    /* Outer white glow */
+    transition: transform 0.2s, box-shadow 0.2s;
+  }
+
+  .course-card:hover {
+    transform: translateY(-5px);
+    box-shadow:
+      0 4px 12px rgba(0, 0, 0, 0.5),
+      0 0 20px rgba(255, 255, 255, 0.4);     /* Stronger glow on hover */
+  }
     
     .course-link {
         color: inherit;
@@ -165,17 +170,26 @@
         padding: 40px;
         color: #666;
     }
-    .btn-primary {
-        background: #141414;  
-        border: none;
-        border-radius: 10px;
-        padding: 10px 20px;
-        box-shadow: 5px 5px 10px var(--shadow-dark),
-        -5px -5px 10px var(--shadow-light);
-        transition: all 0.2s ease;
-        color: var(--text-color);
-        font-weight: 500;
-        margin-left: -5px;
-    }
+    .header-actions .btn-primary {
+    /* Neumorphic look */
+    background: linear-gradient(90deg, #0a2540 0%, #003366 100%);
+    color: var(--text-color);
+    border: none;
+    border-radius: 10px;
+    padding: 10px 20px;
+    box-shadow:
+      5px 5px 10px var(--shadow-dark),
+      -5px -5px 10px var(--shadow-light);
+    transition: all 0.2s ease;
+    margin-left: -5px;
+  }
+
+  .header-actions .btn-primary:hover {
+    box-shadow:
+      inset 5px 5px 10px var(--shadow-dark),
+      inset -5px -5px 10px var(--shadow-light);
+    transform: translateY(2px);
+  }
 </style>
+
 {% endblock %}
