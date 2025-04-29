@@ -1,7 +1,7 @@
 /* Neumorphic Card Styles */
 .neumorphic-card {
     background: var(--bg-color);
-    border-radius: 10px;
+    border-radius: 5px;
     padding: 20px;
     box-shadow: 8px 8px 16px var(--shadow-dark),
                 -8px -8px 16px var(--shadow-light);
@@ -277,3 +277,8 @@
     margin: 0;
     font-size: 1.1em;
 }
+input,
+textarea,
+select {
+  border-radius: 4px;  /* down from 8–10px */
+}   
