@@ -1788,10 +1788,11 @@ def form_published_email(course, form):
         The EagleOps Team"""
     
     students = course.students.all()
-    emails = [student.email for student in students]
+    emails = [student.user.email for student in students]
 
     try:
         send_mail(subject, message, settings.DEFAULT_FROM_EMAIL, emails)
     except Exception as e:
         # Log the error or handle it
-        print(f"Error sending email: {e}")    
+        print(f"Error sending email: {e}")
+        raise e  # Re-raise the exception to be caught by the calling function    

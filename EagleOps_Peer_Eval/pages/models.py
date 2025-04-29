@@ -235,13 +235,21 @@ class Form(models.Model):
             return self.CLOSED
 
     def save(self, *args, **kwargs):
+        # Check if force_status is True to bypass automatic status updates
         force_status = kwargs.pop('force_status', False)
-
-        self.full_clean()
-
-        if force_status or self.status != self.DRAFT:
-            self.status = self.live_status
-
+        
+        # Only update status automatically if not forced
+        if not force_status:
+            now = timezone.now()
+            
+            # If closing date has passed, force close the form
+            if now >= self.closing_date:
+                self.status = self.CLOSED
+            
+            # If publication date is in the future, force schedule the form
+            elif now < self.publication_date:
+                self.status = self.SCHEDULED
+        
         super().save(*args, **kwargs)
 
     def unpublish(self):
