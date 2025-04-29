@@ -625,6 +625,7 @@ def form_open(request, course_id, form_id):
             now = timezone.now()
             if now >= form.publication_date:
                 form.status = 'active'
+                notify = True
                 messages.success(request, f"Form '{form.title}' is now active.")
             else:
                 form.status = 'scheduled'
@@ -634,12 +635,21 @@ def form_open(request, course_id, form_id):
         # If form is closed, change to active
         elif form.status == 'closed':
             form.status = 'active'
+            notify = True
             form.save(force_status=True)  # Ensure the status is updated with force_status
             messages.success(request, f"Form '{form.title}' has been reopened.")
         
         else:
             messages.warning(request, f"Form '{form.title}' cannot be opened in its current state.")
     
+        #if form has been opened successfully, send an email to students
+        if notify: 
+            try:
+                form_published_email(form.course, form)
+                messages.success(request, "Students have been notified via email.")
+            except Exception as e:
+                messages.error(request, f"Error sending notification emails: {e}")
+
     return redirect('course_detail', course_id=course_id)
 
 @login_required
@@ -729,6 +739,8 @@ def create_course(request):
         name = request.POST.get('name')
         code = request.POST.get('code')
         description = request.POST.get('description', '')
+        semester = request.POST.get('semester', 'Spring')
+        year = request.POST.get('year', 2024)
         
         # Create new course
         if name and code:
@@ -736,7 +748,9 @@ def create_course(request):
                 course = Course.objects.create(
                     name=name,
                     code=code,
-                    description=description
+                    description=description,
+                    semester=semester,
+                    year=year
                 )
                 
                 # Add current user as instructor
@@ -749,46 +763,55 @@ def create_course(request):
     
     return render(request, 'course_edit.html', {
         'is_admin': user_profile.admin,
-        'error_message': error_message
+        'error_message': error_message,
+        'semester_choices': Course.SEMESTER_CHOICES,
+        'current_year': timezone.now().year
     })
 
 @login_required
 def edit_course(request, course_id):
     """
-    View for editing an existing course. Only admins or instructors can edit.
+    View for editing an existing course. Only admins can edit courses.
     """
-    try:
-        course = Course.objects.get(id=course_id)
-    except Course.DoesNotExist:
-        return redirect('courses')
-    
     user_profile = request.user.userprofile
+    course = get_object_or_404(Course, id=course_id)
     
-    # Check if user has permission to edit
-    if not user_profile.admin and not course.instructors.filter(id=user_profile.id).exists():
+    # Only admins can edit courses
+    if not user_profile.admin:
         return redirect('courses')
+    
+    error_message = None
     
     if request.method == 'POST':
         # Extract form data
         name = request.POST.get('name')
         code = request.POST.get('code')
         description = request.POST.get('description', '')
+        semester = request.POST.get('semester', 'Spring')
+        year = request.POST.get('year', 2024)
         
         # Update course
         if name and code:
-            course.name = name
-            course.code = code
-            course.description = description
-            course.save()
-            
-            return redirect('course_detail', course_id=course.id)
+            try:
+                course.name = name
+                course.code = code
+                course.description = description
+                course.semester = semester
+                course.year = year
+                course.save()
+                
+                return redirect('course_detail', course_id=course.id)
+            except IntegrityError:
+                # Handle the case where course code already exists
+                error_message = f"Course code '{code}' already exists. Please choose a different code."
     
-    context = {
+    return render(request, 'course_edit.html', {
         'course': course,
         'is_admin': user_profile.admin,
-    }
-    
-    return render(request, 'course_edit.html', context)
+        'error_message': error_message,
+        'semester_choices': Course.SEMESTER_CHOICES,
+        'current_year': timezone.now().year
+    })
 
 @login_required
 def delete_course(request, course_id):
@@ -1752,3 +1775,24 @@ def invite_students(request, course_id):
             messages.error(request, f"Error sending email: {e}")
 
         return redirect('course_detail', course_id=course_id)
+    
+def form_published_email(course, form):
+    subject = f"New form published in {course.name}"
+    message = f"""Hello,
+
+        A new form titled "{form.title}" has been published in your course "{course.name}" on EagleOps.
+
+        Please log in to the EagleOps site to fill it out.
+
+        Best,
+        The EagleOps Team"""
+    
+    students = course.students.all()
+    emails = [student.user.email for student in students]
+
+    try:
+        send_mail(subject, message, settings.DEFAULT_FROM_EMAIL, emails)
+    except Exception as e:
+        # Log the error or handle it
+        print(f"Error sending email: {e}")
+        raise e  # Re-raise the exception to be caught by the calling function    

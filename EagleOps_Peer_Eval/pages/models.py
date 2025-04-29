@@ -49,16 +49,23 @@ class Course(models.Model):
     Represents an academic course with teams, instructors and associated forms.
     Teams are now a child entity of courses rather than a many-to-many relationship.
     """
+    SEMESTER_CHOICES = [
+        ('Fall', 'Fall'),
+        ('Spring', 'Spring'),
+    ]
+    
     name = models.CharField(max_length=100)
     code = models.CharField(max_length=20, unique=True)
     course_join_code = models.CharField(max_length=10, unique=True, blank=True, null=True)
     description = models.TextField(blank=True, null=True)
+    semester = models.CharField(max_length=6, choices=SEMESTER_CHOICES, default='Spring')
+    year = models.IntegerField(default=2024)
     instructors = models.ManyToManyField(UserProfile, related_name='instructor_courses')
     students = models.ManyToManyField(UserProfile, related_name='enrolled_courses', blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return f"{self.code}: {self.name}"
+        return f"{self.code}: {self.name} ({self.semester} {self.year})"
         
     def save(self, *args, **kwargs):
         # Generate a unique join code if one doesn't exist
@@ -228,13 +235,21 @@ class Form(models.Model):
             return self.CLOSED
 
     def save(self, *args, **kwargs):
+        # Check if force_status is True to bypass automatic status updates
         force_status = kwargs.pop('force_status', False)
-
-        self.full_clean()
-
-        if force_status or self.status != self.DRAFT:
-            self.status = self.live_status
-
+        
+        # Only update status automatically if not forced
+        if not force_status:
+            now = timezone.now()
+            
+            # If closing date has passed, force close the form
+            if now >= self.closing_date:
+                self.status = self.CLOSED
+            
+            # If publication date is in the future, force schedule the form
+            elif now < self.publication_date:
+                self.status = self.SCHEDULED
+        
         super().save(*args, **kwargs)
 
     def unpublish(self):

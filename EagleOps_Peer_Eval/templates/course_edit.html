@@ -37,6 +37,20 @@
         <label for="description">Description</label>
         <textarea id="description" name="description" class="neu-input" rows="4">{% if course %}{{ course.description }}{% endif %}</textarea>
       </div>
+      <div class="form-group">
+        <label for="semester">Semester<span class="required">*</span></label>
+        <select id="semester" name="semester" class="form-control" required>
+          {% for value, label in semester_choices %}
+            <option value="{{ value }}" {% if course and course.semester == value %}selected{% endif %}>{{ label }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="form-group">
+        <label for="year">Year<span class="required">*</span></label>
+        <input type="number" id="year" name="year" class="form-control" required 
+               min="2000" max="2100" 
+               value="{% if course %}{{ course.year }}{% else %}{{ current_year }}{% endif %}">
+      </div>
       <div class="form-actions">
         <a href="{% url 'courses' %}" class="neu-btn btn-secondary">Cancel</a>
         <button type="submit" class="neu-btn btn-primary">
