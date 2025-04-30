@@ -162,7 +162,7 @@
         max-width: 1200px;
         margin: 0 auto;
         padding: 20px;
-        font-family: var(--font-primary), sans-serif;
+        color: #ffffff;
     }
     
     .page-header {
@@ -179,12 +179,12 @@
     .back-link {
         display: inline-block;
         margin-bottom: 10px;
-        color: #6c757d;
+        color: #cccccc;
         text-decoration: none;
     }
     
     .back-link:hover {
-        color: #343a40;
+        color: #ffffff;
     }
     
     .info-grid {
@@ -195,20 +195,21 @@
     }
     
     .info-item {
-        background-color: #111827;
+        color: #ffffff;
         padding: 15px;
         border-radius: 8px;
+        border: 1px solid #333333;
     }
     
     .info-item label {
         display: block;
         font-weight: 500;
         margin-bottom: 5px;
-        color: #ffffff;
+        color: #cccccc;
     }
     
     .info-value {
-        font-size: 18px;
+        font-size: 16px;
     }
     
     .team-header {
@@ -219,10 +220,13 @@
     }
     
     .team-score {
-        font-size: 20px;
+        font-size: 18px;
         font-weight: 500;
         padding: 8px 16px;
         border-radius: 4px;
+        background-color: #000000;
+        color: #ffffff;
+        border: 1px solid #444444;
     }
     
     .team-members-dropdown {
@@ -232,20 +236,22 @@
     .dropdown-toggle {
         width: 100%;
         padding: 12px 20px;
-        background-color: #111827;
-        border: 1px solid #dee2e6;
+        background-color: #000000;
+        border: 1px solid #444444;
         border-radius: 8px;
         text-align: left;
-        cursor: pointer;
-        font-weight: 600;
-        transition: background-color 0.3s ease;
+        font-size: 16px;
+        font-weight: 500;
         color: #ffffff;
-        font-family: var(--font-secondary), sans-serif;
-        font-size: 16px; /* Increased from default */
+        cursor: pointer;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        transition: background-color 0.2s;
     }
     
     .dropdown-toggle:hover {
-        background-color: #e9ecef;
+        background-color: #111111;
     }
     
     .dropdown-toggle i {
@@ -259,8 +265,8 @@
     .team-members {
         margin-top: 15px;
         padding: 15px;
-        background-color: #111827;
         border-radius: 8px;
+        color: #ffffff;
     }
     
     .collapse {
@@ -272,11 +278,11 @@
     }
     
     .member-card {
-        background: #111827;
-        border: 1px solid #e9ecef;
+        background: #000000;
         border-radius: 8px;
         padding: 20px;
         margin-bottom: 15px;
+        color: #ffffff;
     }
     
     .member-header {
@@ -285,9 +291,6 @@
         align-items: center;
         margin-bottom: 15px;
     }
-    .member-header h3 {
-        font-size: 18px;
-    }
     
     .member-stats {
         display: flex;
@@ -295,18 +298,19 @@
     }
     
     .completion-badge {
-        color: #6c757d;
+        color: #cccccc;
     }
     
     .score-badge {
         padding: 5px 10px;
         border-radius: 4px;
         font-weight: 500;
+        color: #ffffff;
     }
     
     .preview-feedback {
-        background: #111827;
-        border: 1px solid #e9ecef;
+        color: #ffffff;
+        border: 1px solid #333333;
         border-radius: 4px;
         padding: 15px;
         margin: 15px 0;
@@ -320,11 +324,12 @@
     .feedback-text {
         margin-bottom: 5px;
         font-style: italic;
+        color: #ffffff;
     }
     
     .feedback-from {
         font-size: 0.9em;
-        color: #6c757d;
+        color: #cccccc;
     }
     
     .member-actions {
@@ -333,18 +338,18 @@
     }
     
     .score-high {
-        background-color: #d4edda;
-        color: #155724;
+        background-color: #155724;
+        color: #d4edda;
     }
     
     .score-medium {
-        background-color: #fff3cd;
-        color: #fccf47;
+        background-color: #856404;
+        color: #fff3cd;
     }
     
     .score-low {
-        background-color: #f8d7da;
-        color: #721c24;
+        background-color: #721c24;
+        color: #f8d7da;
     }
     
     .member-details {
@@ -367,15 +372,16 @@
         justify-content: space-between;
         align-items: center;
         padding: 15px;
-        background-color: #f8f9fa;
+        background-color: #000000;
         border-radius: 8px;
         margin-bottom: 10px;
+        color: #ffffff;
+        border: 1px solid #333333;
     }
     
     .question-text {
         flex: 1;
         margin-right: 20px;
-        color: #ffff;
     }
     
     .score-display {
@@ -384,16 +390,19 @@
         font-weight: 500;
         min-width: 60px;
         text-align: center;
+        color: #ffffff;
+        background-color: #111111;
+        border: 1px solid #444444;
     }
     
     .text-feedback {
         margin-top: 30px;
-        color: #ffff;
     }
     
     .feedback-item {
-        background-color: white;
-        border: 1px solid #dee2e6;
+        background-color: #000000;
+        color: #ffffff;
+        border: 1px solid #333333;
         border-radius: 8px;
         margin-bottom: 20px;
         overflow: hidden;
@@ -401,9 +410,10 @@
     
     .feedback-header {
         padding: 15px;
-        background-color: #f8f9fa;
-        border-bottom: 1px solid #dee2e6;
+        background-color: #111111;
+        border-bottom: 1px solid #333333;
         font-weight: 500;
+        color: #ffffff;
     }
     
     .feedback-content {
@@ -421,12 +431,15 @@
     .answer-item .question {
         font-weight: 500;
         margin-bottom: 5px;
+        color: #ffffff;
     }
     
     .answer-item .answer {
-        background-color: #f8f9fa;
+        background-color: #000000;
+        color: #ffffff;
         padding: 10px;
         border-radius: 4px;
+        border: 1px solid #444444;
     }
     
     .status-badge {
@@ -438,23 +451,23 @@
     }
     
     .status-badge.status-draft {
-        background-color: #e9ecef;
-        color: #495057;
+        background-color: #444444;
+        color: #cccccc;
     }
     
     .status-badge.status-scheduled {
-        background-color: #cce5ff;
-        color: #004085;
+        background-color: #004085;
+        color: #cce5ff;
     }
     
     .status-badge.status-active {
-        background-color: #d4edda;
-        color: #155724;
+        background-color: #155724;
+        color: #d4edda;
     }
     
     .status-badge.status-closed {
-        background-color: #f8d7da;
-        color: #721c24;
+        background-color: #721c24;
+        color: #f8d7da;
     }
 </style>
 {% endblock %}
