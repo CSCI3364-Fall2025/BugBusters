@@ -99,89 +99,89 @@
     transition: background 0.2s;
   }
   .form-control:focus {
-    background: rgba(255,255,255,0.15);
     outline: none;
+    background: rgba(255,255,255,0.15);
+  }
+  .team-selection-container {
+    margin-top: 30px;
   }
   .team-selection-container h3 {
-    color: #fff;
-    margin-bottom: 15px;
+    color: white;
+    margin-bottom: 20px;
   }
   .team-boxes {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(250px,1fr));
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
     gap: 15px;
   }
   .team-box {
-    background: rgba(255,255,255,0.1);
+    background: rgba(255,255,255,0.05);
     border-radius: 10px;
     padding: 15px;
-    transition: background 0.2s, transform 0.2s;
-  }
-  .team-box:hover {
-    background: rgba(255,255,255,0.15);
-    transform: translateY(-2px);
+    transition: all 0.3s ease;
   }
   .team-checkbox {
     display: flex;
     align-items: center;
-    gap: 12px;
     cursor: pointer;
+    position: relative;
   }
   .team-checkbox input[type="checkbox"] {
-    width: 20px;
-    height: 20px;
-    appearance: none;
-    border: 2px solid rgba(255,255,255,0.3);
-    border-radius: 4px;
-    position: relative;
-    transition: all 0.2s;
-  }
-  .team-checkbox input[type="checkbox"]:checked {
-    background: #3498db;
-    border-color: #3498db;
-  }
-  .team-checkbox input[type="checkbox"]:checked::after {
-    content: '✓';
     position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%,-50%);
-    color: #fff;
-    font-size: 14px;
+    opacity: 0;
+    cursor: pointer;
+    height: 0;
+    width: 0;
+  }
+  .team-checkbox input[type="checkbox"]:checked + .user-details {
+    background: rgba(74, 134, 232, 0.2);
+    border: 2px solid #4a86e8;
+  }
+  .user-details {
+    flex: 1;
+    padding: 12px;
+    border-radius: 8px;
+    border: 2px solid transparent;
+    transition: all 0.3s ease;
   }
   .user-name {
-    color: #fff;
+    color: white;
     font-weight: 500;
+    margin-bottom: 5px;
   }
   .user-email {
-    color: rgba(255,255,255,0.7);
+    color: rgba(255,255,255,0.6);
     font-size: 0.9em;
   }
-  .no-content {
-    color: rgba(255,255,255,0.6);
-    font-style: italic;
-  }
   .submit-btn {
-    text-align: right;
     margin-top: 30px;
+    text-align: right;
   }
   .neumorphic-btn {
     background: #1a1a1a;
     border: none;
     border-radius: 10px;
-    padding: 12px 25px;
-    color: #fff;
+    padding: 12px 24px;
+    color: white;
     font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
     box-shadow:
       5px 5px 10px rgba(0,0,0,0.3),
       -5px -5px 10px rgba(255,255,255,0.05);
-    transition: all 0.2s ease;
   }
   .neumorphic-btn:hover {
+    transform: translateY(-2px);
     box-shadow:
-      inset 5px 5px 10px rgba(0,0,0,0.3),
-      inset -5px -5px 10px rgba(255,255,255,0.05);
-    transform: translateY(2px);
+      8px 8px 16px rgba(0,0,0,0.3),
+      -8px -8px 16px rgba(255,255,255,0.05);
+  }
+  .no-content {
+    text-align: center;
+    color: rgba(255,255,255,0.6);
+    padding: 20px;
+    background: rgba(255,255,255,0.05);
+    border-radius: 8px;
   }
 </style>
 {% endblock %}
