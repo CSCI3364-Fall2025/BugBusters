@@ -41,7 +41,7 @@
                     <div class="form-card">
                       <div class="form-card-inner">
                         <div class="form-card-header">
-                          <div class="text-heading">{{ form.title }}</div>
+                          <div class="text-heading" style="background-color: #1F2937 !important; color: #F3F4F6 !important;">{{ form.title }}</div>
                           <div class="due-date {% if form.is_urgent %}urgent{% endif %}">
                             <i class="fas fa-clock"></i>
                             <span>{{ form.time_left }}</span>
@@ -100,7 +100,7 @@
                     <div class="form-card">
                       <div class="form-card-inner">
                         <div class="form-card-header">
-                          <div class="text-heading">{{ form.title }}</div>
+                          <div class="text-heading" style="background-color: #1F2937 !important; color: #F3F4F6 !important;">{{ form.title }}</div>
                           <div class="due-date">
                             <i class="fas fa-calendar"></i>
                             <span>Opens {{ form.publication_date|localtime|date:"M d, Y, g:i A" }}</span>
@@ -159,7 +159,7 @@
                     <div class="form-card">
                       <div class="form-card-inner">
                         <div class="form-card-header">
-                          <div class="text-heading">{{ form.title }}</div>
+                          <div class="text-heading" style="background-color: #1F2937 !important; color: #F3F4F6 !important;">{{ form.title }}</div>
                           <div class="due-date">
                             <i class="fas fa-lock"></i>
                             <span>Closed {{ form.closing_date|localtime|date:"M d, Y, g:i A" }}</span>

@@ -1,0 +1,45 @@
+# render.yaml
+services:
+  - type: pserv # PostgreSQL Database
+    name: myapp-db
+    region: oregon # Or your preferred region: frankfurt, ohio, singapore, virginia
+    plan: free # Or your preferred plan: starter, standard, pro, etc.
+    postgresMajorVersion: "15" # Or your preferred PostgreSQL version
+    ipAllowList: [] # Allows access from anywhere; restrict if needed
+
+  - type: web # Django Web Service
+    name: myapp-web
+    env: python
+    region: oregon # Match your database region
+    plan: free # Or your preferred plan
+    buildCommand: |
+      pip install -r requirements.txt
+      python EagleOps_Peer_Eval/manage.py collectstatic --noinput --clear
+      python EagleOps_Peer_Eval/manage.py migrate
+    startCommand: gunicorn project_main.wsgi:application --chdir EagleOps_Peer_Eval
+    healthCheckPath: / # Add a simple health check URL if you have one
+    envVars:
+      - key: DATABASE_URL
+        fromService:
+          type: pserv
+          name: myapp-db
+          property: connectionString
+      - key: DJANGO_SETTINGS_MODULE
+        value: project_main.settings
+      - key: PYTHON_VERSION
+        value: 3.11 # Or your desired Python version, ensure it matches your dev env
+      - key: SECRET_KEY
+        generateValue: true # Render will generate a secure secret key
+      - key: WEB_CONCURRENCY
+        value: 4 # Number of Gunicorn workers, adjust based on your plan's resources
+      # - key: DJANGO_ALLOWED_HOSTS # Render injects this automatically for .onrender.com domains
+      #   value: .onrender.com # Or your custom domain if you have one
+      # Add any other environment variables your app needs below
+      # - key: GOOGLE_CLIENT_ID
+      #   value: YOUR_GOOGLE_CLIENT_ID_HERE
+      # - key: GOOGLE_CLIENT_SECRET
+      #   value: YOUR_GOOGLE_CLIENT_SECRET_HERE
+    autoDeploy: yes # Automatically deploy on pushes to the main/master branch
+    # Optional: Define a custom domain
+    # domains:
+    #   - name: yourdomain.com
