@@ -26,7 +26,8 @@ jobs:
       - name: Django checks & tests
         env:
           # Keep DEBUG off in CI if you want; not required for SQLite.
-          DJANGO_SETTINGS_MODULE: myproject.settings
+          DJANGO_SETTINGS_MODULE: project_main.settings
+        working-directory: EagleOps_Peer_Eval
         run: |
           python manage.py migrate --noinput
           python manage.py check
