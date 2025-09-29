@@ -29,6 +29,16 @@ python manage.py createsuperuser
 - OAuth credentials are stored in settings.py
 - For production, ensure you use environment variables instead of hardcoded credentials
 
+## Running tests
+
+This project uses pytest with pytest-django. The test configuration lives in `EagleOps_Peer_Eval/pytest.ini` which sets `DJANGO_SETTINGS_MODULE = project_main.settings` so you should run pytest from the root – EagleOps_Peer_Eval directory
+
+1) Run tests:
+- Run the whole test suite: pytest -q
+- Run a single test file (example): pytest pages/tests.py -q
+- Run a single test function inside that file (example): pytest pages/tests.py::test_student_cannot_view_other_member_feedback -q
+    - where "test_student_cannot_view_other_member_feedback" is the function name
+
 ## Data Models
 
 The application uses the following key models:
