@@ -5,6 +5,7 @@ from django.utils import timezone
 from django.contrib.auth.models import User
 from django.urls import reverse, NoReverseMatch
 from django.test import RequestFactory
+import re
 
 from pages.models import (
     UserProfile, Course, Team, FormTemplate, Question,
@@ -322,3 +323,46 @@ def test_student_branch_average_correct_for_self(client):
     row = next((r for r in performance_data if r.get("member") == pb), None)
     assert row is not None, "Expected logged-in student's row in performance data"
     assert row["average_score"] == pytest.approx(4.5), f"Got {row['average_score']} instead of 4.5"
+
+# -----------------------------
+# 5) Form.time_left() basic behavior - form should be closed when past due date, should be open before due date
+# -----------------------------
+@pytest.mark.django_db
+def test_form_time_left_returns_closed_when_past_due():
+    user = User.objects.create_user(username="u1", password="pass")
+    profile = UserProfile.objects.create(user=user, admin=True)
+    course = Course.objects.create(name="Algos", code="CS900")
+    template = FormTemplate.objects.create(title="T1", created_by=profile, course=course)
+
+    now = timezone.now()
+    form = Form.objects.create(
+        title="F1",
+        template=template,
+        course=course,
+        created_by=profile,
+        publication_date=now - timedelta(days=2),
+        closing_date=now - timedelta(days=1),
+    )
+
+    assert form.time_left() == "Closed"
+
+@pytest.mark.django_db
+def test_form_time_left_returns_formatted_string_when_future():
+    user = User.objects.create_user(username="u2", password="pass")
+    profile = UserProfile.objects.create(user=user, admin=True)
+    course = Course.objects.create(name="DS", code="CS901")
+    template = FormTemplate.objects.create(title="T2", created_by=profile, course=course)
+
+    now = timezone.now()
+    form = Form.objects.create(
+        title="F2",
+        template=template,
+        course=course,
+        created_by=profile,
+        publication_date=now - timedelta(days=1),
+        closing_date=now + timedelta(days=1, hours=2, minutes=30),
+    )
+
+    tl = form.time_left()
+    assert tl != "Closed"
+    assert re.match(r"^\d+ days, \d+ hours, and \d+ minutes$", tl)
