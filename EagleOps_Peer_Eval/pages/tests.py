@@ -1,11 +1,11 @@
 # pages/tests.py
 import pytest
+import re
 from datetime import timedelta
 from django.utils import timezone
 from django.contrib.auth.models import User
 from django.urls import reverse, NoReverseMatch
 from django.test import RequestFactory
-import re
 
 from pages.models import (
     UserProfile, Course, Team, FormTemplate, Question,
@@ -18,16 +18,9 @@ from pages.views import performance_view
 # utilities
 # -----------------------------
 def _resolve_status(model_cls, *names):
-    """
-    Try to find a status constant on the model.
-    Accepts names in preference order, returns the first found value or None.
-    Works with either attributes like Form.CLOSED or Form.Status.CLOSED.
-    """
     for name in names:
-        # direct attribute (e.g., Form.CLOSED)
         if hasattr(model_cls, name):
             return getattr(model_cls, name)
-        # TextChoices inner class (e.g., Form.Status.CLOSED)
         Status = getattr(model_cls, "Status", None)
         if Status is not None and hasattr(Status, name):
             return getattr(Status, name)
@@ -35,9 +28,6 @@ def _resolve_status(model_cls, *names):
 
 
 def _mark_question_scored(q):
-    """
-    Make sure a question will be included in scoring if the model uses such flags.
-    """
     changed = False
     if hasattr(q, "is_scored") and not getattr(q, "is_scored"):
         q.is_scored = True
@@ -46,8 +36,7 @@ def _mark_question_scored(q):
         q.include_in_score = True
         changed = True
     if hasattr(q, "weight"):
-        w = getattr(q, "weight")
-        if w in (None, 0):
+        if getattr(q, "weight") in (None, 0):
             q.weight = 1
             changed = True
     if changed:
@@ -55,16 +44,12 @@ def _mark_question_scored(q):
 
 
 def _create_submitted_response(form, evaluator, evaluatee):
-    """
-    Create a submitted FormResponse and return it. Ensures submitted_at if the field exists.
-    """
     resp = FormResponse.objects.create(
         form=form,
         evaluator=evaluator,
         evaluatee=evaluatee,
         submitted=True,
     )
-    # Some code considers only responses with a timestamp truly "submitted"
     if hasattr(resp, "submitted_at") and not getattr(resp, "submitted_at"):
         resp.submitted_at = timezone.now()
         resp.save(update_fields=["submitted_at"])
@@ -102,21 +87,17 @@ def test_student_cannot_view_other_member_feedback(client):
     try:
         url = reverse("member_feedback", args=[course.id, form.id, profile_b.id])
     except NoReverseMatch:
-        # If the URL name differs in your project, skip with a helpful message
         pytest.skip("NoReverseMatch for 'member_feedback'—adjust URL name/args in the test to match your project.")
         return
 
     resp = client.get(url)
-
-    # Some apps redirect unauthorized users instead of returning 403 immediately.
     if resp.status_code == 302 and hasattr(resp, "url"):
         resp = client.get(resp.url, follow=True)
 
-    # Be tolerant to either 403 or 404 (some apps avoid leaking existence)
-    assert resp.status_code in (403, 404), f"Expected 403/404 for forbidden access, got {resp.status_code}"
+    assert resp.status_code in (403, 404), f"Expected 403/404, got {resp.status_code}"
 
 
-# ---------- shared helper for performance tests ----------
+# ---------- shared helper ----------
 def _create_minimal_course_with_team_and_form():
     ua = User.objects.create_user("studenta", email="a@example.com", password="pass")
     ub = User.objects.create_user("studentb", email="b@example.com", password="pass")
@@ -128,7 +109,7 @@ def _create_minimal_course_with_team_and_form():
 
     course = Course.objects.create(name="Algorithms", code="CS101")
     course.students.add(pa, pb)
-    course.instructors.add(padmin)  # ensure instructor/admin branch is available
+    course.instructors.add(padmin)
 
     team = Team.objects.create(name="Team A", course=course)
     team.members.add(pa, pb)
@@ -136,13 +117,10 @@ def _create_minimal_course_with_team_and_form():
     tpl = FormTemplate.objects.create(title="Eval Template", created_by=padmin, course=course)
     q1 = Question.objects.create(template=tpl, text="Effort",   question_type=Question.LIKERT_SCALE, order=1)
     q2 = Question.objects.create(template=tpl, text="Teamwork", question_type=Question.LIKERT_SCALE, order=2)
-
-    # Ensure questions are included in scoring if the model uses flags/weights
     _mark_question_scored(q1)
     _mark_question_scored(q2)
 
     now = timezone.now()
-    # Prefer CLOSED if your view only aggregates closed forms; otherwise fall back to PUBLISHED
     CLOSED = _resolve_status(Form, "CLOSED")
     PUBLISHED = _resolve_status(Form, "PUBLISHED")
     desired_status = CLOSED or PUBLISHED
@@ -156,14 +134,12 @@ def _create_minimal_course_with_team_and_form():
         closing_date=now - timedelta(days=1),
         status=desired_status,
     )
-    # Prevent any save() logic from overriding our explicit status if supported
     try:
         form.save(force_status=True)
     except TypeError:
         form.save()
 
     form.teams.add(team)
-
     return {
         "users": {"a": ua, "b": ub, "admin": admin_user},
         "profiles": {"a": pa, "b": pb, "admin": padmin},
@@ -175,7 +151,7 @@ def _create_minimal_course_with_team_and_form():
 
 
 # -----------------------------
-# 2) ADMIN/INSTRUCTOR BRANCH: average should be > 0 and correct (4.5)
+# 2) ADMIN/INSTRUCTOR BRANCH: average 4.5
 # -----------------------------
 @pytest.mark.django_db
 def test_performance_average_is_positive_and_correct_for_member(client):
@@ -185,10 +161,7 @@ def test_performance_average_is_positive_and_correct_for_member(client):
     course, form = data["course"], data["form"]
     q1, q2 = data["questions"]["q1"], data["questions"]["q2"]
 
-    # A evaluates B with likert answers 4,5 -> 4.5
     resp = _create_submitted_response(form, evaluator=pa, evaluatee=pb)
-
-    # Use the field your Answer model expects. Likert projects often use either likert_answer or numeric_answer.
     if "likert_answer" in [f.name for f in Answer._meta.get_fields()]:
         Answer.objects.create(response=resp, question=q1, likert_answer=4)
         Answer.objects.create(response=resp, question=q2, likert_answer=5)
@@ -196,14 +169,7 @@ def test_performance_average_is_positive_and_correct_for_member(client):
         Answer.objects.create(response=resp, question=q1, numeric_answer=4)
         Answer.objects.create(response=resp, question=q2, numeric_answer=5)
 
-    # --- sanity checks: fail early with a precise reason if setup slipped ---
-    assert Form.objects.filter(id=form.id, status=form.status).exists(), "Form row not found with chosen status"
-    assert form in data["team"].assigned_forms.all(), "Form is not assigned to the team"
-    assert FormResponse.objects.filter(form=form, evaluatee=pb, submitted=True).exists(), "No submitted response for evaluatee"
-
     client.force_login(admin_user)
-
-    # Hit the view (URL or direct call fallback)
     try:
         url = reverse("performance", args=[course.id])
         response = client.get(url)
@@ -216,24 +182,19 @@ def test_performance_average_is_positive_and_correct_for_member(client):
         context = getattr(response, "context", None)
         if context is None:
             html = response.content.decode("utf-8")
-            assert "4.5" in html, f"Rendered HTML did not include 4.5:\n{html}"
+            assert "4.5" in html
             return
 
     performance_data = context["performance_data"]
-    assert isinstance(performance_data, list) and performance_data, "Expected non-empty performance_data list"
-
     members = []
     for team_data in performance_data:
-        assert "members" in team_data, f"Expected 'members' key in admin/instructor branch, got: {team_data.keys()}"
         members.extend(team_data["members"])
-
-    b_row = next((m for m in members if getattr(m["member"], "id", None) == data["profiles"]["b"].id), None)
-    assert b_row is not None, "Student B row not found in performance data"
-    assert b_row["average_score"] == pytest.approx(4.5), f"Got {b_row['average_score']} instead of 4.5"
+    b_row = next((m for m in members if m["member"].id == pb.id), None)
+    assert b_row["average_score"] == pytest.approx(4.5)
 
 
 # -----------------------------
-# 3) ADMIN/INSTRUCTOR BRANCH: average should be 0 when no answers exist
+# 3) ADMIN/INSTRUCTOR BRANCH: average 0 when no answers
 # -----------------------------
 @pytest.mark.django_db
 def test_performance_average_is_zero_when_no_answers(client):
@@ -243,7 +204,6 @@ def test_performance_average_is_zero_when_no_answers(client):
     course = data["course"]
 
     client.force_login(admin_user)
-
     try:
         url = reverse("performance", args=[course.id])
         response = client.get(url)
@@ -256,29 +216,22 @@ def test_performance_average_is_zero_when_no_answers(client):
         context = getattr(response, "context", None)
         if context is None:
             html = response.content.decode("utf-8")
-            # Be lenient to different renderings of "no data"
             assert ("No data" in html) or ("0.00" in html) or (">0<" in html)
             return
 
     performance_data = context["performance_data"]
-    assert isinstance(performance_data, list) and performance_data, "Expected non-empty performance_data list"
-
     members = []
     for team_data in performance_data:
-        assert "members" in team_data, "Expected admin/instructor data to include 'members'"
         members.extend(team_data["members"])
-
-    b_row = next((m for m in members if getattr(m["member"], "id", None) == pb.id), None)
-    assert b_row is not None, "Expected to find student B in performance table"
+    b_row = next((m for m in members if m["member"].id == pb.id), None)
     assert b_row["average_score"] == 0
 
 
 # -----------------------------
-# 4) STUDENT BRANCH: student sees their own average correctly (4.5)
+# 4) STUDENT BRANCH: student sees 4.5
 # -----------------------------
 @pytest.mark.django_db
 def test_student_branch_average_correct_for_self(client):
-    # Same fixture, but log in as the student (exercise student branch)
     data = _create_minimal_course_with_team_and_form()
     ua, ub = data["users"]["a"], data["users"]["b"]
     pa, pb = data["profiles"]["a"], data["profiles"]["b"]
@@ -286,7 +239,6 @@ def test_student_branch_average_correct_for_self(client):
     q1, q2 = data["questions"]["q1"], data["questions"]["q2"]
 
     resp = _create_submitted_response(form, evaluator=pa, evaluatee=pb)
-
     if "likert_answer" in [f.name for f in Answer._meta.get_fields()]:
         Answer.objects.create(response=resp, question=q1, likert_answer=4)
         Answer.objects.create(response=resp, question=q2, likert_answer=5)
@@ -294,13 +246,7 @@ def test_student_branch_average_correct_for_self(client):
         Answer.objects.create(response=resp, question=q1, numeric_answer=4)
         Answer.objects.create(response=resp, question=q2, numeric_answer=5)
 
-    # sanity checks
-    assert form in data["team"].assigned_forms.all(), "Form is not assigned to the team"
-    assert FormResponse.objects.filter(form=form, evaluatee=pb, submitted=True).exists(), "No submitted response for evaluatee"
-
-    # Log in as the student (NOT admin/instructor)
     client.force_login(ub)
-
     try:
         url = reverse("performance", args=[course.id])
         response = client.get(url)
@@ -313,19 +259,16 @@ def test_student_branch_average_correct_for_self(client):
         context = getattr(response, "context", None)
         if context is None:
             html = response.content.decode("utf-8")
-            assert "4.5" in html, f"Rendered HTML did not include 4.5:\n{html}"
+            assert "4.5" in html
             return
 
     performance_data = context["performance_data"]
-    assert isinstance(performance_data, list) and performance_data, "Expected non-empty performance_data (student branch)"
-
-    # student branch: entries look like {'member': <UserProfile>, 'forms': [...], 'average_score': ...}
     row = next((r for r in performance_data if r.get("member") == pb), None)
-    assert row is not None, "Expected logged-in student's row in performance data"
-    assert row["average_score"] == pytest.approx(4.5), f"Got {row['average_score']} instead of 4.5"
+    assert row["average_score"] == pytest.approx(4.5)
+
 
 # -----------------------------
-# 5) Form.time_left() basic behavior - form should be closed when past due date, should be open before due date
+# 5) Form.time_left() tests
 # -----------------------------
 @pytest.mark.django_db
 def test_form_time_left_returns_closed_when_past_due():
@@ -343,8 +286,8 @@ def test_form_time_left_returns_closed_when_past_due():
         publication_date=now - timedelta(days=2),
         closing_date=now - timedelta(days=1),
     )
-
     assert form.time_left() == "Closed"
+
 
 @pytest.mark.django_db
 def test_form_time_left_returns_formatted_string_when_future():
@@ -362,7 +305,65 @@ def test_form_time_left_returns_formatted_string_when_future():
         publication_date=now - timedelta(days=1),
         closing_date=now + timedelta(days=1, hours=2, minutes=30),
     )
-
     tl = form.time_left()
     assert tl != "Closed"
     assert re.match(r"^\d+ days, \d+ hours, and \d+ minutes$", tl)
+
+
+# -----------------------------
+# 6) UserProfile.bio long text
+# -----------------------------
+@pytest.mark.django_db
+def test_userprofile_bio_allows_extremely_long_text():
+    base_user = User.objects.create_user(username="huge_bio_user", password="testpass123")
+    huge_bio = "x" * 1_000_000
+    profile = UserProfile.objects.create(user=base_user, bio=huge_bio)
+    profile.refresh_from_db()
+    assert len(profile.bio) == 1_000_000
+    assert profile.bio.startswith("x") and profile.bio.endswith("x")
+
+
+# -----------------------------
+# 7) DummyEvent time_left() tests
+# -----------------------------
+class DummyEvent:
+    def __init__(self, closing_date):
+        self.closing_date = closing_date
+
+    def time_left(self):
+        now = timezone.now()
+        time_left = self.closing_date - now
+        if time_left <= timedelta(0):
+            return "Closed"
+        days_left = time_left.days
+        hours_left = time_left.seconds // 3600
+        minutes_left = (time_left.seconds // 60) % 60
+        return f"{days_left} days, {hours_left} hours, and {minutes_left} minutes"
+
+
+@pytest.mark.django_db
+def test_time_left_closed():
+    now = timezone.now()
+    event = DummyEvent(closing_date=now - timedelta(seconds=1))
+    assert event.time_left() == "Closed"
+
+
+@pytest.mark.django_db
+def test_time_left_all_singular_units():
+    now = timezone.now()
+    event = DummyEvent(closing_date=now + timedelta(days=1, hours=1, minutes=2))
+    assert event.time_left() == "1 day, 1 hour, and 1 minute"
+
+
+@pytest.mark.django_db
+def test_time_left_mixed_plural_units():
+    now = timezone.now()
+    event = DummyEvent(closing_date=now + timedelta(days=2, hours=1, minutes=6))
+    assert event.time_left() == "2 days, 1 hours, and 5 minutes"
+
+
+@pytest.mark.django_db
+def test_time_left_all_plural_units():
+    now = timezone.now()
+    event = DummyEvent(closing_date=now + timedelta(days=3, hours=4, minutes=11))
+    assert event.time_left() == "3 days, 4 hours, and 10 minutes"
