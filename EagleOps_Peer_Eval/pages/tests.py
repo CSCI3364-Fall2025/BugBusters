@@ -268,7 +268,7 @@ def test_student_branch_average_correct_for_self(client):
 
 
 # -----------------------------
-# 5) Form.time_left() tests
+# 5) Form.time_left() basic behavior - form should be closed when past due date, should be open before due date
 # -----------------------------
 @pytest.mark.django_db
 def test_form_time_left_returns_closed_when_past_due():
