@@ -258,14 +258,149 @@ class SecurityTester:
         # Generate report
         self.generate_report()
 
+    def test_dos_sustained_load(self,
+                                endpoint="/",
+                                method="GET",
+                                concurrency=50,
+                                duration_seconds=15,
+                                payload=None,
+                                headers=None,
+                                request_timeout=8):
+        """
+        New DoS test: sustained load for a short duration.
+        - endpoint: path relative to base_url (e.g. "/")
+        - method: "GET" or "POST"
+        - concurrent: number of concurrent requests per wave
+        - duration_seconds: how long to run the test
+        - payload: dict for POST body (optional)
+        - headers: dict for request headers (optional)
+        - request_timeout: per-request timeout in seconds
+        Logs result using the same self.log_result(...) pattern.
+        """
+        print(f"\n🚨 Running sustained DoS test: {method} {endpoint} | concurrency={concurrency} duration={duration_seconds}s")
+        url = urljoin(self.base_url, endpoint)
+        headers = headers or {}
+        payload = payload or {}
+        stop_time = time.time() + duration_seconds
+
+        total_sent = 0
+        total_success = 0
+        total_errors = 0
+        latencies = []
+
+        def single_request(session):
+            nonlocal total_sent, total_success, total_errors
+            start = time.time()
+            try:
+                if method.upper() == "GET":
+                    r = session.get(url, headers=headers, timeout=request_timeout)
+                else:
+                    r = session.post(url, data=payload, headers=headers, timeout=request_timeout)
+                latency = time.time() - start
+                total_sent += 1
+                if r is not None and 200 <= r.status_code < 400:
+                    total_success += 1
+                    latencies.append(latency)
+                    return True
+                else:
+                    total_errors += 1
+                    return False
+            except Exception as e:
+                total_sent += 1
+                total_errors += 1
+                return False
+
+        # Run waves of concurrent requests until duration elapses
+        with concurrent.futures.ThreadPoolExecutor(max_workers=concurrency) as executor:
+            futures = []
+            while time.time() < stop_time:
+                # submit one wave
+                for _ in range(concurrency):
+                    futures.append(executor.submit(single_request, self.session))
+                # small sleep to avoid instant continuous hammering and allow threads to finish
+                time.sleep(0.1)
+
+                # prune completed futures to keep memory reasonable
+                new_futures = []
+                for f in futures:
+                    if f.done():
+                        pass
+                    else:
+                        new_futures.append(f)
+                futures = new_futures
+
+        success_rate = (total_success / total_sent) * 100 if total_sent else 0.0
+        avg_latency = (sum(latencies) / len(latencies)) if latencies else None
+
+        details = (f"endpoint={endpoint}, method={method}, sent={total_sent}, success={total_success}, "
+                   f"errors={total_errors}, success_rate={success_rate:.1f}%, avg_latency={avg_latency if avg_latency is not None else 'N/A'}s")
+
+        # Heuristic: if success rate drops below 50% consider system overwhelmed
+        overwhelmed = success_rate < 50
+        self.log_result("DoS", f"Sustained load {concurrency}x for {duration_seconds}s -> {endpoint}", overwhelmed, details)
+
 if __name__ == "__main__":
     # Configuration
-    BASE_URL = "http://127.0.0.1:8000/" 
-    
+    BASE_URL = "http://127.0.0.1:8000/"
+
     # Create tester instance
     tester = SecurityTester(BASE_URL)
-    
-    # Run all tests
+
+    # Run existing tests (SQLi, auth, etc.)
     tester.run_all_tests()
+
+    # ---- Run the DoS test explicitly (dev/staging only) ----
+    # tune concurrency/duration as needed
+    tester.test_dos_sustained_load(endpoint="/", method="GET", concurrency=20, duration_seconds=8)
+
+    # Re-generate the aggregated report to include DoS results
+    tester.generate_report()
+
+    # Decide exit code: fail if DoS result indicates overwhelmed (low success rate)
+    # We didn't change the DoS method, so parse the details string it logged.
+    dos_results = [r for r in tester.results if r['test_type'] == "DoS"]
+    exit_code = 0
+
+    if dos_results:
+        # Take the last DoS result (most recent)
+        last = dos_results[-1]
+        details = last.get('details', '')
+        # details contains substring like "... success_rate=12.3% ..."
+        success_rate = None
+        try:
+            # find 'success_rate=' then read the float before '%'
+            key = "success_rate="
+            if key in details:
+                after = details.split(key, 1)[1]
+                # strip until '%' and remove non-numeric chars
+                rate_str = after.split('%', 1)[0].strip()
+                # sometimes there may be trailing text, so keep first token
+                rate_token = rate_str.split()[0]
+                success_rate = float(rate_token)
+        except Exception:
+            success_rate = None
+
+        if success_rate is None:
+            print("⚠️ Could not parse DoS success_rate from details; failing to be safe.")
+            exit_code = 1
+        else:
+            print(f"📉 DoS success_rate = {success_rate:.1f}%")
+            # Your policy: fail if success_rate < 50%
+            if success_rate < 50.0:
+                print("❌ DoS indicates system overwhelmed -> marking overall run as FAILED")
+                exit_code = 1
+            else:
+                print("✅ DoS indicates system handled load -> marking overall run as PASSED")
+                exit_code = 0
+    else:
+        print("⚠️ No DoS results found; failing to be safe.")
+        exit_code = 1
+
+    print("\n✅ Security testing completed!" if exit_code == 0 else "\n❌ Security testing completed with FAILURES")
+    # Exit with appropriate code so CI / runner can see failure
+    import sys
+    sys.exit(exit_code)
+
+
+
     
-    print("\n✅ Security testing completed!")
