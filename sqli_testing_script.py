@@ -261,7 +261,7 @@ class SecurityTester:
     def test_dos_sustained_load(self,
                                 endpoint="/",
                                 method="GET",
-                                concurrency=50,
+                                concurrency= 100000,
                                 duration_seconds=15,
                                 payload=None,
                                 headers=None,

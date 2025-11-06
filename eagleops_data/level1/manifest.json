@@ -1,0 +1,14 @@
+{
+  "level": 1,
+  "semester": "Fall 2025",
+  "counts": {
+    "users": 8594,
+    "courses": 150,
+    "enrollments": 8594,
+    "teams": 1405,
+    "team_members": 8444,
+    "eval_templates": 1,
+    "eval_forms": 150,
+    "eval_responses": 42522
+  }
+}
