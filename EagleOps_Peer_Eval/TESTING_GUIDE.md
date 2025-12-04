@@ -111,3 +111,49 @@ This guide will help you test the course management and form features in the Eag
 - Regular users can only view courses they are enrolled in through their team memberships
 
 If you encounter any issues during testing, please check the server logs for error messages. 
+
+USABILITY_TESTING_GUIDE = """
+## Running the Usability Tests
+
+The project includes automated browser-based usability tests (Selenium + Playwright) based on LLM Squared.
+The tests simulate real user interactions across Chrome, Firefox, and Safari/WebKit.
+
+### 1. Install Required Dependencies
+
+Activate your virtual environment and install the testing packages:
+
+    pip install pytest pytest-django pytest-playwright playwright selenium
+
+Install Playwright browsers:
+
+    playwright install
+
+Safari/WebKit support is bundled automatically on macOS.
+
+### 2. Run the Usability Test Suite
+
+From the project root directory, run:
+
+    pytest test_browser_usability.py
+
+To see what tests are being skipped and the reason, run:
+
+   pytest test_browser_usability.py -rs
+
+To include full skip reasons and verbose information:
+
+    pytest -vv usability_tests/test_browser_usability.py
+
+### 3. What the Tests Cover
+
+The suite performs multiple checks:
+
+- Homepage loads and has a valid title
+- Responsive layout (desktop vs mobile resizing)
+- Keyboard navigation / TAB focus traversal
+- Form submit smoke test (if the homepage contains a form)
+- No JavaScript errors during page load
+- Performance measurement: DOMContentLoaded time for L1, L2, L3 scale levels
+- Safari/WebKit parity tests via Playwright
+
+"""
