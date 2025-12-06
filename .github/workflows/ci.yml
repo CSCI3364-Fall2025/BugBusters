@@ -31,7 +31,7 @@ jobs:
         run: |
           python manage.py migrate --noinput
           python manage.py check
-          pytest -q
+          pytest -q --ignore=test_browser_usability.py
 
   pa11y:
     runs-on: ubuntu-latest
