@@ -36,8 +36,6 @@ jobs:
   pa11y:
     runs-on: ubuntu-latest
     # optional: wait until tests pass first
-    needs: test
-
     steps:
       - name: Check out code
         uses: actions/checkout@v4
