@@ -210,3 +210,5 @@ DEFAULT_FROM_EMAIL = 'EagleOps Peer Evaluations <eagleopspeerevaluations@gmail.c
 
 TIME_ZONE = 'America/New_York'
 USE_TZ = True
+
+LOGIN_URL = "/login/"

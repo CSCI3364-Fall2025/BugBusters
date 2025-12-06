@@ -1,0 +1,17 @@
+{
+    "defaults": {
+      "standard": "WCAG2AA",
+      "timeout": 60000,
+      "wait": 1000,
+      "chromeLaunchConfig": {
+        "args": ["--no-sandbox", "--disable-dev-shm-usage"]
+      }
+    },
+   "urls": [
+  "http://127.0.0.1:8000/login/?next=/courses/",
+  "http://127.0.0.1:8000/login/?next=/forms-dashboard/",
+  "http://127.0.0.1:8000/login/?next=/course/100/performance/"
+]
+
+  }
+  

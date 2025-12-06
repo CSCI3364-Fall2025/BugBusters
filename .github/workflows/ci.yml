@@ -8,6 +8,7 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
+
     steps:
       - name: Check out code
         uses: actions/checkout@v4
@@ -25,10 +26,57 @@ jobs:
 
       - name: Django checks & tests
         env:
-          # Keep DEBUG off in CI if you want; not required for SQLite.
           DJANGO_SETTINGS_MODULE: project_main.settings
         working-directory: EagleOps_Peer_Eval
         run: |
           python manage.py migrate --noinput
           python manage.py check
           pytest -q
+
+  pa11y:
+    runs-on: ubuntu-latest
+    # optional: wait until tests pass first
+    needs: test
+
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+
+      - name: Install Python dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Apply migrations
+        env:
+          DJANGO_SETTINGS_MODULE: project_main.settings
+        working-directory: EagleOps_Peer_Eval
+        run: |
+          python manage.py migrate --noinput
+
+      - name: Start Django server
+        env:
+          DJANGO_SETTINGS_MODULE: project_main.settings
+        working-directory: EagleOps_Peer_Eval
+        run: |
+          python manage.py runserver 0.0.0.0:8000 &
+          sleep 20
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Install Pa11y
+        run: npm install -g pa11y-ci pa11y-reporter-html
+
+      - name: Run Pa11y accessibility tests
+        # .pa11yci.json is in the repo root, so run from there
+        working-directory: .
+        run: pa11y-ci -c .pa11yci.json
